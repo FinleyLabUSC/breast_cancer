@@ -185,7 +185,7 @@ void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
         }
     }
 
-} // TESTER COMMENT
+}
 
 /** This function generates and returns a random location within the square defined by the tumorRadius size.
  * The location is used for placing immune cells randomly within the domain.
