@@ -71,11 +71,12 @@ private:
     void initializeTesting();
     void initializeInVitro();
     void calculateForces(double tstep);
-    void updateTimeSeries();
+
 
     void removeDeadCells();
     void updateCell_list();
 
+    void countPops_updateTimeSeries();
     void printStep(double time);
 
     void neighboringCancerCells(Cell otherCell);
@@ -97,7 +98,7 @@ private:
     std::vector<int> m2TS;
     std::vector<int> nkTS;
     std::vector<int> mdscTS;
-    std::vector<int> radiusTS;
+    std::vector<double> radiusTS;
     std::vector<double> chemoTS;
     std::vector<double> ICI_TS;
     /*
@@ -110,8 +111,6 @@ private:
     std::vector<std::vector<std::string> > tCellPhenotypeTrajectory;
 
     std::string tCellTrajectoryPathway;
-
-
 
     // parameter lists
     std::vector<std::vector<double> > cellParams;

@@ -165,16 +165,17 @@ void Cell::resolveForces(double dt, std::array<double, 2> &tumorCenter, double &
      * if the cell is touching the necrotic core, push it outward
      * numerically solve forces
      */
-    if(calcDistance(tumorCenter) < necroticRadius+radius){
-        std::array<double, 2> dx = {x[0] - tumorCenter[0],
-                                    x[1] - tumorCenter[1]};
-        dx = unitVector(dx);
-        if(!std::isnan(dx[0])) {
-            currentForces[0] += necroticForce * dx[0];
-            currentForces[1] += necroticForce * dx[1];
-        }
-    }
+    // if(calcDistance(tumorCenter) < necroticRadius+radius){
+    //     std::array<double, 2> dx = {x[0] - tumorCenter[0],
+    //                                 x[1] - tumorCenter[1]};
+    //     dx = unitVector(dx);
+    //     if(!std::isnan(dx[0])) {
+    //         currentForces[0] += necroticForce * dx[0];
+    //         currentForces[1] += necroticForce * dx[1];
+    //     }
+    // }
 
+    // resolving the forces between cells.
     x[0] += (dt/damping)*currentForces[0];
     x[1] += (dt/damping)*currentForces[1];
 

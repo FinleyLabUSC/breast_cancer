@@ -2,8 +2,6 @@
 #include "../inc/Environment.h"
 #include <chrono>
 
-
-
 /*
  * CHANGE summing influences to multiplying (1 - inf)
  */
@@ -58,15 +56,6 @@
  * - PUT MODEL DESCRIPTION HERE
  */
 
-/*
- * THERAPY (future)
- * ----------------
- * - in whole tumor mode, assume sufficient vascularization outside of tumor, then decrease effect going into the tumor using exponential decay
- *
- * POTENTAIL ANALYSES
- * ------------------
- * - don't let cells die of age. at end of simulation, output distributions of cancer cell phenotype/distance to nearest immune cell that induces that phenotype
- */
 
 int main(int argc, char **argv) {
     std::string folder = argv[1];

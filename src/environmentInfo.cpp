@@ -1,44 +1,15 @@
 #include "../inc/Environment.h"
 
 void Environment::printStep(double time) {
-    int numM = 0;
-    int numT8 = 0;
-    int numT4_th = 0;
-    int numT4_treg = 0;
-    int numC = 0;
-    int numNK = 0;
-    int numMDSC = 0;
-
-    for(auto &cell : cell_list){
-
-        if(cell.type == 0){
-            numC++;
-        } else if(cell.type == 1){
-            numM++;
-        } else if(cell.type == 2){
-            if (cell.state == 4) {
-                numT4_th++;
-            } else {
-                numT4_treg++;
-            }
-        } else if(cell.type == 3){
-            numT8++;
-        } else if (cell.type == 4) {
-            numNK++;
-        } else if (cell.type == 5) {
-            numMDSC++;
-        }
-    }
-
 
     std::cout << std::fixed << std::setprecision(5);
-    std::cout << "Time: " << std::setw(10) << (time / 24) << " | cancer: " << std::setw(10) << numC
-          << " | cd8: " << std::setw(10) << numT8 << " | cd4 Th: " << std::setw(10) << numT4_th  << " | cd4 Treg: " << std::setw(10) << numT4_treg
-          << " | macrophage: " << std::setw(10) << numM <<  " | nk: " << std::setw(10) << numNK << " | mdsc: " << std::setw(10) << numMDSC << std::endl;
+    std::cout << "Time: " << std::setw(10) << (time / 24) << " | cancer: " << std::setw(10) << cancerTS.back()
+          << " | cd8: " << std::setw(10) << cd8TS.back() << " | cd4 Th: " << std::setw(10) << cd4_th_TS.back()  << " | cd4 Treg: " << std::setw(10) << cd4_treg_TS.back()
+          << " | macrophage: " << std::setw(10) << m0TS.back() + m1TS.back() + m2TS.back() <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
 
 }
 
-void Environment::updateTimeSeries() {
+void Environment::countPops_updateTimeSeries() {
     int numT8 = 0;
     int numT4_th = 0;
     int numT4_treg = 0;
@@ -86,5 +57,4 @@ void Environment::updateTimeSeries() {
     m2TS.push_back(m2);
 
     radiusTS.push_back(tumorRadius);
-
 }

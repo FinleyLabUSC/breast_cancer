@@ -69,7 +69,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
         tumorSize();
         save(0, 0);
-        updateTimeSeries();
+        countPops_updateTimeSeries();
         recordPopulation(0.0);
 
         std::cout<<"Model initialized. Populations recorded. "<<std::endl;

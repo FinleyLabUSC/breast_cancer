@@ -218,25 +218,27 @@ void Environment::simulate(double tstep, int tx, int met,int numDoses) {
 
         // mutateCells(chemoOn);
 
-        removeDeadCells();
-        updateCell_list();
+        removeDeadCells(); // loops through, removes the dead cells
+        updateCell_list(); // loops through, updates the runtimeindex
 
-        tumorSize();
-        necrosis(tstep); // Note for future use: if necroses is turned back on & kills cells, confirm the order of the removeDeadCells, updateCell_list, tumorSize and necrosis functions.
+        tumorSize(); // loops through twice, calculates the tumor center, calculates the furtherest distance from the center to a cancer cell.
 
+        //necrosis(tstep); // Note for future use: if necroses is turned back on & kills cells, confirm the order of the removeDeadCells, updateCell_list, tumorSize and necrosis functions.
 
         steps += 1;
-        printStep(steps * tstep);
+        countPops_updateTimeSeries(); // loops through and saves the count of each cell type
+        printStep(steps * tstep); // Prints to screen
 
-        updateTimeSeries();
         model_time = steps;
 
-        recordPopulation(steps*tstep);
+        recordPopulation(steps*tstep); // saves the count of each cell to a file.
 
-        if (fmod(steps * tstep, 24) == 0) {
-            // save every simulation day
-            save(tstep, steps*tstep);
-        }
+        save(tstep, steps*tstep);
+
+        // if (fmod(steps * tstep, 24) == 0) {
+        //     // save every simulation day
+        //     save(tstep, steps*tstep);
+        // }
 
 
         if (cancerTS.back() == 0) {

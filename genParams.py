@@ -157,9 +157,9 @@ recParams[6] = mdscRecRate # mdscRecRate
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 5.0 # simulation duration (days)
+envParams[1] = 2#5.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
-envParams[3] = 0.5 # necrotic region outward force
+envParams[3] = 0#0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)
 envParams[5] = chemoDose# dose or concentration of chemo
 envParams[6] = iciDose
