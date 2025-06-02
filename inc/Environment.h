@@ -18,13 +18,13 @@
 class Environment{
 
 public:
-    Environment(std::string folder, std::string set, std::string tCellTrajectoryPath);
+    Environment(std::string folder, std::string set, std::string tCellTrajectoryPath, int base_seed);
     //destructor needed
     void simulate(double tstep, int tx, int met, int numDoses);
-    void truncatedGaussian(double mean, double stddev, double min, double max);
 
+    void generateNums();
     // Visualization on / off
-    bool visualize;
+
 
     // Delete these safely, I don't think they're used.
     std::vector<double> cancer_CellCycle_CDF;
@@ -43,9 +43,7 @@ private:
     void neighborInfluenceInteractions(double tstep, size_t step_count);
     void internalCellFunctions(double tstep, size_t step_count);
     void recruitImmuneCells(double tstep, size_t step_count);
-    void recruitImmuneCells_random(double tstep, size_t step_count);
-    std::array<double, 2> recruitmentLocation();
-    std::array<double, 2> recruitmentLocation_random();
+    std::array<double, 2> generate_random_location_for_immune_recruitment();
     void tumorSize();
     void necrosis(double tstep);
     double calculateDiffusibles(std::array<double, 2> x);
@@ -58,7 +56,7 @@ private:
     void immune_checkpoint_inhibitor_drug(double tstep,double new_dose);
 
 
-    void mutateCells(int cause);
+    void mutateCells();
 
     void populateTrajectories(std::string tCellTrajectoryPath);
     std::vector<std::string> getTcellTrajectory(); // This function will check whether the tCellPhenotypeTrajectory's have been read in, read the files if not, and return a randomly selected trajectory
@@ -70,7 +68,7 @@ private:
     void initializeCells();
     void initializeTesting();
     void initializeInVitro();
-    void calculateForces(double tstep);
+    void calculateForces(double tstep, size_t step_count);
 
 
     void removeDeadCells();
@@ -142,7 +140,10 @@ private:
     double dose_ICI;
     int number_of_chemo_doses;
 
-    std::mt19937 mt;
+    double mean_cancer_cell_cycle_length = 17;
+    double std_cancer_cell_cycle_length = 2;
+
+    RNG rng;
 
 };
 

@@ -20,13 +20,13 @@ void Cell::initialize_CD4_Cell(std::vector<std::vector<double> > &cellParams, si
 
 }
 
-void Cell::cd4_differentiation(double dt) {
+void Cell::cd4_differentiation(double dt, RNG& master_rng, std::mt19937& temporary_gen) {
     if(state != 4){return;}
 
-    std::uniform_real_distribution<double> dis(0.0,1.0);
+    double rnd = master_rng.uniform(0,1,temporary_gen);
     // negInfuence is M2 + alive cancer + MDSC
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[3])*(1 - influences[10]);
-    if(dis(mt) < kTr*negInfluence){
+    if(rnd < kTr*negInfluence){
         state = 5;
         pdl1 += pdl1_increment;
     }

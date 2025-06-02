@@ -95,7 +95,8 @@ void Environment::save(double tstep, double tstamp) {
                 << cell.x[1] << ","
                 << cell.radius << ","
                 << cell.state << ","
-                << cell.pdl1 << std::endl;
+                << cell.pdl1 <<  ","
+            <<cell.cellCycleLength<< std::endl;
         }
     }
     myfile.close();

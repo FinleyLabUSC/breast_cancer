@@ -9,7 +9,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
     std::fstream file;
     file.open(filePathway);
-    
+
     // Check whether file exists
     std::vector<int> numCells = {0,0,0,0,0,0,0,0,0,0,0};
     std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5};
@@ -43,15 +43,16 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
                     tempTrajectory = getTcellTrajectory();
                 }
 
+                // TODO sample ages for the cells.
                 Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state],tempTrajectory);
                 newCell.state = cell_state;
                 newCell.runtime_index = cell_list.size();
 
                 if (newCell.state == 3) {
-                    std::uniform_real_distribution<double> cellCyclePos(0,newCell.cellCycleLength);
-                    newCell.cellCyclePos = cellCyclePos(mt);
-                    std::uniform_real_distribution<double> pdl1_distribution(0,1);
-                    newCell.pdl1 = pdl1_distribution(mt);
+                    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+                    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+
+                    newCell.pdl1 = rng.uniform(0,1);
                 }
                 // Update the cell list
                 cell_list.push_back(newCell);
@@ -67,7 +68,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         std::cout<<"\033[32mModel initialized from mIHC file!\033[0m"<<std::endl;
         file.close(); // Close the input file
 
-        tumorSize();
+        tumorSize(); // always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
         save(0, 0);
         countPops_updateTimeSeries();
         recordPopulation(0.0);
@@ -82,15 +83,14 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 
 void Environment::initializeInVitro() {
-    std::uniform_real_distribution<double> cell_location(-1500, 1500);
-
     int idx = 0;
     for (int i = 0; i < 1000; i++) {
-        double x = cell_location(mt);
-        double y = cell_location(mt);
-        Cell newCell = Cell({x,y}, cellParams,0,tCellPhenotypeTrajectory_1);
-        std::uniform_real_distribution<double> cellCyclePos(0,newCell.cellCycleLength);
-        newCell.cellCyclePos = cellCyclePos(mt);
+        double x = rng.uniform(-1500,1500);
+        double y = rng.uniform(-1500,1500);
+        Cell newCell = Cell({x,y}, cellParams,0,tCellPhenotypeTrajectory_1); // TODO update age sampling
+        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+
         newCell.runtime_index = cell_list.size();
         cell_list.push_back(newCell);
         ++idx;
@@ -102,14 +102,21 @@ void Environment::initializeInVitro() {
 void Environment::initializeTesting() {
     Cell newCell = Cell({-100,-100}, cellParams,0,tCellPhenotypeTrajectory_1);
     newCell.runtime_index = cell_list.size();
+    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+
     cell_list.push_back(newCell);
 
     newCell =Cell({-100,0}, cellParams,0,tCellPhenotypeTrajectory_1);
     newCell.runtime_index = cell_list.size();
+    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
     cell_list.push_back(newCell);
 
     newCell =Cell({-100,100}, cellParams,0,tCellPhenotypeTrajectory_1);
     newCell.runtime_index = cell_list.size();
+    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
     cell_list.push_back(newCell);
 
 }
@@ -122,6 +129,8 @@ void Environment::initializeCells() {
     double radiiCells = envParams[0];
     int q = 1;
     cell_list.push_back(Cell({0.0,0.0}, cellParams, 0, tCellPhenotypeTrajectory_1));
+    cell_list.back().cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    cell_list.back().cellCyclePos = rng.uniform(0,cell_list.back().cellCycleLength);
     cell_list.back().runtime_index = q;
 
     for(int i=1; i<radiiCells; ++i){
@@ -131,8 +140,8 @@ void Environment::initializeCells() {
             double x = i * cellParams[4][0] * cos(2 * 3.1415 * j / nCells);
             double y = i * cellParams[4][0] * sin(2 * 3.1415 * j / nCells);
             Cell newCell = Cell({x, y},  cellParams, 0, tCellPhenotypeTrajectory_1);
-            std::uniform_real_distribution<double> cellCyclePos(0,newCell.cellCycleLength);
-            newCell.cellCyclePos = cellCyclePos(mt);
+            newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+            newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
             newCell.runtime_index = cell_list.size();
 
             cell_list.push_back(newCell);
@@ -147,7 +156,9 @@ std::vector<std::string> Environment::getTcellTrajectory() {
         populateTrajectories(tCellTrajectoryPathway);
     }
 
-    size_t phenotypeIdx = getRandomNumber(tCellPhenotypeTrajectory.size());
+    // TODO this is to circumvent changing Model Util in such a way that it gets access to the RNG. This is being removed anyway.
+    //size_t phenotypeIdx = getRandomNumber(tCellPhenotypeTrajectory.size());
+    size_t phenotypeIdx = 0;
     return get2dvecrow(tCellPhenotypeTrajectory, phenotypeIdx);
 }
 
@@ -165,14 +176,13 @@ void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
         double recRate = immuneCellRecRates[i]*static_cast<double>(numC);
         immuneCells2rec[i] += tstep*recRate; //QUESTION: why are we multiplying with the timestep size? Why are we INCREMENTING?
         while(immuneCells2rec[i] >= 1){
-            std::array<double, 2> recLoc =recruitmentLocation_random();
+            std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
 
             //i==0 represents the idx in immuneCellRecRates vector that is associated with initializing a cd8 t cell
             if(i == 0){ //
                 std::vector<std::string> trajec_phenotype = getTcellTrajectory();
 
-                cell_list.push_back(Cell(recLoc, cellParams, immuneCellRecTypes[i],
-                                    trajec_phenotype, step_count));
+                cell_list.push_back(Cell(recLoc, cellParams, immuneCellRecTypes[i],trajec_phenotype,step_count));
                 cell_list.back().runtime_index = cell_list.size()-1;
             }
             else{ // Recruit macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
@@ -187,38 +197,15 @@ void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
 
 }
 
-/** This function generates and returns a random location within the square defined by the tumorRadius size.
+/** This function generates and returns a random location within the square defined by the tumorRadius + recDist size.
  * The location is used for placing immune cells randomly within the domain.
  */
-std::array<double, 2> Environment::recruitmentLocation_random() {
+std::array<double, 2> Environment::generate_random_location_for_immune_recruitment() {
     double recDist = 200;
-    std::uniform_real_distribution<double> cell_location(-1*tumorRadius-recDist, tumorRadius+recDist);
-    double x = tumorCenter[0] + cell_location(mt);
-    double y = tumorCenter[1] + cell_location(mt);
+    double x = tumorCenter[0] + rng.uniform(-1*tumorRadius-recDist, tumorRadius+recDist);
+    double y = tumorCenter[1] + rng.uniform(-1*tumorRadius-recDist, tumorRadius+recDist);
     return {x,y};
 }
-
-/** This function returns a location within the domain, that is a specific distance away from the tumor center, in a circular region.
- *
- */
-std::array<double, 2> Environment::recruitmentLocation() {
-    /*
-     * cells enter a random distance away from the tumor radius
-     * cells enter at a random angle from the tumor center
-     */
-    //std::uniform_real_distribution<double> angle(-1.0, 1.0);
-    std::normal_distribution<double> angle(0.0,1.0);
-    std::array<double, 2> dx = {angle(mt),
-                                angle(mt)};
-    double norm = sqrt(dx[0]*dx[0] + dx[1]*dx[1]);
-
-    std::uniform_real_distribution<double> loc(0.0, recDist);
-    double distance = loc(mt) + tumorRadius;
-
-    return {distance*(dx[0]/norm), distance*(dx[1]/norm)};
-}
-
-
 
 void Environment::tumorSize(){
     tumorCenter = {0,0};
@@ -271,74 +258,4 @@ double Environment::calculateDiffusibles(std::array<double, 2> x) {
     }
 
     return d;
-}
-
-
-
-
-
-
-
-
-
-// genearte a truncated normal
-void Environment::truncatedGaussian(double mean, double stddev, double min, double max) {
-    // Create the list of samples from the truncated distribution, round the values
-    int freq;
-
-    std::vector<double> dist_samples;// = {10,20,30,30,20,10,10,20};
-    int numSamples = 10000;//dist_samples.size();
-    std::vector<double> unique_data;
-    std::vector<int> frequency_count;
-    std::vector<double> empirical_cdf;
-    std::normal_distribution<double> gauss_dist(mean,stddev);
-
-
-    while (dist_samples.size() < numSamples) {
-        double rnd = gauss_dist(mt);
-       if (rnd >= min && rnd <= max) {
-            //dist_samples.push_back(std::round(rnd)); // sample the normal distribution and round the value to the nearest hour.
-            dist_samples.push_back(rnd); // sample the normal distribution and round the value to the nearest hour.
-        }
-    }
-
-    std::ofstream myfile;
-    myfile.open ("generatedDistribution.csv");
-
-    for (auto val:dist_samples) {
-        myfile<< val << "\n";
-    }
-    myfile.close();
-
-    // Sort the list, extract disinct values into the unique_data vector
-    std::vector<double> temp_distSamples = dist_samples;
-    std::sort(temp_distSamples.begin(), temp_distSamples.end()); // sorts the vector
-    unique_data = temp_distSamples;
-
-    auto lastEl = std::unique(unique_data.begin(),unique_data.end()); // finds the unique elements.
-    unique_data.resize(std::distance(unique_data.begin(),lastEl)); // resize the unique data vector according to how many elements are unique
-
-    // determine how many of each value occurs in the array.
-    for(double i : unique_data) {
-        auto bounds = std::equal_range(temp_distSamples.begin(),temp_distSamples.end(),i);
-        freq = bounds.second - temp_distSamples.begin() - (bounds.first - temp_distSamples.begin());
-        frequency_count.push_back(freq);
-    }
-
-    unique_data.insert(unique_data.begin(),0.0); // add zero
-    empirical_cdf.push_back(frequency_count[0]);
-
-    double tempSum;
-
-    // Save the CDF / return the CDF
-    for(int i = 1; i<frequency_count.size();++i) {
-        tempSum = (empirical_cdf[i-1] + frequency_count[i]);
-        empirical_cdf.push_back(tempSum);
-    }
-
-    for(int i = 0; i < empirical_cdf.size(); i++) {
-        empirical_cdf[i] = empirical_cdf[i]/numSamples;
-    }
-
-    empirical_cdf.insert(empirical_cdf.begin(),0.0);
 }

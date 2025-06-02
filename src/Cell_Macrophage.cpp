@@ -19,7 +19,7 @@ void Cell::initialize_Macrophage_Cell(std::vector<std::vector<double> > &cellPar
     rmax = 1.5*radius*2;
 }
 
-void Cell::macrophage_differentiation(double dt) {
+void Cell::macrophage_differentiation(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     /*
      * differentiate
      * probability of not differentiating is constant (before scaling)
@@ -42,10 +42,9 @@ void Cell::macrophage_differentiation(double dt) {
                                    (p0 + p1)/sum,
                                    (p0 + p1 + p2)/sum};
     int choice = 0;
-    std::uniform_real_distribution<double> dis(0.0,1.0);
-    double p = dis(mt);
+    double rnd = master_rng.uniform(0,1,temporary_rng);
     for(int i=0; i<3; ++i){
-        if(p > probs[i]){choice++;}
+        if(rnd > probs[i]){choice++;}
     }
     state = choice;
     if(state == 1){

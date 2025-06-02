@@ -20,7 +20,6 @@ public:
 
     int runtime_index;                  // a runtime index that is updated every timestep. used in the neighbor list (and other places).
 
-
     /*
      * FUNCTIONS
      */
@@ -39,11 +38,10 @@ public:
     std::array<double, 2> attractiveForce(std::array<double, 2> dx, double otherRadius);
     std::array<double, 2> repulsiveForce(std::array<double, 2> dx, double otherRadius);
     void calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType);
-    void resolveForces(double dt, std::array<double, 2> &tumorCenter, double &necroticRadius, double &necroticForce);
-    void resetForces();
-    void neighboringCells(std::array<double, 2> otherX, int otherCell_runtime_index);
-    void neighboringCancerCells(std::array<double, 2> otherX, int otherCellState);
+    void resolveForces(double dt, std::array<double, 2> &tumorCenter, double &necroticRadius, double &necroticForce, RNG& master_rng, std::mt19937& temporary_rng);
+    void resetForces(RNG& master_rng, std::mt19937& local_gen);
 
+    void determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state);
 
     // overlap functions
     void calculateOverlap(std::array<double, 2> otherX, double otherRadius);
@@ -51,23 +49,21 @@ public:
     void isCompressed();
 
     // cell behavior functions
-    std::array<double, 3> proliferate(double dt);
-    std::array<double, 3> proliferate_v2(double dt);
-    void prolifState();
-    void prolifState_v2(); // this version is used for the updated Cancer cells that have their own cell cycle clocks
+    std::array<double, 3> proliferate(double dt, RNG& master_rng);
+    void proliferationState(); // this version is used for the updated Cancer cells that have their own cell cycle clocks
     void inherit(std::vector<double> properties);
     std::vector<double> inheritanceProperties();
-    void age(double dt, size_t step_count);
+    void age(double dt, size_t step_count, RNG& master_rng);
 
     void migrate(double dt, std::array<double, 2> tumorCenter);
-    void migrate_NN(double dt);
+    void migrate_NN(double dt,RNG& master_rng, std::mt19937& temporary_rng);
 
-    void indirectInteractions(double tstep, size_t step_count);
-    void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep);
+    void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng);
+    void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng);
     std::vector<double> directInteractionProperties(int interactingState, size_t step_count);
 
     // differentiation
-    void differentiate(double dt);
+    void differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng);
 
     // cell influences
     void addInfluence(std::array<double, 2> otherX, double otherInfluence, int otherType);
@@ -75,23 +71,23 @@ public:
     void clearInfluence();
 
     // macrophage
-    void macrophage_differentiation(double dt);
+    void macrophage_differentiation(double dt, RNG& master_rng, std::mt19937& temporary_rng);
 
     // CD4 specific
-    void cd4_differentiation(double dt);
+    void cd4_differentiation(double dt, RNG& master_rng, std::mt19937& localgen);
 
     // CD8 specific
     void cd8_setKillProb(size_t step_count);
-    void cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt);
+    void cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& local_gen);
 
     // cancer specific
-    void cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt);
-    void cancer_gainPDL1(double dt);
-    void cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt);
-    void mutate(int cause, double chemoLevel); // cause = 1 (chemo)    cause = 0 ("natural" mutations)
+    void cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& localgen);
+    void cancer_gainPDL1(double dt, RNG& master_rng, std::mt19937& local_gen);
+    void cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& local_gen);
+    void mutate(RNG& master_rng); // cause = 1 (chemo)    cause = 0 ("natural" mutations)
 
     // NK specific
-    void nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt);
+    void nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt,RNG& master_rng, std::mt19937& local_gen);
     void nk_setKillProb(size_t step_count);
 
     // MDSC specific
@@ -104,7 +100,7 @@ public:
     static std::array<double, 2> unitVector(std::array<double, 2> v);
     void updateID(int idx);
 
-    double setCellCycleLength(int cellState, int cellType);
+    void set_cell_cycle_length(double cell_cycle_length);
     int cellAge;
     void set_cellAge(size_t step_count);
 
@@ -169,6 +165,12 @@ public:
     double killProb;
     double baseKillProb;
     double infScale;
+
+    // Used to ensure that no data races occur during the parallel regions in runCells
+    double next_killProb;
+    int next_state;
+    double next_migrationSpeed;
+
     std::vector<std::string> t_cell_phenotype_Trajectory;
 
     std::vector<std::array<double, 2> > location_history;
@@ -205,10 +207,6 @@ public:
     size_t cellCyclePos;
 
     size_t birthTime;
-
-
-private:
-    std::mt19937 mt;
 };
 
 #endif //IMMUNE_MODEL_CELL_H

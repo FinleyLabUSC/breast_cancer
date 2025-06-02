@@ -22,7 +22,6 @@ void Cell::initialize_Cancer_Cell(std::vector<std::vector<double>> &cellParams, 
 
     rmax = 1.5*radius*2;
 
-    cellCycleLength = setCellCycleLength(state,type);
     init_time = init_tstamp;
 
     cellCyclePos = 0;
@@ -38,7 +37,7 @@ void Cell::initialize_Cancer_Cell(std::vector<std::vector<double>> &cellParams, 
 
 
 
-void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt) {
+void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     /*
      * die from CTL based on a probability
      * contact required
@@ -46,25 +45,25 @@ void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, d
     if(type != 0){return;}
 
     if(calcDistance(otherX) <= radius+otherRadius){
-        std::uniform_real_distribution<double> dis(0.0,1.0); 
-        if(dis(mt) < kp){
-            state = -1;
+        double rnd = master_rng.uniform(0,1,temporary_rng);
+        if(rnd < kp){
+            next_state = -1;
         }
     }
 }
 
-void Cell::cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt) {
+void Cell::cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt, RNG& master_rng,std::mt19937& temporary_rng) {
     if (type !=0) {return;}
 
-    if(calcDistance(otherX) <= radius+otherRadius){
-        std::uniform_real_distribution<double> dis(0.0,1.0);
-        if(dis(mt) < kp){
-            state = -1;
+    if(calcDistance(otherX) <= radius+otherRadius){ // this checks whether the interacting cells are in direct contact with each other
+        double rnd = master_rng.uniform(0,1,temporary_rng);
+        if(rnd < kp){
+            next_state = -1;
         }
     }
 }
 
-void Cell::cancer_gainPDL1(double dt) {
+void Cell::cancer_gainPDL1(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     /*
      * shift pdl1 value based on influence from CTL and Th
      *  ifn-g is shown to increase PD-L1 expression
@@ -74,8 +73,8 @@ void Cell::cancer_gainPDL1(double dt) {
     // induced by ifn-g secreting cells
     // posInfluence is Th + CD8 + NK
     double posInfluence = 1 - (1 - influences[4])*(1 - influences[6])*(1 - influences[8]);
-    std::uniform_real_distribution<double> dis(0.0,1.0);
-    if(dis(mt) < posInfluence*pdl1Shift){
+    double rnd = master_rng.uniform(0,1,temporary_rng);
+    if(rnd < posInfluence*pdl1Shift){
         pdl1 += pdl1_increment;
     }
 }

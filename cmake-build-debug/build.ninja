@@ -51,105 +51,105 @@ build cmake_object_order_depends_target_breast_cancer: phony || .
 
 build CMakeFiles/breast_cancer.dir/src/Cell_CD4.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_CD4.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_CD4.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/Cell_CD8.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_CD8.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_CD8.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/Cell_Cancer.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_Cancer.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_Cancer.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/Cell_General.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_General.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_General.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/Cell_MDSC.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_MDSC.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_MDSC.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/Cell_Macrophage.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_Macrophage.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_Macrophage.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/Cell_NK.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/Cell_NK.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/Cell_NK.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/ModelUtil.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/ModelUtil.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/ModelUtil.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/RNG.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/RNG.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/RNG.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/environmentInfo.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/environmentInfo.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/environmentInfo.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/environmentLoadSave.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/environmentLoadSave.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/environmentLoadSave.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/environmentMain.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/environmentMain.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/environmentMain.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/environmentMisc.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/environmentMisc.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/environmentMisc.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/environmentRunCells.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/environmentRunCells.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/environmentRunCells.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
 
 build CMakeFiles/breast_cancer.dir/src/main.cpp.o: CXX_COMPILER__breast_cancer_unscanned_Debug /Users/becca/Dropbox/Mac$ (3)/Documents/Postdoc/Code/breast_cancer/Model/src/main.cpp || cmake_object_order_depends_target_breast_cancer
   DEP_FILE = CMakeFiles/breast_cancer.dir/src/main.cpp.o.d
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics -g -O0 -fopenmp=libomp
   INCLUDES = -I"/Users/becca/Dropbox/Mac (3)/Documents/Postdoc/Code/breast_cancer/Model/inc"
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   OBJECT_FILE_DIR = CMakeFiles/breast_cancer.dir/src
@@ -163,7 +163,7 @@ build CMakeFiles/breast_cancer.dir/src/main.cpp.o: CXX_COMPILER__breast_cancer_u
 # Link the executable breast_cancer
 
 build breast_cancer: CXX_EXECUTABLE_LINKER__breast_cancer_Debug CMakeFiles/breast_cancer.dir/src/Cell_CD4.cpp.o CMakeFiles/breast_cancer.dir/src/Cell_CD8.cpp.o CMakeFiles/breast_cancer.dir/src/Cell_Cancer.cpp.o CMakeFiles/breast_cancer.dir/src/Cell_General.cpp.o CMakeFiles/breast_cancer.dir/src/Cell_MDSC.cpp.o CMakeFiles/breast_cancer.dir/src/Cell_Macrophage.cpp.o CMakeFiles/breast_cancer.dir/src/Cell_NK.cpp.o CMakeFiles/breast_cancer.dir/src/ModelUtil.cpp.o CMakeFiles/breast_cancer.dir/src/RNG.cpp.o CMakeFiles/breast_cancer.dir/src/environmentInfo.cpp.o CMakeFiles/breast_cancer.dir/src/environmentLoadSave.cpp.o CMakeFiles/breast_cancer.dir/src/environmentMain.cpp.o CMakeFiles/breast_cancer.dir/src/environmentMisc.cpp.o CMakeFiles/breast_cancer.dir/src/environmentRunCells.cpp.o CMakeFiles/breast_cancer.dir/src/main.cpp.o | /opt/homebrew/opt/llvm/lib/libomp.dylib
-  FLAGS = -std=c++14 -g -O0 -fopenmp=libomp -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk
+  FLAGS = -std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk
   LINK_LIBRARIES = /opt/homebrew/opt/llvm/lib/libomp.dylib
   OBJECT_DIR = CMakeFiles/breast_cancer.dir
   POST_BUILD = :

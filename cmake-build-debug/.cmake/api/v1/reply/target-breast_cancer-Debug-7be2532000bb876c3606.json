@@ -75,7 +75,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-std=c++14 -g -O0 -fopenmp=libomp -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics"
+					"fragment" : "-std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g -std=gnu++17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.4.sdk -fcolor-diagnostics"
 				},
 				{
 					"backtrace" : 5,
@@ -132,7 +132,7 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "-std=c++14 -g -O0 -fopenmp=libomp -g",
+				"fragment" : "-std=c++14 -g -O1 -fsanitize=address -fno-omit-frame-pointer -g",
 				"role" : "flags"
 			},
 			{

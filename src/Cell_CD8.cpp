@@ -11,6 +11,7 @@ void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, st
     radius = cellParams[4][2]/2.0;
     deathProb = cellParams[5][2];
     migrationSpeed = cellParams[6][2];
+    next_migrationSpeed = migrationSpeed;
     baseKillProb = cellParams[7][2];
     infScale = cellParams[8][2];
     influenceRadius = cellParams[9][2];
@@ -19,29 +20,26 @@ void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, st
     pTypeStateTransition = cellParams[12][2]; 
     rmax = 1.5*radius*2;
 
-    cellCycleLength = setCellCycleLength(state,type);
-
     if(phenotypeTrajectory.size() == 0 || phenotypeTrajectory.empty()){
         std::cerr << "WARNING CONSTRUCTOR: t_cell_phenotype_Trajectory is empty!" << std::endl; 
     }
-    
-    
+
     t_cell_phenotype_Trajectory = phenotypeTrajectory; 
     init_time = init_tstamp;
 }
 
-void Cell::cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt) {
+void Cell::cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     // inhibition via direct contact
 
     if(state != 6){return;}
 
     double distance = calcDistance(otherX);
     if(distance <= radius+otherRadius){
-        std::uniform_real_distribution<double> dis(0.0,1.0);
-        if(dis(mt) < otherpdl1){
-            state = 7;
-            killProb = 0;
-            migrationSpeed = 0.0;
+        double rnd = master_rng.uniform(0,1,temporary_rng);
+        if(rnd < otherpdl1){
+            next_state = 7;
+            next_killProb = 0;
+            next_migrationSpeed = 0.0;
         }
     }
 }

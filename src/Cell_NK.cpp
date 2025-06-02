@@ -20,18 +20,18 @@ void Cell::initialize_NK_Cell(std::vector<std::vector<double> > &cellParams, siz
 
 }
 
-void Cell::nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt) {
+void Cell::nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     // inhibition via direct contact
 
     if(state != 8){return;}
 
     double distance = calcDistance(otherX);
     if(distance <= radius+otherRadius){
-        std::uniform_real_distribution<double> dis(0.0,1.0);
-        if(dis(mt) < otherpdl1){
-            state = 9;
-            killProb = 0;
-            migrationSpeed = 0.0;
+        double rnd = master_rng.uniform(0,1,temporary_rng);
+        if(rnd < otherpdl1){
+            next_state = 9;
+            next_killProb = 0;
+            next_migrationSpeed = 0.0;
         }
     }
 }

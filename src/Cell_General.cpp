@@ -25,7 +25,7 @@
 long unsigned Cell::cell_counter = 0;  // Define the static variable here
 
 // INITIALIZE CELL TYPE
-Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, std::vector<std::string> tCellPhenotypeTrajectory, size_t init_tstamp): mt((std::random_device())()), unique_cell_ID(cell_counter++) {
+Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, std::vector<std::string> tCellPhenotypeTrajectory, size_t init_tstamp): unique_cell_ID(cell_counter++) {
     /*
      * initialize all parameters to 0
      * set parameters based on cellType
@@ -81,18 +81,18 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     // Values for immune cells, cancer cells can acquire tolerance to chemo so they have different values.
     chemoTimeThresh = 0;
 
-    std::normal_distribution<double> toleranceDistribution{40,5};
-    chemoTolerance = toleranceDistribution(mt);
+  //  std::normal_distribution<double> toleranceDistribution{40,5};
+    //chemoTolerance = toleranceDistribution(mt); // this needs to be changed to the correct rng.
     chemo_Accumulated_Threshold = 0;
     chemoTolRate = 0;
 
     antiPDL1_bindingRate = 1;
 
     if(cellType == 0){
-        initialize_Cancer_Cell(cellParams);
+        initialize_Cancer_Cell(cellParams,0);
         mutationProbability_chemo = 0.0001;
         mutationProbability_inherent = 0;
-        chemoTimeThresh = 1 * this->cellCycleLength;//0.5; // the proportion of the cell cycle that cancer cells need to be exposed to chemo for, in order to develop resistance / tolerance
+        chemoTimeThresh = 0;
         chemo_Accumulated_Threshold = 0.0000001; // threshold of "low" dose
         chemoTolRate=0.00; // rate at which cancer cells develop tolerance
 
@@ -110,8 +110,6 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     else{
         throw std::runtime_error("Cell::Cell -> unavailable cell type");
     }
-
-
 }
 
 // FORCE FUNCTIONS
@@ -160,63 +158,61 @@ void Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, int
     }
 }
 
-void Cell::resolveForces(double dt, std::array<double, 2> &tumorCenter, double &necroticRadius, double &necroticForce) {
-    /*
-     * if the cell is touching the necrotic core, push it outward
-     * numerically solve forces
-     */
-    // if(calcDistance(tumorCenter) < necroticRadius+radius){
-    //     std::array<double, 2> dx = {x[0] - tumorCenter[0],
-    //                                 x[1] - tumorCenter[1]};
-    //     dx = unitVector(dx);
-    //     if(!std::isnan(dx[0])) {
-    //         currentForces[0] += necroticForce * dx[0];
-    //         currentForces[1] += necroticForce * dx[1];
-    //     }
-    // }
+void Cell::resolveForces(double dt, std::array<double, 2> &tumorCenter, double &necroticRadius, double &necroticForce, RNG& master_rng, std::mt19937& temporary_rng) {
 
     // resolving the forces between cells.
     x[0] += (dt/damping)*currentForces[0];
     x[1] += (dt/damping)*currentForces[1];
 
-    resetForces();
+    resetForces(master_rng,temporary_rng);
 }
 
-void Cell::resetForces() {
+void Cell::resetForces(RNG& master_rng, std::mt19937& temporary_rng) {
     /*
      * resets forces with a slight randomizing factor
      */
-    double D = 1;
-    std::uniform_real_distribution<double> dis(-D, D);
-    currentForces = {dis(mt),dis(mt)};
+    double temp_x = master_rng.uniform(-1,1,temporary_rng);
+    double temp_y = master_rng.uniform(-1,1,temporary_rng);
+    currentForces = {temp_x,temp_y};
 }
 
-void Cell::neighboringCells(std::array<double, 2> otherX, int otherID){
+// void Cell::neighboringCells(std::array<double, 2> otherX, int otherID){
+//
+//     /*
+//      * determine which cells are within 10*maximum interaction distance
+//      * stores the index in cell_list (runtime_index of the cell in Environment) of the neighboring cells
+//      */
+//     double dis = calcDistance(otherX);
+//     if(dis <= 10*rmax){
+//         neighbors.push_back(otherID);
+//     }
+// }
+//
+// void Cell::neighboringCancerCells(std::array<double, 2> otherX, int otherState){
+//
+//     /*
+//      * determine which cancer cells are within 10*maximum interaction distance
+//      * stores the index in cell_list (in Environment) of the neighboring cells
+//      */
+//     double dis = calcDistance(otherX);
+//     if (type != 0 && otherState == 3) { // If the cell under consideration is an immune cell, and the other is a cancer cell
+//         if(dis <= 10*rmax){
+//             cancer_neighbors.push_back(otherX);
+//         }
+//     }
+// }
 
-    /*
-     * determine which cells are within 2*maximum interaction distance
-     * stores the index in cell_list (in Environment) of the neighboring cells
-     */
+void Cell::determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state) {
     double dis = calcDistance(otherX);
-    if(dis <= 10*rmax){
-        neighbors.push_back(otherID);
-    }
-}
 
-void Cell::neighboringCancerCells(std::array<double, 2> otherX, int otherState){
+    if (dis <= 10*rmax) { // check distance between the cells. if they're within the required distance,
+        neighbors.push_back(otherCell_runtime_index); // add runtime_index to neighbors
 
-    /*
-     * determine which cancer cells are within 2*maximum interaction distance
-     * stores the index in cell_list (in Environment) of the neighboring cells
-     */
-    double dis = calcDistance(otherX);
-    if (type != 0 && otherState == 3) { // If the cell under consideration is an immune cell, and the other is a cancer cell
-        if(dis <= 10*rmax){
-            cancer_neighbors.push_back(otherX);
+        if (type != 0 && otherCell_state==3) { // if the original cell is immune and the other cell is cancer, add to a different list.
+             cancer_neighbors.push_back(otherX);
         }
     }
 }
-
 
 
 
@@ -241,39 +237,15 @@ void Cell::isCompressed() { // :
 }
 
 // CELL BEHAVIOR FUNCTIONS
-
-// ORIGINAL PROLIFERATION CODE
-std::array<double, 3> Cell::proliferate(double dt) {
-    // positions 0 and 1 are cell location
-    // position 2 is boolean didProliferate?
-    if(!canProlif){return {0,0,0};}
-
-    std::uniform_real_distribution<double> dis(0.0, 1.0);
-    if(dis(mt) < divProb){
-        // place daughter cell a random angle away from the mother cell at a distance of radius
-        std::normal_distribution<double> rd(0.0, 1.0); // QUESTION: why is the angle sampled from a standard normal distribution?? Would this bias the placement in a certain direction?
-        std::array<double, 2> dx = {rd(mt),
-                                      rd(mt)};
-        double norm = calcNorm(dx);
-        return{radius*(dx[0]/norm)+x[0],
-               radius*(dx[1]/norm)+x[1],
-               1};
-    } else{
-        return {0,0,0};
-    }
-}
-
 // UPDATED PROLIFERATION CODE -> CANCER CELLS HAVE CELL CYCLE LENGTHS, NOT DIVISION PROBABILITIES
-std::array<double, 3> Cell::proliferate_v2(double dt) {
+std::array<double, 3> Cell::proliferate(double dt, RNG& master_rng) {
     // positions 0 and 1 are cell location
     // position 2 is boolean didProliferate?
     if(!canProlif){return {0,0,0};}
 
     if (type == 0) { // CANCER CELL PROLIFERATION
         // place daughter cell a random angle away from the mother cell at a distance
-        std::normal_distribution<double> rd(0.0, 1.0); // QUESTION: why is the angle sampled from a standard normal distribution?? Would this bias the placement in a certain direction?
-        std::array<double, 2> dx = {rd(mt),
-                                      rd(mt)};
+        std::array<double, 2> dx = {master_rng.normal(0,1),master_rng.normal(0,1)};
 
         double norm = calcNorm(dx);
         return{radius*(dx[0]/norm)+x[0],
@@ -281,12 +253,9 @@ std::array<double, 3> Cell::proliferate_v2(double dt) {
                1};
 
     } else if (type == 3 || type == 8) { // CD8 T CELL PROLIFERATION AND NK PROLIFERATION
-        std::uniform_real_distribution<double> dis(0.0, 1.0);
-        if(dis(mt) < divProb){
+        if(master_rng.uniform(0,1) < divProb){
             // place daughter cell a random angle away from the mother cell at a distance of radius
-            std::normal_distribution<double> rd(0.0, 1.0); // QUESTION: why is the angle sampled from a standard normal distribution?? Would this bias the placement in a certain direction?
-            std::array<double, 2> dx = {rd(mt),
-                                          rd(mt)};
+            std::array<double, 2> dx = {master_rng.normal(0,1),master_rng.normal(0,1)};
             double norm = calcNorm(dx);
             return{radius*(dx[0]/norm)+x[0],
                    radius*(dx[1]/norm)+x[1],
@@ -303,12 +272,11 @@ void Cell::set_cellAge(size_t step_count) {
      cellAge = step_count - birthTime;
 }
 
-void Cell::age(double dt, size_t step_count) {
+void Cell::age(double dt, size_t step_count,  RNG& master_rng) {
     /*
      * cells die based on a probability equal to 1/lifespan
      */
-
-    std::uniform_real_distribution<double> dis(0.0, 1.0);
+    double rand = master_rng.uniform(0,1);
 
     //CD8 cells only 
     if(type == 3){
@@ -326,17 +294,17 @@ void Cell::age(double dt, size_t step_count) {
             
             switch(phenotype_char){
             case 'N': 
-                if(dis(mt) < deathProb){
+                if(rand < deathProb){
                     state = -1;
                 }
                 break; 
             case 'M': 
-                if(dis(mt) < (deathProb/2)){
+                if(rand < (deathProb/2)){
                     state = -1;
                 }
                 break; 
             default: //case 'E' these are cells that are exhausted but haven't been supressed research showing exhausted t cells kill at lower rate     
-                if(dis(mt) < deathProb){
+                if(rand < deathProb){
                     state = -1;
                 }
             }
@@ -355,67 +323,36 @@ void Cell::age(double dt, size_t step_count) {
             //char phenotype_char = 'E'; //assume all cells out of their timecourse are exhausted 
             switch(phenotype_char){
             case 'N': 
-                if(dis(mt) < deathProb){
+                if(rand < deathProb){
                     state = -1;
                 }
                 break; 
             case 'M': 
-                if(dis(mt) < deathProb/2){
+                if(rand < deathProb/2){
                     state = -1;
                 }
                 break; 
             default: //case 'E' these are cells that are exhausted but haven't been supressed research showing exhausted t cells kill at lower rate
-                if(dis(mt) < deathProb){
+                if(rand < deathProb){
                     state = -1;
                 }
             }
         }
     }
-    if(dis(mt) < deathProb){
+    if(rand < deathProb){
         state = -1;
     }
 }
 
-void Cell::migrate(double dt, std::array<double,2> tumorCenter) {
-    /*
-     * biased random-walk towards tumor center
-     *
-     * commented out code for migrating up a pseudo-chemotaxix gradient
-     * it produces weird spatial behaviors and makes it difficult to recruit immune cells around the tumor
-     */
-    if(type == 0 || state == -1 || state == 7){return;} // cancer cells, dead cells, suppressed CD8
-
-    std::array<double, 2> dx_direction = {tumorCenter[0] - x[0],
-                                          tumorCenter[1] - x[1]};
-    std::normal_distribution<double> vect(0.0, 1.0);
-    std::array<double, 2> dx_random = {vect(mt), vect(mt)};
-
-    dx_direction = unitVector(dx_direction);
-    dx_random = unitVector(dx_random);
-    std::array<double, 2> dx_movement = {0,0};
-    for(int i=0; i<2; ++i){
-        dx_movement[i] = migrationBias*dx_direction[i] + (1- migrationBias)*dx_random[i];
-    }
-    dx_movement = unitVector(dx_movement);
-
-    std::array<double,2> temp = {x[0],x[1]};
-    for(int i=0; i<x.size(); ++i){
-        x[i] += dt*migrationSpeed*dx_movement[i];
-        if(std::isnan(x[i])){
-            throw std::runtime_error("migration NaN");
-        }
-    }
-}
-
-
-void Cell::migrate_NN(double dt) {
+void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     // Dead cells, suppressed CD8's, suppressed NKs don't move
 
     if(state == -1 || state == 7 || state == 9) {return;}
      if (type == 0) { // Cancer
         // do random migration
-        std::normal_distribution<double> dist(0.0,1.0);
-        std::array<double, 2> rand_unit_vec = unitVector({dist(mt),dist(mt)});
+         double temp_x = master_rng.normal(0,1,temporary_rng);
+         double temp_y = master_rng.normal(0,1,temporary_rng);
+        std::array<double, 2> rand_unit_vec = unitVector({temp_x,temp_y});
 
         for(int i=0; i<x.size(); ++i){
             x[i] += dt*migrationSpeed*rand_unit_vec[i];
@@ -427,8 +364,10 @@ void Cell::migrate_NN(double dt) {
     } else {
 
         // Define the random unit vector
-        std::normal_distribution<double> vect(0.0, 1.0);
-        std::array<double, 2> dx_random = {vect(mt), vect(mt)};
+
+        double temp_x = master_rng.normal(0,1,temporary_rng);
+        double temp_y = master_rng.normal(0,1,temporary_rng);
+        std::array<double, 2> dx_random = {temp_x, temp_y};
         dx_random = unitVector(dx_random);
         std::array<double, 2> dx_movement = {0,0};
 
@@ -478,30 +417,7 @@ void Cell::migrate_NN(double dt) {
     }
 }
 
-// ORIGINAL PROLIF STATE CODE
-void Cell::prolifState() {
-    /*
-     * cancer cells and CD8 can proliferate
-     */
-    if(type == 0){
-        canProlif = !(state == -1 || compressed);
-    } else if(type == 3){
-        // CTLs -> presence of Th promotes their proliferation, M2 and Treg decrease it
-        // assume CTLs need IL-2 from Th to proliferate
-        canProlif = !(state == 7 || compressed);
-        double posInfluence = influences[4];
-        double negInfluence = 1 - (1 - influences[2])*(1 - influences[5]);
-
-        double scale = posInfluence - negInfluence;
-        //divProb = divProb_base*pow(infScale, scale);
-        divProb = scale*divProb_base;
-    } else {
-        canProlif = false;
-    }
-}
-
-
-void Cell::prolifState_v2() {
+void Cell::proliferationState() {
     /*
      * cancer cells and CD8 can proliferate
      */
@@ -620,51 +536,29 @@ std::vector<double> Cell::inheritanceProperties() {
     return {};
 }
 
-void Cell::indirectInteractions(double tstep, size_t step_count) {
+void Cell::indirectInteractions(double tstep, size_t step_count,RNG& master_rng, std::mt19937& temporary_rng) {
 
     /*
      * after determining total influences on the cell, run the indirect interaction functions
      */
-    if(state == 0){
-        // M0 macrophages
-        return;
-    } else if (state == 1){
-        // M1 macrophages
-        return;
-    } else if (state == 2){
-        // M2 macrophages
-        return;
-    } else if (state == 3){
+    if (state == 3){
         // cancer
-        cancer_gainPDL1(tstep);
+        cancer_gainPDL1(tstep,master_rng, temporary_rng);
         return;
-    } else if (state == 4){
-        // CD4 helper
-        return;
-    } else if (state == 5){
-        // CD4 regulatory
-        return;
-    } else if (state == 6){
+    }
+    if (state == 6){
         // CD8 active
         cd8_setKillProb(step_count);
         return;
-    } else if (state == 7){
-        // CD8 suppressed
-        return;
-    } else if (state == 8) {
+    }
+    if (state == 8) {
         // NK active
         nk_setKillProb(step_count);
-        return;
-    } else if (state == 9) {
-        // NK suppressed
-        return;
-    } else if (state == 10) {
-        // MDSC
         return;
     }
 }
 
-void Cell::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep) {
+void Cell::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_rng, std::mt19937& temporary_rng) {
 
     /*
      * when the cell touches another cell, run direct interactions
@@ -683,10 +577,10 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
         // cancer
         if(interactingState == 6){
             // interactionProperties = {radius, killProb}
-            cancer_dieFromCD8(interactingX, interactionProperties[0], interactionProperties[1], tstep);
+            cancer_dieFromCD8(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         if (interactingState == 8){
-            cancer_dieFromNK(interactingX, interactionProperties[0], interactionProperties[1], tstep);
+            cancer_dieFromNK(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     } else if (state == 4){
@@ -699,7 +593,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
         // CD8 active
         if(interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10){
             // interactionProperties = {radius, pdl1}
-            cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep);
+            cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     } else if (state == 7){
@@ -709,7 +603,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
         // NK active
         // M2 cells, Cancer cells, Tregs and MDSCs can induce PDL1 expression on NK cells.
         if (interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10) {
-            nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep);
+            nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     } else if (state == 9) {
@@ -783,15 +677,15 @@ std::vector<double> Cell::directInteractionProperties(int interactingState, size
 }
 
 // DIFFERENTIATION
-void Cell::differentiate(double dt) {
+void Cell::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     /*
      * runs either macrophage differentiation or cd4 differentiation
      */
     if(type == 1){
-        macrophage_differentiation(dt);
+        macrophage_differentiation(dt, master_rng, temporary_rng);
     }
     if (type == 2) {
-        cd4_differentiation(dt);
+        cd4_differentiation(dt,master_rng, temporary_rng);
     }
 }
 
@@ -814,84 +708,57 @@ void Cell::clearInfluence() {
     }
 }
 
-
-// This function assigns the cell cycle length for each of the cell types, when they divide.
-double Cell::setCellCycleLength(int cellState, int cellType) {
-    std::random_device rd;  // Obtain a random seed from the OS entropy device
-    std::mt19937 gen(rd()); // Mersenne Twister 32-bit PRNG using seed from random device
-    std::normal_distribution<double> distrib_cancerCell(17,2); // Calibrated to NT2.5M cell line data
-    std::normal_distribution<double> distrib_cd8TCell(7,0.3); // centered at 7, most within [6,8] review: https://www.nature.com/articles/nri778. Data suggests non-uniform times, slows with number of divisions
-
-    if (cellState == -1) {
+void Cell::set_cell_cycle_length(double cell_cycle_length) {
+    if (state == -1) {
         std::cout<<"Error: assigning cell cycle length to dead cell!"<<std::endl;
-        return -1;
-    } else if (cellType == 0 && cellState == 3) { // Cancer cells
-        double temp = -1.0;
-        while (temp<=0) {
-            temp = distrib_cancerCell(gen);
-        }
-        return temp;
-    } else { // We currently assume only cancer cells divide
-        return 0.0;
+    }
+    if (type == 0 && state == 3) {
+        cellCycleLength = cell_cycle_length;
     }
 }
 
-void Cell::mutate(int cause, double chemoLevels) {
+
+void Cell::mutate(RNG& master_rng) {
+    // properties that can mutate: proliferation rate, migration rate, or PDL1 expression,
+
+    double sampleMutation = master_rng.uniform(0,1);
+
     // Only cancer cells will mutate
-    if(type == 0 && state == 3 && chemoLevels > 0) {
-        // properties that can mutate: proliferation rate, migration rate, damage repair. or PDL1 expression, immune recruitment
-        std::uniform_real_distribution<double> mutationProb(0.0,1.0);
-        double sampleMutation = mutationProb(mt);
+    if(type == 0 && state == 3 && sampleMutation < mutationProbability_inherent) {
 
-        std::uniform_int_distribution<int> propertyToMutate(1,1);
-        int selectPropertyToMutate = propertyToMutate(mt);
+        // Select what to mutate
+        int selectPropertyToMutate = master_rng.uniform_int(1,1);
+        switch(selectPropertyToMutate) {
+            case 0: {
+                // proliferation
+                // Increase or decrease according to kappa sampled from a uniform distribution [0, std dev of cell cycle].
+                // The position within the cell cycle is changed as well.
 
-        if (cause == 1) { // only chemo is assumed to cause mutations at the moment.
-        // chemotherapy
-            if(sampleMutation < mutationProbability_chemo * chemoLevels) {
-                // Select what to mutate
-                switch(selectPropertyToMutate) {
-                    case 0: {
-                        // proliferation
-                        // Increase or decrease according to kappa sampled from a uniform distribution [0, std dev of cell cycle].
-                        // The position within the cell cycle is changed as well.
-                        std::uniform_real_distribution<float> cellCycleLengthChange(0,2);
-                        float deltaCellCyle = cellCycleLengthChange(mt);
-                        cellCycleLength *= deltaCellCyle;
-                        break;
-                    }
-                    case 1: {
-                        // migration rate, incremented or decremented by a percentage (-100%, 100%). If migChange < 1 then decrease speed, if migChange > 1 increase speed
-                        std::uniform_real_distribution<double> migChange(0, 2);
-                        double migrationDelta = migChange(mt);
-                        migrationSpeed *= migrationDelta;
-
-                        break;
-                    }
-                    case 2: {
-                        // PDL1 expression
-                        std::uniform_int_distribution<int> pdl1Mutation(0,1);
-                        if (pdl1Mutation(mt) == 1) { // PDL1 expression changes
-                            if (pdl1 == pdl1WhenExpressed) { // if PDL1 is expressed, down regulate
-                                pdl1 = 0;
-                            } else { // if PDL1 is not expressed, induce expression.
-                                pdl1 = pdl1WhenExpressed;
-                            }
-                        }
-                        break;
-                    }
-
-                    case 3: {
-                        // damage repair
-                        std::uniform_real_distribution<double> chemo_tolerance_Mutation(0, 2);
-                        chemoTolerance*=chemo_tolerance_Mutation(mt);
-                        break;
-                    }
-
-                    default: std::cout<<"Mutate Error: trying to mutate property not on the list."<<std::endl;
-                }
-
+                float deltaCellCycle = master_rng.uniform(0,2);
+                cellCycleLength *= deltaCellCycle;
+                break;
             }
+            case 1: {
+                // migration rate, incremented or decremented by a percentage (-100%, 100%). If migChange < 1 then decrease speed, if migChange > 1 increase speed
+                double migrationDelta = master_rng.uniform(0,2);
+                migrationSpeed *= migrationDelta;
+
+                break;
+            }
+            case 2: {
+                // PDL1 expression
+                // TODO update this to be more granular / fine grained.
+                if (master_rng.uniform_int(0,1) == 1) { // PDL1 expression changes
+                    if (pdl1 == pdl1WhenExpressed) { // if PDL1 is expressed, down regulate
+                        pdl1 = 0;
+                    } else { // if PDL1 is not expressed, induce expression.
+                        pdl1 = pdl1WhenExpressed;
+                    }
+                }
+                break;
+            }
+
+            default: std::cout<<"Mutate Error: trying to mutate property not on the list."<<std::endl;
         }
     }
 }

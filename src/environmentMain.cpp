@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 
@@ -49,7 +51,7 @@ std::vector<std::string> get_phenotype(std::vector<std::vector<std::string>>& tr
 }
 
 
-Environment::Environment(std::string folder, std::string set, std::string tCellTrajectoryPath): mt((std::random_device())()) {
+Environment::Environment(std::string folder, std::string set, std::string tCellTrajectoryPath, int base_seed): rng(base_seed) {
 
     /*
      * initialize a simulation environment
@@ -115,6 +117,7 @@ Environment::Environment(std::string folder, std::string set, std::string tCellT
     tCellPhenotypeTrajectory_1 = phenotype_trajec_1;
 }
 
+//TODO this is going to change.
 void Environment::populateTrajectories(std::string tCellTrajectoryPath) {
     if(tCellPhenotypeTrajectory.empty() || tCellPhenotypeTrajectory.size()==0 ) {
         printf("Attempting to read trajectories located in %s...\n", tCellTrajectoryPath.c_str());
@@ -138,7 +141,31 @@ void Environment::populateTrajectories(std::string tCellTrajectoryPath) {
 
 }
 
+
+/** this is for testing purposes*/
+void Environment::generateNums() {
+    std::vector<double> nums(10,2);
+
+    // for (int i = 0; i < 10; ++i) {
+    //     nums[i] = rng.uniform(0,1);
+    //
+    // }
+
+    #pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < 10; ++i) {
+        unsigned int seed_for_temp_rng = rng.get_context_seed(i, i*10,1);
+        std::mt19937 temporary_rng(seed_for_temp_rng);
+        nums[i] = rng.uniform(0,1,temporary_rng);
+     }
+
+    for (double val : nums) {
+      std::cout<<val<<std::endl;
+    }
+}
+
+
 void Environment::simulate(double tstep, int tx, int met,int numDoses) {
+
     /*
      * initializes and runs a simulation
      * ---------------------------------
@@ -154,7 +181,7 @@ void Environment::simulate(double tstep, int tx, int met,int numDoses) {
     for(int i = 0; i < numDoses; i++){
         chemo_treatment_schedule[i]=0.125 + 7.0 * i;
     }
-    
+
     int chemo_count_num_dose = 0;
     chemoTS.push_back(0.0);
     bool chemoOn = false;
@@ -174,77 +201,58 @@ void Environment::simulate(double tstep, int tx, int met,int numDoses) {
         ICI_on = true;
     }
 
-    std::vector<std::string> metLabels = {"../mihc/121223 P9msP61-2 #06 NT2.5 LM Lungs 16d-1_met_2_adjusted.csv", "../mihc/121223 P9msP61-2 #25 NeuN NT2.5 LM 5 wks #1_met_5_adjusted.csv"};
+   std::vector<std::string> metLabels = {"../mihc/121223 P9msP61-2 #06 NT2.5 LM Lungs 16d-1_met_2_adjusted.csv", "../mihc/121223 P9msP61-2 #25 NeuN NT2.5 LM 5 wks #1_met_5_adjusted.csv"};
+ //z   std::vector<std::string> metLabels = {"../mihc/test.csv"};
 
-    initializeCellsFromFile(metLabels[met-1]);
-    
-
+     initializeCellsFromFile(metLabels[met-1]);
 
     std::cout << "starting simulations...\n";
 
 
-    while(tstep*steps/24 <simulationDuration ) { // simulationDuration
-        double timePoint = tstep*steps/24;
-        recruitImmuneCells(tstep, tstep*steps);
+     while(tstep*steps/24 <simulationDuration ) { // simulationDuration
+         double timePoint = tstep*steps/24;
 
-        runCells(tstep, tstep*steps);
-        // if chemo is off
-        if (!chemoOn) {
-            chemotherapy_drug(tstep,0); // update the chemo value
-        } else { // if chemo is on
-            if (timePoint == chemo_treatment_schedule[chemo_count_num_dose]) {
-                std::cout<<"Chemo administered"<<std::endl;
-                chemotherapy_drug(tstep,dose_chemo);
-                chemotherapy(tstep);
-                chemo_count_num_dose++;
-            } else {
-                chemotherapy(tstep);
-                chemotherapy_drug(tstep,0);
-            }
-        }
-        if (!ICI_on) {
-            immune_checkpoint_inhibitor_drug(tstep,0);
-        } else {
-            if (timePoint == ici_treatment_schedule[ici_count_num_dose]) {
-                std::cout<<"ICI administered"<<std::endl;
-                immune_checkpoint_inhibitor_drug(tstep,dose_ICI);
-                immune_checkpoint_inhibitor(tstep);
-                ici_count_num_dose++;
-            } else {
-                    immune_checkpoint_inhibitor_drug(tstep,0);
-                    immune_checkpoint_inhibitor(tstep);
-            }
-        }
+         recruitImmuneCells(tstep, tstep*steps);
 
-        // mutateCells(chemoOn);
+         runCells(tstep, tstep*steps);
+
+        // if (!ICI_on) {
+        //     immune_checkpoint_inhibitor_drug(tstep,0);
+        // } else {
+        //     if (timePoint == ici_treatment_schedule[ici_count_num_dose]) {
+        //         std::cout<<"ICI administered"<<std::endl;
+        //         immune_checkpoint_inhibitor_drug(tstep,dose_ICI);
+        //         immune_checkpoint_inhibitor(tstep);
+        //         ici_count_num_dose++;
+        //     } else {
+        //             immune_checkpoint_inhibitor_drug(tstep,0);
+        //             immune_checkpoint_inhibitor(tstep);
+        //     }
+        // }
+
+        mutateCells();
 
         removeDeadCells(); // loops through, removes the dead cells
         updateCell_list(); // loops through, updates the runtimeindex
 
         tumorSize(); // loops through twice, calculates the tumor center, calculates the furtherest distance from the center to a cancer cell.
-
-        //necrosis(tstep); // Note for future use: if necroses is turned back on & kills cells, confirm the order of the removeDeadCells, updateCell_list, tumorSize and necrosis functions.
-
         steps += 1;
         countPops_updateTimeSeries(); // loops through and saves the count of each cell type
         printStep(steps * tstep); // Prints to screen
 
         model_time = steps;
 
-        recordPopulation(steps*tstep); // saves the count of each cell to a file.
+        recordPopulation(steps); // saves the count of each cell to a file.
 
-        save(tstep, steps*tstep);
-
-        // if (fmod(steps * tstep, 24) == 0) {
-        //     // save every simulation day
-        //     save(tstep, steps*tstep);
-        // }
-
+        if (fmod(steps * tstep, 1) == 0) { // change the y value depending on how frequently you want the stuff to be saved.
+            // save every simulation day
+            save(tstep, steps*tstep);
+        }
 
         if (cancerTS.back() == 0) {
             save(tstep, steps*tstep);
             break;
         }
 
-    }
+     }
 }

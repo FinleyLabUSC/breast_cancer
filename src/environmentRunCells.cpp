@@ -1,3 +1,5 @@
+#include <omp.h>
+
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 #include <unordered_set>
@@ -18,44 +20,68 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
      * - differentiate
      */
 
-
-
-
-#pragma omp parallel for
-
+#pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
+        // reset the "next_" members, so that they're synchronized to the correct values for the current time step.
+        cell_list[i].next_state = cell_list[i].state;
+        cell_list[i].next_killProb = cell_list[i].killProb;
+        cell_list[i].next_migrationSpeed = cell_list[i].migrationSpeed;
+
         // reset neighborhood and influence
         cell_list[i].neighbors.clear();
         cell_list[i].clearInfluence();
-        for(auto &c : cell_list){
+
+        for(int j = 0; j < cell_list.size(); ++j){
             // assume that a cell cannot influence itself
-            if(cell_list[i].unique_cell_ID != c.unique_cell_ID){
-                cell_list[i].neighboringCells(c.x, c.runtime_index);
-                cell_list[i].neighboringCancerCells(c.x, c.state);
-                cell_list[i].addInfluence(c.x, c.influenceRadius, c.state);
+            if(cell_list[i].unique_cell_ID != cell_list[j].unique_cell_ID){
+                cell_list[i].determine_neighboringCells(cell_list[j].x,cell_list[j].runtime_index,cell_list[j].state);
+                cell_list[i].addInfluence(cell_list[j].x, cell_list[j].influenceRadius, cell_list[j].state);
             }
         }
-        cell_list[i].indirectInteractions(tstep, step_count);
+
+        unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,1);
+        std::mt19937 temporary_rng1(seed_for_temp_rng1);
+        cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1);
     }
 
-#pragma omp parallel for
-
+#pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
+        unsigned int seed_for_temp_rng2 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,2);
+        std::mt19937 temporary_rng2(seed_for_temp_rng2);
+
         for(auto &c : cell_list[i].neighbors){
             cell_list[i].directInteractions(cell_list[c].state,
                                             cell_list[c].x,
                                             cell_list[c].directInteractionProperties(cell_list[i].state, step_count),
-                                            tstep);
+                                            tstep, rng, temporary_rng2);
         }
     }
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
-        cell_list[i].differentiate(tstep);
+        unsigned int seed_for_temp_rng3 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,3);
+        std::mt19937 temporary_rng3(seed_for_temp_rng3);
+        cell_list[i].differentiate(tstep, rng,temporary_rng3);
+    }
+
+    // Update the properties that have changed to reflect the new values.
+    // Note: this should be updated if any of the other properties of cells are changed in directInteractions
+    // or in a way that may cause data race conditions.
+
+    for (int i = 0; i <cell_list.size();++i) {
+        if (cell_list[i].state != cell_list[i].next_state) {
+            cell_list[i].state = cell_list[i].next_state;
+        }
+        if (cell_list[i].killProb != cell_list[i].next_killProb) {
+            cell_list[i].killProb = cell_list[i].next_killProb;
+        }
+        if (cell_list[i].migrationSpeed != cell_list[i].next_migrationSpeed) {
+            cell_list[i].migrationSpeed = cell_list[i].next_migrationSpeed;
+        }
     }
 }
 
-void Environment::calculateForces(double tstep) {
+void Environment::calculateForces(double tstep, size_t step_count) {
     /*
      * 1. Calculate total force vector for each cell
      * 2. Resolve forces on each cell
@@ -65,15 +91,19 @@ void Environment::calculateForces(double tstep) {
 
     // divide tstep into smaller steps for solving
     // only solve forces between neighboring cells to improve computation time
+
     int Nsteps = static_cast<int>(tstep/dt);
 
     // iterate through Nsteps, calculating and resolving forces between neighbors
     // also includes migration
     for(int q=0; q<Nsteps; ++q) {
         // migrate first
-        #pragma omp parallel for
+        #pragma omp parallel for schedule(dynamic)
         for(int i=0; i<cell_list.size(); ++i){
-            cell_list[i].migrate_NN(dt);
+            unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,4);
+            std::mt19937 temporary_rng(seed_for_temp_rng);
+
+            cell_list[i].migrate_NN(dt, rng, temporary_rng);
         }
 
         // calc forces
@@ -85,9 +115,12 @@ void Environment::calculateForces(double tstep) {
                 }
 
         // resolve forces
-       #pragma omp parallel for
+       #pragma omp parallel for schedule(dynamic)
                 for(int i=0; i<cell_list.size(); ++i){
-                    cell_list[i].resolveForces(dt, tumorCenter, necroticRadius, necroticForce);
+                    unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,5);
+                    std::mt19937 temporary_rng(seed_for_temp_rng);
+
+                    cell_list[i].resolveForces(dt, tumorCenter, necroticRadius, necroticForce,rng, temporary_rng);
                 }
             }
 
@@ -99,7 +132,6 @@ void Environment::calculateForces(double tstep) {
             }
             cell_list[i].isCompressed();
         }
-
 }
 
 void Environment::internalCellFunctions(double tstep, size_t step_count) {
@@ -112,25 +144,20 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
     int numCells = cell_list.size();
 
     for(int i=0; i<numCells; ++i){
+
         cell_list[i].set_cellAge(step_count); // this function figures out the age of the cell.
-        cell_list[i].age(tstep, step_count); // this function figures out if the cell is dying because it's reached it's lifespan
-
-        // if in necrotic core, die
-        if(cell_list[i].calcDistance(tumorCenter) < necroticRadius){
-            cell_list[i].state = -1;
-        }
-
-        cell_list[i].prolifState_v2();
-         std::array<double, 3> newLoc = cell_list[i].proliferate_v2(tstep);
+        cell_list[i].age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
+        cell_list[i].proliferationState();
+         std::array<double, 3> newLoc = cell_list[i].proliferate(tstep, rng);
 
         if(newLoc[2] == 1){
             if(cell_list[i].type == 3){ // CD8 T cells
-                int phenotypeIdx = getRandomNumber(tCellPhenotypeTrajectory.size()); 
+                int phenotypeIdx = 0;  // TODO going to change once the trajectory stuff is removed.
                 std::vector<std::string> trajec_phenotype = get2dvecrow(tCellPhenotypeTrajectory, phenotypeIdx);
                 if(trajec_phenotype.empty() || trajec_phenotype.size() == 0){
                     std::cerr << "WARNING INTERNAL CELL FUNCTIONS: t_cell_phenotype_Trajectory is empty!" << std::endl; 
                 }
-                cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type, trajec_phenotype, step_count));
+                cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type, trajec_phenotype));
                 cell_list.back().runtime_index = cell_list.size()-1;
             }
             else{ // any other proliferating cell
@@ -138,7 +165,8 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
                     // if cancer cell has divided, reset the mother cell's cellCyclePos
                     cell_list[i].prevDivTime = cell_list[i].currDivTime;
                     cell_list[i].currDivTime = step_count;
-                    cell_list[i].cellCyclePos =0; cell_list[i].canProlif = false;
+                    cell_list[i].cellCyclePos =0;
+                    cell_list[i].canProlif = false;
                 }
                 // Note: NK cells don't currently have cell specific type proliferation behaviour.
 
@@ -153,7 +181,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
 
 void Environment::runCells(double tstep, size_t step_count) {
     neighborInfluenceInteractions(tstep, step_count);
-    calculateForces(tstep);
+    calculateForces(tstep,step_count);
     internalCellFunctions(tstep, step_count);
 }
 
@@ -228,9 +256,9 @@ void  Environment::treatment() {
 }
 
 
-void Environment::mutateCells(int cause) {
+void Environment::mutateCells() {
     for(auto & cell : cell_list) {
-        cell.mutate(cause, chemoTS.back());
+        cell.mutate(rng);
     }
 }
 
