@@ -723,7 +723,7 @@ void Cell::mutate(RNG& master_rng) {
 
     double sampleMutation = master_rng.uniform(0,1);
 
-    // Only cancer cells will mutate
+    // Only alive cancer cells will mutate
     if(type == 0 && state == 3 && sampleMutation < mutationProbability_inherent) {
 
         // Select what to mutate

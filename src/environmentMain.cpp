@@ -216,19 +216,19 @@ void Environment::simulate(double tstep, int tx, int met,int numDoses) {
 
          runCells(tstep, tstep*steps);
 
-        // if (!ICI_on) {
-        //     immune_checkpoint_inhibitor_drug(tstep,0);
-        // } else {
-        //     if (timePoint == ici_treatment_schedule[ici_count_num_dose]) {
-        //         std::cout<<"ICI administered"<<std::endl;
-        //         immune_checkpoint_inhibitor_drug(tstep,dose_ICI);
-        //         immune_checkpoint_inhibitor(tstep);
-        //         ici_count_num_dose++;
-        //     } else {
-        //             immune_checkpoint_inhibitor_drug(tstep,0);
-        //             immune_checkpoint_inhibitor(tstep);
-        //     }
-        // }
+        if (!ICI_on) {
+            immune_checkpoint_inhibitor_drug(tstep,0);
+        } else {
+            if (timePoint == ici_treatment_schedule[ici_count_num_dose]) {
+                std::cout<<"ICI administered"<<std::endl;
+                immune_checkpoint_inhibitor_drug(tstep,dose_ICI);
+                immune_checkpoint_inhibitor(tstep);
+                ici_count_num_dose++;
+            } else {
+                    immune_checkpoint_inhibitor_drug(tstep,0);
+                    immune_checkpoint_inhibitor(tstep);
+            }
+        }
 
         mutateCells();
 
@@ -244,8 +244,7 @@ void Environment::simulate(double tstep, int tx, int met,int numDoses) {
 
         recordPopulation(steps); // saves the count of each cell to a file.
 
-        if (fmod(steps * tstep, 1) == 0) { // change the y value depending on how frequently you want the stuff to be saved.
-            // save every simulation day
+        if (fmod(steps * tstep, 12) == 0) { // change the y value depending on how frequently you want the stuff to be saved.
             save(tstep, steps*tstep);
         }
 
