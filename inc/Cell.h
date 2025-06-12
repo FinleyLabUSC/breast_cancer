@@ -79,6 +79,8 @@ public:
     // CD8 specific
     void cd8_setKillProb(size_t step_count);
     void cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& local_gen);
+    double cd8_setProliferationScale();
+
 
     // cancer specific
     void cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& localgen);

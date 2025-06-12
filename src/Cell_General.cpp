@@ -433,11 +433,8 @@ void Cell::proliferationState() {
         // CTLs -> presence of Th and NK promotes their proliferation, M2 and Treg decrease it
         // assume CTLs need IL-2 from Th to proliferate
         canProlif = !(state == 7 || compressed);
-        double posInfluence = 1 - (1 - influences[4])*(1 - influences[8]);
-        double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
 
-        double scale = posInfluence - negInfluence;
-        divProb = scale*divProb_base;
+        divProb = cd8_setProliferationScale()*divProb_base;
     } else if (type == 8) {
         canProlif = !compressed; // TODO update depending on whether any other cells affect nk cell proliferation
     }else {

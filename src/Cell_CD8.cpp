@@ -44,6 +44,7 @@ void Cell::cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, 
     }
 }
 
+
 void Cell::cd8_setKillProb(size_t step_count){
     // set kill prob based on influence
     // essentially effects of cytokines
@@ -100,4 +101,12 @@ void Cell::cd8_setKillProb(size_t step_count){
         }
     }
     killProb = killProb*pow(infScale, scale); //realize the impact of pos and negative influence in coordination with T cell boolean network 
+}
+
+double Cell::cd8_setProliferationScale() {
+    double posInfluence = 1 - (1 - influences[4])*(1 - influences[8]);
+    double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
+
+    double scale = posInfluence - negInfluence;
+    return scale;
 }
