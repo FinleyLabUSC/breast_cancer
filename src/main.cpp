@@ -65,13 +65,15 @@ int main(int argc, char **argv) {
     std::string kp_fac = argv[5];
     int tx = std::stoi(argv[6]);
     int met = std::stoi(argv[7]);
-    int number_of_chemo_doses = std::stoi(argv[8]);
+    int number_of_pdl1_doses = std::stoi(argv[8]);
+    int number_of_ctla4_doses = std::stoi(argv[9]);
+    double binding_rate_pd1_drug = std::stod(argv[10]);
     int repNum = std::stoi(argv[2]);
 
-    std::vector<std::string> txLabels = {"control","chemo","combo"};
+    std::vector<std::string> txLabels = {"control","chemo","pdl1","ctla4","ici_combo"};
     std::vector<std::string> metLabels = {"met1","met2"};
     // TODO you probably need to change this for the cluster
-    std::string saveFolder = "../../" + folder + "/" + metLabels[met-1] + "/" + txLabels[tx] + "/dose_" + std::to_string(number_of_chemo_doses);
+    std::string saveFolder = "../../" + folder + "/" + metLabels[met-1] + "/" + txLabels[tx] + "/dose_" + std::to_string(number_of_pdl1_doses) + "_" + std::to_string(number_of_ctla4_doses);
 
     //std::string str = "rm -r ./"+folder+"/set_" + set;
     //const char *command = str.c_str();
@@ -84,10 +86,9 @@ int main(int argc, char **argv) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    Environment model(saveFolder, set, "../phenotype_out/",repNum); //can replace with a directory representing any other phenotype state
+    Environment model(saveFolder, set,repNum); //can replace with a directory representing any other phenotype state
 
-   // model.generateNums();
-    model.simulate(1,tx,met,number_of_chemo_doses);
+    model.simulate(1,tx,met,number_of_pdl1_doses, number_of_ctla4_doses,binding_rate_pd1_drug);
 
     auto stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = stop - start;

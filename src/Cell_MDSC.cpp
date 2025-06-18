@@ -16,11 +16,28 @@ void Cell::initialize_MDSC_Cell(std::vector<std::vector<double> > &cellParams, s
     migrationSpeed = cellParams[6][5];
     influenceRadius = cellParams[7][5];
     migrationBias = cellParams[8][5];
-    pdl1WhenExpressed = cellParams[9][5];
-    pdl1_increment = cellParams[10][5];
-    pdl1 = pdl1WhenExpressed;
+
+
     rmax = 1.5*radius*2;
 
 }
 
-void Cell::mdsc_gainPDL1(double dt) {}
+void Cell::mdsc_gainPDL1(double dt) {
+    if (type != 5){return;}
+
+    // induced by ifn-g secreting cells
+    // posInfluence is Th + CD8 + NK
+    double posInfluence = 1 - (1-influences[4])*(1 - influences[6])*(1 - influences[8]);
+
+    if (posInfluence >= threshold_for_pdl1_induction) {
+        double pdl1_increase_amount = (posInfluence - threshold_for_pdl1_induction) * pdl1_induction_rate * dt;
+        pdl1_expression_level += pdl1_increase_amount;
+        pdl1_expression_level = (pdl1_expression_level < max_pdl1_level) ? pdl1_expression_level : max_pdl1_level;
+    } else {
+        double pdl1_decrease_amount = pdl1_decay * dt;
+        pdl1_expression_level -= pdl1_decrease_amount;
+        pdl1_expression_level = (pdl1_expression_level > 0) ? pdl1_expression_level : 0;
+    }
+}
+
+

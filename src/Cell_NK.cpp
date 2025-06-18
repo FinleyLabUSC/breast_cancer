@@ -11,35 +11,40 @@ void Cell::initialize_NK_Cell(std::vector<std::vector<double> > &cellParams, siz
     deathProb = cellParams[5][4];
     migrationSpeed = cellParams[6][4];
     baseKillProb = cellParams[7][4];
+    killProb = baseKillProb;
     infScale = cellParams[8][4];
     influenceRadius = cellParams[9][4];
     migrationBias = cellParams[10][4];
     divProb_base = cellParams[11][4];
+    deathScale = cellParams[12][4];
+    migScale = cellParams[13][4];
 
     rmax = 1.5*radius*2;
 
 }
 
 void Cell::nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
-    // inhibition via direct contact
+    // Inhibition via direct contact, modeling binding of pd-1 and pd-l1.
 
     if(state != 8){return;}
 
     double distance = calcDistance(otherX);
     if(distance <= radius+otherRadius){
+        // the line below assumes a one to one binding of pd1 and pdl1. You can only bind the minimum num of molecules of either pd1 or pdl1.
+        double effective_inhibitory_signal = std::min(otherpdl1, pd1_available) / pd1_expression_level; // this turns it into a fraction.
         double rnd = master_rng.uniform(0,1,temporary_rng);
-        if(rnd < otherpdl1){
-            next_state = 9;
-            next_killProb = 0;
-            next_migrationSpeed = 0.0;
+        if(rnd < effective_inhibitory_signal * inhibition_proportion){
+            next_killProb = killProb * effective_inhibitory_signal;
+            next_migrationSpeed = migrationSpeed * effective_inhibitory_signal;
         }
     }
 }
 
-void Cell::nk_setKillProb(size_t step_count){
-    // set kill prob based on influence
-    // essentially effects of cytokines
 
+
+void Cell::nk_update_properties_indirect(size_t step_count){
+    // Indirect interactions, models the secretion of stimulatory or inhibitory soluble factors
+    // Assumes Cancer cells don't secrete the soluble factors, only other imme cells.
     if(state != 8){return;}
 
     // posInfluence is M1 + Th
@@ -48,5 +53,28 @@ void Cell::nk_setKillProb(size_t step_count){
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
     double scale = posInfluence - negInfluence;
 
-    killProb = killProb*pow(infScale, scale); //realize the impact of pos and negative influence in coordination with T cell boolean network
+    next_killProb = next_killProb*pow(infScale, scale);
+    next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
+    next_death_prob = next_death_prob*pow(deathScale,scale);
+
 }
+
+void Cell::nk_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug){
+    if (type == 4) {
+        double temp;
+        // Assumes that the expression of PD1 is induced in a contact independent manner, by M2 macs, cancer, Tregs and MDSCs.
+        double influence = 1 - (1-influences[2]) * (1-influences[3])*(1-influences[5])*(1-influences[10]);
+        if (influence >= threshold_for_pd1_induction ) {
+            temp = pd1_expression_level + dt * (influence - threshold_for_pd1_induction)/threshold_for_pd1_induction;
+            pd1_expression_level = (temp < max_pd1_level) ? temp : max_pd1_level;
+        }
+        else {
+            temp = pd1_expression_level - pd1_decay_rate * dt;
+            pd1_expression_level = (temp > 0) ? temp : 0; // pd1 expression must be non-negative
+        }
+        double fraction_pd1_bound_by_drug = anti_pd1_concentration / (anti_pd1_concentration + binding_rate_pd1_drug);
+        pd1_drug_bound = pd1_expression_level * fraction_pd1_bound_by_drug;
+        pd1_available = pd1_expression_level * (1-fraction_pd1_bound_by_drug);
+    }
+}
+

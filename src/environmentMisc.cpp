@@ -38,13 +38,8 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
             if (cell_state!=-10){
                 numCells[cell_state]++;
 
-                // Create and initialize the new cell
-                if (cell_state==6) {
-                    tempTrajectory = getTcellTrajectory();
-                }
-
                 // TODO sample ages for the cells.
-                Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state],tempTrajectory);
+                Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state]);
                 newCell.state = cell_state;
                 newCell.runtime_index = cell_list.size();
 
@@ -52,7 +47,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
                     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
                     newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
 
-                    newCell.pdl1 = rng.uniform(0,1);
+                    newCell.pdl1_expression_level = rng.uniform(0,1);
                 }
                 // Update the cell list
                 cell_list.push_back(newCell);
@@ -80,14 +75,12 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 }
 
 
-
-
 void Environment::initializeInVitro() {
     int idx = 0;
     for (int i = 0; i < 1000; i++) {
         double x = rng.uniform(-1500,1500);
         double y = rng.uniform(-1500,1500);
-        Cell newCell = Cell({x,y}, cellParams,0,tCellPhenotypeTrajectory_1); // TODO update age sampling
+        Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling
         newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
         newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
 
@@ -100,20 +93,20 @@ void Environment::initializeInVitro() {
 
 
 void Environment::initializeTesting() {
-    Cell newCell = Cell({-100,-100}, cellParams,0,tCellPhenotypeTrajectory_1);
+    Cell newCell = Cell({-100,-100}, cellParams,0);
     newCell.runtime_index = cell_list.size();
     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
     newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
 
     cell_list.push_back(newCell);
 
-    newCell =Cell({-100,0}, cellParams,0,tCellPhenotypeTrajectory_1);
+    newCell =Cell({-100,0}, cellParams,0);
     newCell.runtime_index = cell_list.size();
     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
     newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
     cell_list.push_back(newCell);
 
-    newCell =Cell({-100,100}, cellParams,0,tCellPhenotypeTrajectory_1);
+    newCell =Cell({-100,100}, cellParams,0);
     newCell.runtime_index = cell_list.size();
     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
     newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
@@ -128,7 +121,7 @@ void Environment::initializeCells() {
 
     double radiiCells = envParams[0];
     int q = 1;
-    cell_list.push_back(Cell({0.0,0.0}, cellParams, 0, tCellPhenotypeTrajectory_1));
+    cell_list.push_back(Cell({0.0,0.0}, cellParams, 0));
     cell_list.back().cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
     cell_list.back().cellCyclePos = rng.uniform(0,cell_list.back().cellCycleLength);
     cell_list.back().runtime_index = q;
@@ -139,7 +132,7 @@ void Environment::initializeCells() {
         for(int j=0; j<nCells; ++j){
             double x = i * cellParams[4][0] * cos(2 * 3.1415 * j / nCells);
             double y = i * cellParams[4][0] * sin(2 * 3.1415 * j / nCells);
-            Cell newCell = Cell({x, y},  cellParams, 0, tCellPhenotypeTrajectory_1);
+            Cell newCell = Cell({x, y},  cellParams, 0);
             newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
             newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
             newCell.runtime_index = cell_list.size();
@@ -150,17 +143,6 @@ void Environment::initializeCells() {
     }
 }
 
-
-std::vector<std::string> Environment::getTcellTrajectory() {
-    if(tCellPhenotypeTrajectory.empty() || tCellPhenotypeTrajectory.size()==0 ) {
-        populateTrajectories(tCellTrajectoryPathway);
-    }
-
-    // TODO this is to circumvent changing Model Util in such a way that it gets access to the RNG. This is being removed anyway.
-    //size_t phenotypeIdx = getRandomNumber(tCellPhenotypeTrajectory.size());
-    size_t phenotypeIdx = 0;
-    return get2dvecrow(tCellPhenotypeTrajectory, phenotypeIdx);
-}
 
 
 void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
@@ -178,18 +160,11 @@ void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
         while(immuneCells2rec[i] >= 1){
             std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
 
-            //i==0 represents the idx in immuneCellRecRates vector that is associated with initializing a cd8 t cell
-            if(i == 0){ //
-                std::vector<std::string> trajec_phenotype = getTcellTrajectory();
-
-                cell_list.push_back(Cell(recLoc, cellParams, immuneCellRecTypes[i],trajec_phenotype,step_count));
-                cell_list.back().runtime_index = cell_list.size()-1;
-            }
-            else{ // Recruit macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
-                cell_list.push_back(Cell(recLoc,cellParams,immuneCellRecTypes[i], tCellPhenotypeTrajectory_1));
+             // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+                cell_list.push_back(Cell(recLoc,cellParams,immuneCellRecTypes[i]));
                 cell_list.back().runtime_index = cell_list.size()-1;
                 // This tCellPhenotypeTrajectory_1 is not used for adding CD4 or macrophage
-            }
+
             
             immuneCells2rec[i] -= 1;
         }
@@ -230,7 +205,6 @@ void Environment::tumorSize(){
             tumorRadius = std::max(tumorRadius, c.calcDistance(tumorCenter));
         }
     }
-
 }
 
 void Environment::necrosis(double tstep) {
@@ -258,4 +232,11 @@ double Environment::calculateDiffusibles(std::array<double, 2> x) {
     }
 
     return d;
+}
+
+/**
+ * Shuffles the cells in the cell_list so that there are no spatial artifacts.
+ */
+void Environment::shuffleCells() {
+    std::shuffle(cell_list.begin(), cell_list.end(), rng.getGenerator());
 }

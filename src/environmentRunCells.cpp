@@ -26,6 +26,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         cell_list[i].next_state = cell_list[i].state;
         cell_list[i].next_killProb = cell_list[i].killProb;
         cell_list[i].next_migrationSpeed = cell_list[i].migrationSpeed;
+        cell_list[i].next_death_prob = cell_list[i].deathProb;
 
         // reset neighborhood and influence
         cell_list[i].neighbors.clear();
@@ -41,7 +42,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
 
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
-        cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1);
+        cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
     }
 
 #pragma omp parallel for schedule(dynamic)
@@ -77,6 +78,9 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         }
         if (cell_list[i].migrationSpeed != cell_list[i].next_migrationSpeed) {
             cell_list[i].migrationSpeed = cell_list[i].next_migrationSpeed;
+        }
+        if (cell_list[i].deathProb != cell_list[i].next_death_prob) {
+            cell_list[i].deathProb = cell_list[i].next_death_prob;
         }
     }
 }
@@ -143,41 +147,37 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
 
     int numCells = cell_list.size();
 
+    int count_num_cd8_proliferation = 0;
     for(int i=0; i<numCells; ++i){
         if (cell_list[i].state != -1) {
             cell_list[i].set_cellAge(step_count); // this function figures out the age of the cell.
             cell_list[i].age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
-            cell_list[i].proliferationState();
+            cell_list[i].proliferationState(anti_ctla4_TS.back());
             std::array<double, 3> newLoc = cell_list[i].proliferate(tstep, rng);
 
             if(newLoc[2] == 1){
-                if(cell_list[i].type == 3){ // CD8 T cells
-                    int phenotypeIdx = 0;  // TODO going to change once the trajectory stuff is removed.
-                    std::vector<std::string> trajec_phenotype = get2dvecrow(tCellPhenotypeTrajectory, phenotypeIdx);
-                    if(trajec_phenotype.empty() || trajec_phenotype.size() == 0){
-                        std::cerr << "WARNING INTERNAL CELL FUNCTIONS: t_cell_phenotype_Trajectory is empty!" << std::endl;
-                    }
-                    cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type, trajec_phenotype));
-                    cell_list.back().runtime_index = cell_list.size()-1;
-                }
-                else{ // any other proliferating cell
-                    if(cell_list[i].type == 0) {
-                        // if cancer cell has divided, reset the mother cell's cellCyclePos
-                        cell_list[i].prevDivTime = cell_list[i].currDivTime;
-                        cell_list[i].currDivTime = step_count;
-                        cell_list[i].cellCyclePos =0;
-                        cell_list[i].canProlif = false;
-                    }
-                    // Note: NK cells don't currently have cell specific type proliferation behaviour.
 
-                    cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type, tCellPhenotypeTrajectory_1));
-                    cell_list.back().birthTime = model_time;
-                    cell_list.back().runtime_index = cell_list.size()-1;
+                if(cell_list[i].type == 0) {
+                    // if cancer cell has divided, reset the mother cell's cellCyclePos
+                    cell_list[i].prevDivTime = cell_list[i].currDivTime;
+                    cell_list[i].currDivTime = step_count;
+                    cell_list[i].cellCyclePos =0;
+                    cell_list[i].canProlif = false;
                 }
+
+                if (cell_list[i].type ==3) {
+                    count_num_cd8_proliferation++;
+                }
+
+                cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type));
+                cell_list.back().birthTime = model_time;
+                cell_list.back().runtime_index = cell_list.size()-1;
+
                 cell_list[cell_list.size() - 1].inherit(cell_list[i].inheritanceProperties());
             }
         }
     }
+    record_proliferation(step_count,count_num_cd8_proliferation);
 }
 
 void Environment::runCells(double tstep, size_t step_count) {
@@ -186,75 +186,37 @@ void Environment::runCells(double tstep, size_t step_count) {
     internalCellFunctions(tstep, step_count);
 }
 
-void Environment::chemotherapy_drug(double tstep, double new_dose) {
-    double calc = std::exp(-1*tstep * chemotherapy_decay_rate);
-    double currentChemoValue = chemoTS.back() * calc + new_dose;
-    double temp = (currentChemoValue > 0) ? currentChemoValue : 0;
-  //  std::cout<<"chemoTS "<<chemoTS.back()<< " decay " << chemotherapy_decay_rate << " calc " << calc << " new dose "<< new_dose<< std::endl;
-    chemoTS.push_back(temp);
+
+
+void Environment::anti_pd1_drug(double tstep, double new_dose) {
+    double current_Value = anti_pd1_TS.back() * std::exp(-1*tstep * anti_pd1_decay_rate) + new_dose;
+    double temp = (current_Value>0) ? current_Value : 0;
+    anti_pd1_TS.push_back(temp);
 }
 
-void Environment::chemotherapy(double tstep) {
-    int count_dead = 0;
-    for (auto & cell :cell_list) {
-        // if the cell is already dead, return
-        if (cell.state==-1) {
-            continue;
-        } else {
-            double dt = 1; // this needs to be adjust based on how small a time step we want to do "diffusion"
-            double steps = 1;//60*60*tstep/dt;
-            for(int i=0; i<steps; ++i) {
-
-                double drugUptake = cell.chemoUptake * chemoTS.back(); // drug uptake
-                cell.chemoDamage += dt * (drugUptake - cell.chemoRepair * cell.chemoDamage);
-
-                // Assume only cancer cells acquire tolerance to drug.
-                if (cell.type == 3 && cell.state == 0) {
-                    cell.chemoAccumulated += dt * drugUptake; // accumulated chemo, used to model tolerance
-                    // modeling accumulation of damage, for the induction of tolerance
-                    if (cell.chemoAccumulated > cell.chemo_Accumulated_Threshold) {
-                        cell.chemoTime+=dt;
-                    }
-                    // Checking whether tolerance has been induced
-                    if (cell.chemoTime > cell.chemoTimeThresh) {
-                        cell.chemoTolerance += dt * cell.chemoTolRate;
-                    }
-                }
-            }
-            // kill the cell.
-            if (cell.chemoDamage > cell.chemoTolerance) {
-                cell.state = -1;
-                count_dead++;
-            }
-        }
-    }
+void Environment::anti_ctla4_drug(double tstep, double new_dose) {
+    double current_drug_Value = anti_ctla4_TS.back() * std::exp(-1*tstep * anti_ctla4_decay_rate) + new_dose;
+    double temp = (current_drug_Value>0) ? current_drug_Value : 0;
+    anti_ctla4_TS.push_back(temp);
 }
 
-void Environment::immune_checkpoint_inhibitor(double tstep) {
-    int count_cells_inhibited = 0;
-    for (auto & cell : cell_list) {
-        if (cell.state == 2 || cell.state == 3 || cell.state == 5 || cell.state == 10) { // M2, living Cancer, Treg, MDSC all express PDL1
+void Environment::anti_pd1(double tstep) {
+    int count_cells_inhibited=0;
+    for (auto& cell : cell_list) {
+        if (cell.type == 3 || cell.type == 4) { // CD8 cells and NK cells
             double dt = 1; // this can be used to fine grain the pdl1 calculations
             double steps = 1; // tstep / dt; // Use a multiplier to convert from hours (current) to whatever units needed.
             for (int i = 0; i < steps; ++i) {
-                double bound_PDL1 = cell.antiPDL1_bindingRate * ICI_TS.back();
-                cell.pdl1 = (cell.pdl1 - bound_PDL1 > 0) ? cell.pdl1 - bound_PDL1 : 0;
+                cell.pd1_drug_bound = anti_pd1_TS.back()/(anti_pd1_TS.back() + binding_rate_pd1_drug);
+                cell.pd1_available = 1- cell.pd1_drug_bound;
                 count_cells_inhibited++;
             }
         }
     }
 }
 
-void Environment::immune_checkpoint_inhibitor_drug(double tstep, double new_dose) {
-    double current_ICI_Value = ICI_TS.back() * std::exp(-1*tstep * ICI_decay_rate) + new_dose;
-    double temp = (current_ICI_Value>0) ? current_ICI_Value : 0;
-    ICI_TS.push_back(temp);
-}
 
-void  Environment::treatment() {
-    // check the time step against the schedules for the drugs.
-        // apply the appropriate drug
-}
+void  Environment::treatment(int tx_flag) {}
 
 
 void Environment::mutateCells() {

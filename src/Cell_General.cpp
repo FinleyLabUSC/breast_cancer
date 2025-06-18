@@ -25,7 +25,7 @@
 long unsigned Cell::cell_counter = 0;  // Define the static variable here
 
 // INITIALIZE CELL TYPE
-Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, std::vector<std::string> tCellPhenotypeTrajectory, size_t init_tstamp): unique_cell_ID(cell_counter++) {
+Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp): unique_cell_ID(cell_counter++) {
     /*
      * initialize all parameters to 0
      * set parameters based on cellType
@@ -50,11 +50,9 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     currentForces = {0,0};
     migrationSpeed = 0;
     migrationBias = 0;
-    pdl1Shift = 0;
+
     influenceRadius = 0;
-    pdl1 = 0;
-    pdl1WhenExpressed = 0;
-    pdl1_increment = 0;
+
     for(int i=0; i<influences.size(); ++i){
         influences[i] = 0;
     }
@@ -72,36 +70,33 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     // for influence distance, assume a soft-cutoff where p(distance) = probTh
     probTh = 0.01;
 
-    // BASELINE CHEMOTHERAPY SENSITIVITY
-    chemoDamage = 0; // for all cells
-    chemoRepair = 0.0002; // for all cells
-    chemoAccumulated = 0; // for all cells
-    chemoUptake = 0.085;//for all cells
+    pd1_drug_bound = 0;
+    pd1_available = 0;
+    pd1_expression_level = 0;
+    pdl1_expression_level = 0;
 
-    // Values for immune cells, cancer cells can acquire tolerance to chemo so they have different values.
-    chemoTimeThresh = 0;
+    max_pd1_level = 5; // arbitrary
+    threshold_for_pd1_induction = 0.5; // arbitrary
+    pd1_decay_rate = 0.025; // arbitrary
 
-  //  std::normal_distribution<double> toleranceDistribution{40,5};
-    //chemoTolerance = toleranceDistribution(mt); // this needs to be changed to the correct rng.
-    chemo_Accumulated_Threshold = 0;
-    chemoTolRate = 0;
+    threshold_for_pdl1_induction = 0.5;
+    pdl1_induction_rate = 0.05;
+    pdl1_decay = 0.025; // arbitrary
+    max_pdl1_level = 5; // arbitrary
 
-    antiPDL1_bindingRate = 1;
+    inhibition_proportion = 0.01; // arbitrary
 
     if(cellType == 0){
         initialize_Cancer_Cell(cellParams,0);
-        mutationProbability_chemo = 0.0001;
-        mutationProbability_inherent = 0;
-        chemoTimeThresh = 0;
-        chemo_Accumulated_Threshold = 0.0000001; // threshold of "low" dose
-        chemoTolRate=0.00; // rate at which cancer cells develop tolerance
+        mutationProbability_inherent = 0.2;
+        mutation_prob_PDL1 = 0.1;
 
     } else if(cellType == 1){
         initialize_Macrophage_Cell(cellParams);
     } else if(cellType == 2){
         initialize_CD4_Cell(cellParams);
     } else if(cellType == 3){
-        initialize_CD8_Cell(cellParams, tCellPhenotypeTrajectory, init_tstamp);
+        initialize_CD8_Cell(cellParams, init_tstamp);
     } else if (cellType ==4 ) {
         initialize_NK_Cell(cellParams);
     } else if (cellType == 5 ) {
@@ -241,7 +236,7 @@ void Cell::isCompressed() { // :
 std::array<double, 3> Cell::proliferate(double dt, RNG& master_rng) {
     // positions 0 and 1 are cell location
     // position 2 is boolean didProliferate?
-    if(!canProlif){return {0,0,0};}
+    if(!canProlif || state==-1){return {0,0,0};}
 
     if (type == 0) { // CANCER CELL PROLIFERATION
         // place daughter cell a random angle away from the mother cell at a distance
@@ -277,68 +272,6 @@ void Cell::age(double dt, size_t step_count,  RNG& master_rng) {
      * cells die based on a probability equal to 1/lifespan
      */
     double rand = master_rng.uniform(0,1);
-
-    //CD8 cells only 
-    if(type == 3){
-        size_t step_alive = step_count -  init_time; 
-                    
-        if(step_alive < 0){
-            std::cout << "ERROR in OPENMP REGION: NEGATIVE LIFESPAN" << std::endl; 
-        }
-
-        //either it is in one of 7 end states or still progressing through state of gene evolution 
-        if((step_alive*pTypeStateTransition-1) < t_cell_phenotype_Trajectory.size()){
-
-            std::string phenotype = t_cell_phenotype_Trajectory[step_alive*pTypeStateTransition - 1];
-            char phenotype_char = phenotype[0]; 
-            
-            switch(phenotype_char){
-            case 'N': 
-                if(rand < deathProb){
-                    state = -1;
-                }
-                break; 
-            case 'M': 
-                if(rand < (deathProb/2)){
-                    state = -1;
-                }
-                break; 
-            default: //case 'E' these are cells that are exhausted but haven't been supressed research showing exhausted t cells kill at lower rate     
-                if(rand < deathProb){
-                    state = -1;
-                }
-            }
-        }
-        else {
-
-            char phenotype_char; 
-            if (t_cell_phenotype_Trajectory.empty() || (t_cell_phenotype_Trajectory.size() == 0)){
-                std::cerr << "WARNING age: t_cell_phenotype_Trajectory is empty!" << std::endl;
-                // suppress bad access with Exhausted phenotype
-                phenotype_char = 'E'; 
-            }
-            else{
-                phenotype_char = t_cell_phenotype_Trajectory.back()[0];         
-            }
-            //char phenotype_char = 'E'; //assume all cells out of their timecourse are exhausted 
-            switch(phenotype_char){
-            case 'N': 
-                if(rand < deathProb){
-                    state = -1;
-                }
-                break; 
-            case 'M': 
-                if(rand < deathProb/2){
-                    state = -1;
-                }
-                break; 
-            default: //case 'E' these are cells that are exhausted but haven't been supressed research showing exhausted t cells kill at lower rate
-                if(rand < deathProb){
-                    state = -1;
-                }
-            }
-        }
-    }
     if(rand < deathProb){
         state = -1;
     }
@@ -417,10 +350,12 @@ void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     }
 }
 
-void Cell::proliferationState() {
+void Cell::proliferationState(double anti_ctla4_concentration) {
     /*
      * cancer cells and CD8 can proliferate
      */
+    if (state==-1) {return;} // dead cells can't proliferate
+
     if(type == 0){ // Cancer cells
         if (!(state == -1 || compressed)) {
             cellCyclePos++;
@@ -434,12 +369,13 @@ void Cell::proliferationState() {
         // assume CTLs need IL-2 from Th to proliferate
         canProlif = !(state == 7 || compressed);
 
-        divProb = cd8_setProliferationScale()*divProb_base;
+        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb_base;
     } else if (type == 8) {
         canProlif = !compressed; // TODO update depending on whether any other cells affect nk cell proliferation
     }else {
         canProlif = false;
     }
+
 }
 
 
@@ -459,7 +395,7 @@ void Cell::inherit(std::vector<double> properties) { // QUESTION: cancer cells i
         return;
     } else if (state == 3){
         // cancer
-        pdl1 = properties[0];
+        pdl1_expression_level = properties[0];
         cellCycleLength = properties[1];
         return;
     } else if (state == 4){
@@ -503,7 +439,7 @@ std::vector<double> Cell::inheritanceProperties() {
         return {};
     } else if (state == 3){
         // cancer
-        return {pdl1, cellCycleLength};
+        return {pdl1_expression_level, cellCycleLength};
 
     } else if (state == 4){
         // CD4 helper
@@ -533,24 +469,38 @@ std::vector<double> Cell::inheritanceProperties() {
     return {};
 }
 
-void Cell::indirectInteractions(double tstep, size_t step_count,RNG& master_rng, std::mt19937& temporary_rng) {
+void Cell::indirectInteractions(double tstep, size_t step_count,RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) {
 
     /*
      * after determining total influences on the cell, run the indirect interaction functions
      */
     if (state == 3){
         // cancer
-        cancer_gainPDL1(tstep,master_rng, temporary_rng);
+        cancer_gainPDL1(tstep);
+        return;
+    }
+    if (state == 2) {
+        macrophage_pdl1_expression_level(tstep);
+    }
+    if (state == 5) {
+        cd4_pdl1_expression_level(tstep);
         return;
     }
     if (state == 6){
         // CD8 active
-        cd8_setKillProb(step_count);
+        cd8_pd1_expression_level(tstep,anti_pd1_concentration, binding_rate_pd1_drug);
+        cd8_update_properties_indirect();
         return;
     }
     if (state == 8) {
         // NK active
-        nk_setKillProb(step_count);
+        nk_pd1_expression_level(tstep,anti_pd1_concentration, binding_rate_pd1_drug);
+        nk_update_properties_indirect(step_count);
+        return;
+    }
+    if (state == 10) {
+        // MDSC cells
+        mdsc_gainPDL1(tstep);
         return;
     }
 }
@@ -561,16 +511,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
      * when the cell touches another cell, run direct interactions
      */
 
-    if(state == 0){
-        // M0 macrophages
-        return;
-    } else if (state == 1){
-        // M1 macrophages
-        return;
-    } else if (state == 2){
-        // M2 macrophages
-        return;
-    } else if (state == 3){
+    if (state == 3){
         // cancer
         if(interactingState == 6){
             // interactionProperties = {radius, killProb}
@@ -580,34 +521,21 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
             cancer_dieFromNK(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
-    } else if (state == 4){
-        // CD4 helper
-        return;
-    } else if (state == 5){
-        // CD4 regulatory
-        return;
-    } else if (state == 6){
+    }
+    if (state == 6){
         // CD8 active
         if(interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10){
             // interactionProperties = {radius, pdl1}
             cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
-    } else if (state == 7){
-        // CD8 suppressed
-        return;
-    } else if (state == 8) {
+    }
+    if (state == 8) {
         // NK active
         // M2 cells, Cancer cells, Tregs and MDSCs can induce PDL1 expression on NK cells.
         if (interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10) {
             nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
-        return;
-    } else if (state == 9) {
-        // NK suppressed
-        return;
-    } else if (state == 10) {
-        // MDSC
         return;
     }
 }
@@ -627,13 +555,13 @@ std::vector<double> Cell::directInteractionProperties(int interactingState, size
     } else if (state == 2){
         // M2 macrophages
         if(interactingState == 6 || interactingState ==8){
-            return {radius, pdl1};
+            return {radius, pdl1_expression_level};
         }
         return {};
     } else if (state == 3){
         // cancer
         if(interactingState == 6 || interactingState ==8){
-            return {radius, pdl1};
+            return {radius, pdl1_expression_level};
         }
         return {};
     } else if (state == 4){
@@ -642,7 +570,7 @@ std::vector<double> Cell::directInteractionProperties(int interactingState, size
     } else if (state == 5){
         // CD4 regulatory
         if(interactingState == 6 || interactingState ==8){
-            return {radius, pdl1};
+            return {radius, pdl1_expression_level};
         }
         return {};
     } else if (state == 6){
@@ -666,7 +594,7 @@ std::vector<double> Cell::directInteractionProperties(int interactingState, size
     } else if (state == 10) {
         // MDSC
         if(interactingState == 6 || interactingState ==8){
-            return {radius, pdl1};
+            return {radius, pdl1_expression_level};
         }
         return {};
     }
@@ -724,7 +652,7 @@ void Cell::mutate(RNG& master_rng) {
     if(type == 0 && state == 3 && sampleMutation < mutationProbability_inherent) {
 
         // Select what to mutate
-        int selectPropertyToMutate = master_rng.uniform_int(1,1);
+        int selectPropertyToMutate = master_rng.uniform_int(0,2);
         switch(selectPropertyToMutate) {
             case 0: {
                 // proliferation
@@ -739,19 +667,12 @@ void Cell::mutate(RNG& master_rng) {
                 // migration rate, incremented or decremented by a percentage (-100%, 100%). If migChange < 1 then decrease speed, if migChange > 1 increase speed
                 double migrationDelta = master_rng.uniform(0,2);
                 migrationSpeed *= migrationDelta;
-
                 break;
             }
             case 2: {
                 // PDL1 expression
-                // TODO update this to be more granular / fine grained.
-                if (master_rng.uniform_int(0,1) == 1) { // PDL1 expression changes
-                    if (pdl1 == pdl1WhenExpressed) { // if PDL1 is expressed, down regulate
-                        pdl1 = 0;
-                    } else { // if PDL1 is not expressed, induce expression.
-                        pdl1 = pdl1WhenExpressed;
-                    }
-                }
+                double scale = master_rng.uniform(0,2);
+                pdl1_expression_level *= scale;
                 break;
             }
 
@@ -790,14 +711,4 @@ std::array<double, 2> Cell::unitVector(std::array<double, 2> v) {
 
 void Cell::updateRunTimeIndex(int index) {
     runtime_index = index;
-}
-
-void Cell::printLocations(int cellNum) {
-    std::ofstream outFile;
-    outFile.open("/Users/rebeccabekker/Documents/Finley_Lab/Project1/Code/Mutation/inSilico/migrationMutation/control/migrationInfo_" + std::to_string(cellNum) + ".csv", std::ios::out);
-
-    for (int i = 0; i < location_history.size();i++) {
-        outFile<<location_history[i][0]<<","<<location_history[i][1]<<std::endl;
-    }
-    outFile.close();
 }

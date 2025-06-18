@@ -54,39 +54,19 @@ void Environment::save(double tstep, double tstamp) {
     myfile.open(day_dir+"/cells.csv");
     for(auto &cell : cell_list){
         //logging cell location, type and state 
-        if(cell.type == 3){ //cd8 t cell
-            size_t idx = (tstamp - cell.init_time)*cell.pTypeStateTransition; 
-            if(idx > cell.t_cell_phenotype_Trajectory.size() - 1){
-                //we are outside of the array and want to get the last 
-                std::string phenotype_char; 
-                if (cell.t_cell_phenotype_Trajectory.empty() || (cell.t_cell_phenotype_Trajectory.size() == 0)){
-                    std::cerr << "WARNING LOGGING: t_cell_phenotype_Trajectory is empty!" << std::endl;
-                    phenotype_char = 'E'; 
-                }
-                else{
-                    phenotype_char = cell.t_cell_phenotype_Trajectory.back();         
-                }
-
-                myfile << cell.unique_cell_ID << ","
-                    << cell.type << ","
-                    << cell.x[0] << ","
-                    << cell.x[1] << ","
-                    << cell.radius << ","
-                    << phenotype_char << ","
-                    << cell.pdl1 << std::endl;
-            }
-            else{
-                //we are in the array and can index
-                std::string pType = cell.t_cell_phenotype_Trajectory[idx]; 
-                myfile << cell.unique_cell_ID << ","
-                    << cell.type << ","
-                    << cell.x[0] << ","
-                    << cell.x[1] << ","
-                    << cell.radius << ","
-                    << pType << ","
-                    << cell.pdl1 << std::endl;
-            }
-
+        if(cell.type == 3 || cell.type == 4){ //cd8 t cell
+            myfile << cell.unique_cell_ID << ","
+           << cell.type << ","
+           << cell.x[0] << ","
+           << cell.x[1] << ","
+           << cell.radius << ","
+            << cell.state << ","
+            << cell.pd1_expression_level<< ","
+            << cell.pd1_available<< ","
+           << cell.migrationSpeed/cell.migration_speed_base << ","
+            << cell.killProb/cell.kill_prob_base << ","
+            << cell.deathProb/cell.death_prob_base << ","
+            << cell.divProb/cell.divProb_base << std::endl;
         }
         else{
             myfile << cell.unique_cell_ID << ","
@@ -95,7 +75,7 @@ void Environment::save(double tstep, double tstamp) {
                 << cell.x[1] << ","
                 << cell.radius << ","
                 << cell.state << ","
-                << cell.pdl1 <<  ","
+                << cell.pdl1_expression_level <<  ","
             <<cell.cellCycleLength<< std::endl;
         }
     }
@@ -125,3 +105,55 @@ void Environment::recordPopulation(double timestamp) {
 
     myfile.close();
 }
+
+void Environment::record_drug(double tstep, int tx_type) {
+    if (tx_type == 2 || tx_type == 4) {
+        bool file_exists = std::filesystem::exists(saveDir + "/anti_pd1.csv");
+        std::ofstream myfile;
+        if (!file_exists) {
+            std::string str = "mkdir -p " + saveDir;
+            const char *command = str.c_str();
+            std::system(command);
+            myfile.open(saveDir + "/anti_pd1.csv", std::ios_base::app);
+            myfile << "Hr" << "," << "anti_pd1"<< std::endl;
+            myfile << tstep << "," << anti_pd1_TS.back() << std::endl;
+        } else {
+            myfile.open(saveDir + "/anti_pd1.csv", std::ios_base::app);
+            myfile << tstep << "," << anti_pd1_TS.back() << std::endl;
+        }
+
+    }
+    if (tx_type == 3 || tx_type == 4) {
+        // check if file exists, if not, create it.
+        bool file_exists = std::filesystem::exists(saveDir + "/anti_ctla4.csv");
+        std::ofstream myfile;
+        if (!file_exists) {
+            std::string str = "mkdir -p " + saveDir;
+            const char *command = str.c_str();
+            std::system(command);
+            myfile.open(saveDir + "/anti_ctla4.csv", std::ios_base::app);
+            myfile << "Hr" << "," << "anti_ctla4"<< std::endl;
+            myfile << tstep << "," << anti_ctla4_TS.back() << std::endl;
+        } else {
+            myfile.open(saveDir + "/anti_ctla4.csv", std::ios_base::app);
+            myfile << tstep << "," << anti_ctla4_TS.back() << std::endl;
+        }
+    }
+}
+
+void Environment::record_proliferation(double tstep, int prolifCount) {
+    std::ofstream myfile;
+    if (tstep==0) {
+        std::string str = "mkdir -p " + saveDir;
+        const char *command = str.c_str();
+        std::system(command);
+        myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);
+        myfile << "Hr" << "prolif_count"<< std::endl;
+    }
+
+    myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);
+    myfile << tstep << "," << prolifCount << std::endl;
+
+    myfile.close();
+}
+

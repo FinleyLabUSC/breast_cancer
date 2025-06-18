@@ -25,10 +25,9 @@ public:
      */
 
     // initialization
-    Cell(std::array<double, 2> loc, std::vector<std::vector<double> > &cellParams, int cellType,
-    std::vector<std::string> tCellPhenotypeTrajectory, size_t init_tstamp=0);
+    Cell(std::array<double, 2> loc, std::vector<std::vector<double> > &cellParams, int cellType, size_t init_tstamp=0);
     void initialize_Cancer_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);
-    void initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, std::vector<std::string> phenotypeTrajectory, size_t init_tstamp);
+    void initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp);
     void initialize_CD4_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);
     void initialize_Macrophage_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);
     void initialize_NK_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);
@@ -50,7 +49,7 @@ public:
 
     // cell behavior functions
     std::array<double, 3> proliferate(double dt, RNG& master_rng);
-    void proliferationState(); // this version is used for the updated Cancer cells that have their own cell cycle clocks
+    void proliferationState(double anti_ctla4_concentration); // this version is used for the updated Cancer cells that have their own cell cycle clocks
     void inherit(std::vector<double> properties);
     std::vector<double> inheritanceProperties();
     void age(double dt, size_t step_count, RNG& master_rng);
@@ -58,7 +57,7 @@ public:
     void migrate(double dt, std::array<double, 2> tumorCenter);
     void migrate_NN(double dt,RNG& master_rng, std::mt19937& temporary_rng);
 
-    void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng);
+    void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug);
     void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng);
     std::vector<double> directInteractionProperties(int interactingState, size_t step_count);
 
@@ -72,25 +71,29 @@ public:
 
     // macrophage
     void macrophage_differentiation(double dt, RNG& master_rng, std::mt19937& temporary_rng);
+    void macrophage_pdl1_expression_level(double dt);
 
     // CD4 specific
     void cd4_differentiation(double dt, RNG& master_rng, std::mt19937& localgen);
+    void cd4_pdl1_expression_level(double dt);
 
     // CD8 specific
     void cd8_setKillProb(size_t step_count);
     void cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& local_gen);
-    double cd8_setProliferationScale();
-
+    double cd8_setProliferationScale(double anti_ctla4_concentration);
+    void cd8_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug);
+    void cd8_update_properties_indirect();
 
     // cancer specific
     void cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& localgen);
-    void cancer_gainPDL1(double dt, RNG& master_rng, std::mt19937& local_gen);
+    void cancer_gainPDL1(double dt);
     void cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& local_gen);
-    void mutate(RNG& master_rng); // cause = 1 (chemo)    cause = 0 ("natural" mutations)
+    void mutate(RNG& master_rng); // cause = 0 ("natural" mutations)
 
     // NK specific
     void nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt,RNG& master_rng, std::mt19937& local_gen);
-    void nk_setKillProb(size_t step_count);
+    void nk_update_properties_indirect(size_t step_count);
+    void nk_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug);
 
     // MDSC specific
     void mdsc_gainPDL1(double dt);
@@ -101,9 +104,10 @@ public:
     static double calcNorm(std::array<double, 2> dx);
     static std::array<double, 2> unitVector(std::array<double, 2> v);
     void updateID(int idx);
+    double Hill_function(double concentration, double EC50, double n);
 
     void set_cell_cycle_length(double cell_cycle_length);
-    int cellAge;
+
     void set_cellAge(size_t step_count);
 
     void updateRunTimeIndex(int index);
@@ -121,13 +125,20 @@ public:
     double currentOverlap;
     std::vector<int> neighbors;
     std::vector<std::array<double, 2> > cancer_neighbors;
+    int cellAge;
 
     // age, division, and lifespan
     double divProb;
     double divProb_base;
+
     double deathProb;
+    double death_prob_base;
+
+
+    double kill_prob_base;
+
     bool canProlif;
-    int pTypeStateTransition; // for CD8+ T cells only
+
     double cellCycleLength;
 
     double prevDivTime;
@@ -144,15 +155,26 @@ public:
     // migration
     double migrationSpeed;
     double migrationBias;
-
-    // cancer properties
-    double pdl1Shift;
+    double migration_speed_base;
 
     // interactions with other cells
     double influenceRadius;
-    double pdl1;
-    double pdl1WhenExpressed;
-    double pdl1_increment;
+
+    // cancer properties
+    double pdl1_expression_level;
+    double threshold_for_pdl1_induction;
+    double pdl1_induction_rate;
+    double pdl1_decay;
+    double max_pdl1_level;
+
+    double pd1_drug_bound;
+    double pd1_available;
+    double pd1_expression_level;
+    double threshold_for_pd1_induction;
+    double pd1_decay_rate;
+    double max_pd1_level;
+
+    double inhibition_proportion;// This specifies the level of reduction in kill prob and migration prob from PD1 - PDL1 binding.
     std::array<double, 11> influences;
     std::array<double, 8> chemotaxVals;
     double probTh;
@@ -167,35 +189,28 @@ public:
     double killProb;
     double baseKillProb;
     double infScale;
+    double migScale;
+    double deathScale;
 
     // Used to ensure that no data races occur during the parallel regions in runCells
     double next_killProb;
     int next_state;
     double next_migrationSpeed;
+    double next_death_prob;
 
-    std::vector<std::string> t_cell_phenotype_Trajectory;
+    // anti CTTLA-4 parameters
+    double anti_CTLA4_IC50 = 5; // 5 nM ref: https://bpsbioscience.com/ctla4-neutralizing-antibody-71212
+    double anti_CTLA4_hill_coeff = 1; // steepness of sigmoid
+
+    // anti PD1 parameters
+    double anti_pdl1_hill_coeff = 1; // steepness of sigmoid
 
     std::vector<std::array<double, 2> > location_history;
     void printLocations(int cellNum);
 
-    // chemotherapy
-    double chemoDamage;
-    double chemoRepair;
-    double chemoTolerance;
-    double chemoTolRate;
-    double deathTime;
-    double chemo_Accumulated_Threshold;
-    double chemoAccumulated;
-    double chemoTime;
-    double chemoTimeThresh;
-    double chemoUptake;
-
-    double antiPDL1_bindingRate;
-
     // mutation probability
-    double mutationProbability_chemo;
     double mutationProbability_inherent;
-
+    double mutation_prob_PDL1;
 
     // identification
     int id;

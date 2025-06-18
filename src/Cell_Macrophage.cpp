@@ -14,8 +14,7 @@ void Cell::initialize_Macrophage_Cell(std::vector<std::vector<double> > &cellPar
     kM2 = cellParams[8][3];
     influenceRadius = cellParams[9][3];
     migrationBias = cellParams[10][3];
-    pdl1WhenExpressed = cellParams[11][3];
-    pdl1_increment = cellParams[12][3];
+
     rmax = 1.5*radius*2;
 }
 
@@ -31,7 +30,7 @@ void Cell::macrophage_differentiation(double dt, RNG& master_rng, std::mt19937& 
 
     // posInfluence is active CD8 + Th + NK
     // negInfluence is M2 + alive cancer + Treg + MDSC
-    double posInfluence = 1 - (1 - influences[6])*(1 - influences[4])*(1 - influences[8]);
+    double posInfluence = 1 - (1 - influences[4])*(1 - influences[6])*(1 - influences[8]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[3])*(1 - influences[5])*(1 - influences[10]);
     double p1 = kM1*posInfluence;
     double p2 = kM2*negInfluence;
@@ -48,8 +47,23 @@ void Cell::macrophage_differentiation(double dt, RNG& master_rng, std::mt19937& 
     }
     state = choice;
     if(state == 1){
-        pdl1 = 0;
+        pdl1_expression_level = 0;
     } else if(state == 2){
-        pdl1 += pdl1_increment;
+        macrophage_pdl1_expression_level(dt);
+    }
+}
+
+void Cell::macrophage_pdl1_expression_level(double dt) {
+
+    double posInfluence = 1 - (1-influences[4])*(1 - influences[6])*(1 - influences[8]);
+
+    if (posInfluence >= threshold_for_pdl1_induction) {
+        double pdl1_increase_amount = (posInfluence - threshold_for_pdl1_induction) * pdl1_induction_rate * dt;
+        pdl1_expression_level += pdl1_increase_amount;
+        pdl1_expression_level = (pdl1_expression_level < max_pdl1_level) ? pdl1_expression_level : max_pdl1_level;
+    } else {
+        double pdl1_decrease_amount = pdl1_decay * dt;
+        pdl1_expression_level -= pdl1_decrease_amount;
+        pdl1_expression_level = (pdl1_expression_level > 0) ? pdl1_expression_level : 0;
     }
 }

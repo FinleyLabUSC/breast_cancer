@@ -21,7 +21,6 @@ void Environment::countPops_updateTimeSeries() {
     int m1 = 0;
     int m2 = 0;
 
-    // TODO update once I've decided on how to handle the phenotypes of the CD8's.  N -> Pro-M -> exh
     for(auto &cell : cell_list){
         if(cell.type == 3){
             numT8++;

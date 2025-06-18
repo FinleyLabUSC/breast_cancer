@@ -22,17 +22,13 @@ kp = float(sys.argv[5])
 
 print("starting simulation with phenotype state transition: {}, death probability factor: {}, kill probability factor: {}".format(pST, dp, kp) )
 
-cancerPDL1_m = 0.01 
 tcellMigBias = 0.076
 cd4Diff = 0.132
-cd4PDL1 = 0.139
 macMigBias = 0.123
 mdscMigBias = 0.123
 nkMigBias = 0.123
 macM1 = 0.187
 macM2 = 0.433
-macPDL1 = 0.264
-mdscPDL1 = 0.264
 cd8RecRate = 0.002# 0.001 #0.0001
 cd4RecRate = 0.002
 macRecRate = 0.002
@@ -42,9 +38,9 @@ recDelay = 0.00
 necroticGrowth = 0 #params[12]
 necrosisLimit = 940.3
 nkKillProb = 0.2 # This is an estimate. RAB needs to find references & read literature
-pdl1_increment = 0.005 # the maximum "increment" at which cancer cell PDL1 expression can increase.
-chemoDose = 20
-iciDose = 50
+
+anti_pd1_Dose = 50
+anti_ctla4_dose = 0.6667 # based on conversion from mg to nM of the experimental schedules from R-T group. See documentation
 
 #############################
 # ------------------------- #
@@ -61,9 +57,6 @@ cellParams[4, 0] = 20.0  # diameter (um)
 cellParams[5, 0] = 1/24.0  # div probability (hours) # Gong 2017
 cellParams[6, 0] = 1/(24.0*5.0) # death probability (hours) # Gong 2017
 cellParams[7, 0] = 40.0  # influence distance
-cellParams[8, 0] = cancerPDL1_m  # pdl1 when expressed
-cellParams[9, 0] = 1e6  # prob of gaining pdl1 (is multiplied by t cell influence) -> pretty sure the cancer cells from the images already had pdl1 when injected (check with evanthia). 1e6 pretty much guarantees that cancer cells will express pdl1
-cellParams[10,0] = pdl1_increment # the maximum "increment" at which cancer cell PDL1 expression can increase.
 
 # cd4 params
 cellParams[0, 1] = m  # mu
@@ -76,8 +69,6 @@ cellParams[6, 1] = 200.0  # migration speed base um/hr
 cellParams[7, 1] = cd4Diff  # differentiation to Treg
 cellParams[8, 1] = 40.0  # influence distance
 cellParams[9, 1] = tcellMigBias  # migration bias base
-cellParams[10, 1] = cd4PDL1  # pdl1 (when Treg)
-cellParams[11,1] = pdl1_increment
 
 # cd8 params
 cellParams[0, 2] = m  # mu
@@ -85,22 +76,15 @@ cellParams[1, 2] = k  # kc
 cellParams[2, 2] = d  # damping
 cellParams[3, 2] = ol  # overlap
 cellParams[4, 2] = 10.0  # diameter (um)
-cellParams[5, 2] = 1/(24.0*3.0*dp) # lifespan (days) Gong 2017
+cellParams[5, 2] = 1/(24.0*3.0*dp) # 1/lifespan (days) Gong 2017
 cellParams[6, 2] = 200  # migration speed um/hr | https://onlinelibrary.wiley.com/doi/epdf/10.1038/icb.2012.75 -> scaled based on model scale
 cellParams[7, 2] = 0.1*kp # killProb Gong 2017 (other works use very different probabilities
 cellParams[8, 2] = 2.0  # infScale -> arbitrarily set
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
-cellParams[11, 2] = 0.053  # proliferation prob
-
-
-"""
-this parameterizes the rate at which a modeled T cell will progress through phenotypic state transitions
-as articulated by the embedded Gene Regulatory Network. A higher value results in a faster progression through states. 
-This value must be an integer. A recommended range is 1-10 but should not exceed the length of the smallest trajectory
-"""
-cellParams[12, 2] = pST
-cellParams[13, 2] = pdl1_increment
+cellParams[11, 2] = 0.25 # only for testing #0.053  # proliferation prob
+cellParams[12, 2] = 2.0 # arbitrary death scale
+cellParams[13, 2] = 2.0 # arbitrary migrate scale
 
 # macrophage params
 cellParams[0, 3] = m  # mu
@@ -114,8 +98,7 @@ cellParams[7, 3] = macM1  # kM1
 cellParams[8, 3] = macM2  # kM2
 cellParams[9, 3] = 40.0  # influence distance
 cellParams[10, 3] = macMigBias  # migration bias
-cellParams[11, 3] = macPDL1  # pdl1
-cellParams[12,3] = pdl1_increment
+
 
 # nk params
 cellParams[0, 4] = m  # mu
@@ -130,6 +113,8 @@ cellParams[8, 4] = 2  # infScale -> arbitrarily set
 cellParams[9, 4] = 40.0  # influence distance
 cellParams[10, 4] = nkMigBias  # migration bias
 cellParams[11, 4] = 0.0031 # proliferation probability: Lutz_2011_JImmunol
+cellParams[12, 4] = 2.0 # arbitrary
+cellParams[13, 4] = 2.0 # arbitrary
 
 
 # mdsc params
@@ -142,8 +127,6 @@ cellParams[5, 5] = 1/(24.0*3.0)  # lifespan (days)
 cellParams[6, 5] = 200.0 # migration speed um/hr (assumed to be the same as other cells)
 cellParams[7, 5] = 40  # influenceDistance (assumed to be same as cancer cells, can change)
 cellParams[8, 5] = mdscMigBias #
-cellParams[9, 5] = mdscPDL1 # pdl1
-cellParams[10,5] = pdl1_increment
 
 
 recParams = np.zeros((7, 1))
@@ -157,12 +140,12 @@ recParams[6] = mdscRecRate # mdscRecRate
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 4.0 #5.0 # simulation duration (days)
+envParams[1] = 1#5.0 #5.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
 envParams[3] = 0#0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)
-envParams[5] = chemoDose# dose or concentration of chemo
-envParams[6] = iciDose
+envParams[5] = anti_pd1_Dose
+envParams[6] = anti_ctla4_dose # experimental data
 
 # os.system('mkdir -p ' + sys.argv[1] + '/params')
 saveFld = sys.argv[1]+'/set_'+sys.argv[2]+'/params'

@@ -18,20 +18,22 @@
 class Environment{
 
 public:
-    Environment(std::string folder, std::string set, std::string tCellTrajectoryPath, int base_seed);
+    Environment(std::string folder, std::string set, int base_seed);
     //destructor needed
-    void simulate(double tstep, int tx, int met, int numDoses);
+    void simulate(double tstep, int tx, int met, int num_anti_pd1_doses, int num_ctla4_doses, double binding_rate_pd1_drug);
 
+    void shuffleCells();
     void generateNums();
-    // Visualization on / off
-
 
     // Delete these safely, I don't think they're used.
     std::vector<double> cancer_CellCycle_CDF;
     std::vector<double> CD8_CellCycle_CDF;
     std::vector<double> chemo_treatment_schedule;
 
-    std::vector<double> ici_treatment_schedule;
+    std::vector<double> anti_pd1_treatment_schedule;
+    std::vector<double> anti_ctl4_treatment_schedule;
+
+    double effect_of_anti_CTLA4();
 
     double sampleNormal();
 
@@ -48,21 +50,20 @@ private:
     void necrosis(double tstep);
     double calculateDiffusibles(std::array<double, 2> x);
 
-    void treatment();
-    void chemotherapy(double tstep);
-    void chemotherapy_drug(double tstep, double new_dose);
+    void treatment(int tx_flag);
 
-    void immune_checkpoint_inhibitor(double tstep);
-    void immune_checkpoint_inhibitor_drug(double tstep,double new_dose);
-
+    void anti_pd1(double tstep);
+    void anti_pd1_drug(double tstep,double new_dose);
+    void anti_ctla4_drug(double tstep,double new_dose);
 
     void mutateCells();
 
-    void populateTrajectories(std::string tCellTrajectoryPath);
-    std::vector<std::string> getTcellTrajectory(); // This function will check whether the tCellPhenotypeTrajectory's have been read in, read the files if not, and return a randomly selected trajectory
-
     void save(double tstep, double tstamp);
     void recordPopulation(double tstamp);
+    void record_proliferation(double tstep, int prolifcount);
+    void record_drug(double tstep, int tx_type);
+
+    void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
 
     void initializeCells();
@@ -97,18 +98,10 @@ private:
     std::vector<int> nkTS;
     std::vector<int> mdscTS;
     std::vector<double> radiusTS;
-    std::vector<double> chemoTS;
-    std::vector<double> ICI_TS;
-    /*
-    t cell trajectory matrix: we can either represent as a vector of chars 
-    where a char maps to a phenotypic state or an int where the int maps to 
-    a phenotypic state
-    */
-    std::vector<std::string> tCellPhenotypeTrajectory_1;
 
-    std::vector<std::vector<std::string> > tCellPhenotypeTrajectory;
+    std::vector<double> anti_pd1_TS;
+    std::vector<double> anti_ctla4_TS;
 
-    std::string tCellTrajectoryPathway;
 
     // parameter lists
     std::vector<std::vector<double> > cellParams;
@@ -134,11 +127,18 @@ private:
     double simulationDuration;
     int day;
 
-    double chemotherapy_decay_rate;
-    double ICI_decay_rate;
-    double dose_chemo;
-    double dose_ICI;
-    int number_of_chemo_doses;
+    // treatment related parameters
+
+    double anti_pd1_decay_rate;
+    double anti_ctla4_decay_rate;
+
+    double dose_anti_pd1;
+    double dose_anti_ctla4;
+
+    int number_of_anti_ctla4_doses;
+    int number_of_anti_pd1_doses;
+
+    double binding_rate_pd1_drug;
 
     double mean_cancer_cell_cycle_length = 17;
     double std_cancer_cell_cycle_length = 2;
