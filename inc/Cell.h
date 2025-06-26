@@ -26,6 +26,7 @@ public:
 
     // initialization
     Cell(std::array<double, 2> loc, std::vector<std::vector<double> > &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int state, int run_time_index, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng);
     void initialize_Cancer_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);
     void initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp);
     void initialize_CD4_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);

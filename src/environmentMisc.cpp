@@ -40,15 +40,8 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
                 // TODO sample ages for the cells.
                 Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state]);
-                newCell.state = cell_state;
-                newCell.runtime_index = cell_list.size();
+                newCell.initialize_cell_from_file(cell_state,cell_list.size(),mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length,rng);
 
-                if (newCell.state == 3) {
-                    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-                    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-
-                    newCell.pdl1_expression_level = rng.uniform(0,1);
-                }
                 // Update the cell list
                 cell_list.push_back(newCell);
                 i++;
@@ -163,9 +156,7 @@ void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
              // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
                 cell_list.push_back(Cell(recLoc,cellParams,immuneCellRecTypes[i]));
                 cell_list.back().runtime_index = cell_list.size()-1;
-                // This tCellPhenotypeTrajectory_1 is not used for adding CD4 or macrophage
 
-            
             immuneCells2rec[i] -= 1;
         }
     }

@@ -47,6 +47,7 @@ void Cell::cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, 
         if(rnd < effective_inhibitory_signal){
             next_killProb = killProb * effective_inhibitory_signal;
             next_migrationSpeed = migrationSpeed * effective_inhibitory_signal;
+            // next_death_prob = deathProb * (1 + effective_inhibitory_signal); 6/26 I'm not sure if this should be here, or only in the indirect inhibition.
         }
     }
 }

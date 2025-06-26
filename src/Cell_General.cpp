@@ -107,6 +107,7 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     }
 }
 
+
 // FORCE FUNCTIONS
 // from Osborne 2017
 std::array<double, 2> Cell::attractiveForce(std::array<double, 2> dx, double otherRadius) {
@@ -678,6 +679,49 @@ void Cell::mutate(RNG& master_rng) {
 
             default: std::cout<<"Mutate Error: trying to mutate property not on the list."<<std::endl;
         }
+    }
+}
+
+/**
+ * This function is used to initialize specific properties of the cells when the model is initialized using an mIHC slide.
+ * Essentially the assumption is that in this case, cells aren't starting "from scratch". There have already been
+ * interactions that gave rise to the current state of the tumor. Cancer cells have been cycling, and T cells & NK cells
+ * have been suppressed by the tumor. This function assigns those properties and others.
+ *
+ * @param cell_state specifies what type of cell we're working with (type = 0, state = 3 - Cancer; type = 3 state = 6 - CD8; type = 4 state = 8 - NK).
+ * @param cell_list_length specifies the runtime index of the cell
+ * @param mean_cancer_cell_cycle_length
+ * @param std_cancer_cell_cycle_length
+ * @param master_rng used to sample the appropriate distribution
+ */
+void Cell::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) {
+    state = cell_state;
+    runtime_index = cell_list_length;
+    birthTime = master_rng.uniform(0, 1 / deathProb);
+
+    // Cancer. Assign the cell cycle length, and position within the cell cycle.
+    if (type == 0 && state == 3) {
+        cellCycleLength = master_rng.normal(mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length);
+        cellCyclePos = master_rng.uniform(0, cellCycleLength);
+        pdl1_expression_level = master_rng.uniform(0,max_pdl1_level);
+    } else if (type == 3) { // CD8+ T cells
+        pd1_expression_level = master_rng.uniform(0,max_pd1_level);
+
+        // Assign properties such that the cell is exhausted.
+        deathProb = master_rng.uniform(4 * death_prob_base, 20 * death_prob_base); // High death rate
+
+        migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base); // Low migration speed
+        divProb = master_rng.uniform(0, 0.25 * divProb_base); // Low division probability
+        killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
+    } else if (type == 4) { // Natural Killer cells
+        pd1_expression_level = master_rng.uniform(0,max_pd1_level);
+
+        deathProb = master_rng.uniform(4 * death_prob_base, 20 * death_prob_base); // High death rate
+
+        migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base);
+        killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
+    } else if (state == 2 || state == 5 || state == 10){
+        pdl1_expression_level = master_rng.uniform(0,max_pdl1_level);
     }
 }
 
