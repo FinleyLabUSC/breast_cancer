@@ -166,6 +166,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
                 }
 
                 if (cell_list[i].type ==3) {
+                    // increase count if CD8+ cell proliferated. Testing purposes.
                     count_num_cd8_proliferation++;
                 }
 

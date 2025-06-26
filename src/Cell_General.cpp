@@ -248,7 +248,7 @@ std::array<double, 3> Cell::proliferate(double dt, RNG& master_rng) {
                radius*(dx[1]/norm)+x[1],
                1};
 
-    } else if (type == 3 || type == 8) { // CD8 T CELL PROLIFERATION AND NK PROLIFERATION
+    } else if (type == 3) { // CD8 T CELL PROLIFERATION
         if(master_rng.uniform(0,1) < divProb){
             // place daughter cell a random angle away from the mother cell at a distance of radius
             std::array<double, 2> dx = {master_rng.normal(0,1),master_rng.normal(0,1)};
@@ -353,7 +353,7 @@ void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
 
 void Cell::proliferationState(double anti_ctla4_concentration) {
     /*
-     * cancer cells and CD8 can proliferate
+     * Only Cancer cells and CD8 can proliferate
      */
     if (state==-1) {return;} // dead cells can't proliferate
 
@@ -371,19 +371,16 @@ void Cell::proliferationState(double anti_ctla4_concentration) {
         canProlif = !(state == 7 || compressed);
 
         divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb_base;
-    } else if (type == 8) {
-        canProlif = !compressed; // TODO update depending on whether any other cells affect nk cell proliferation
-    }else {
+    } else {
         canProlif = false;
     }
 
 }
 
 
-void Cell::inherit(std::vector<double> properties) { // QUESTION: cancer cells inherit PDL1 expression, do CD8 T cells inherit phenotype???
+void Cell::inherit(std::vector<double> properties) {
     /*
      * daughter cells inherit properties from mother
-     * even though this is applicable only for cancer cells, I left it this way for ease of running cell functions
      */
     if(state == 0){
         // M0 macrophages
@@ -407,6 +404,12 @@ void Cell::inherit(std::vector<double> properties) { // QUESTION: cancer cells i
         return;
     } else if (state == 6){
         // CD8 active
+        pd1_expression_level = properties[0];
+
+        killProb = properties[1];
+        migrationSpeed = properties[2];
+        divProb = properties[3];
+        deathProb = properties[4];
         return;
     } else if (state == 7){
         // CD8 suppressed
@@ -450,7 +453,7 @@ std::vector<double> Cell::inheritanceProperties() {
         return {};
     } else if (state == 6){
         // CD8 active
-        return {};
+        return {pd1_expression_level, killProb, migrationSpeed, divProb,deathProb};
     } else if (state == 7){
         // CD8 suppressed
         return {};
@@ -717,7 +720,6 @@ void Cell::initialize_cell_from_file(int cell_state, int cell_list_length, doubl
         pd1_expression_level = master_rng.uniform(0,max_pd1_level);
 
         deathProb = master_rng.uniform(4 * death_prob_base, 20 * death_prob_base); // High death rate
-
         migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base);
         killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
     } else if (state == 2 || state == 5 || state == 10){

@@ -15,7 +15,8 @@ void Cell::initialize_NK_Cell(std::vector<std::vector<double> > &cellParams, siz
     infScale = cellParams[8][4];
     influenceRadius = cellParams[9][4];
     migrationBias = cellParams[10][4];
-    divProb_base = cellParams[11][4];
+    divProb_base = 0;
+    divProb_base = 0;
     deathScale = cellParams[12][4];
     migScale = cellParams[13][4];
 
