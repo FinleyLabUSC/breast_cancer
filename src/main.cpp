@@ -59,36 +59,34 @@
 
 int main(int argc, char **argv) {
     std::string folder = argv[1];
-    std::string set = argv[2];
+    std::string replicate_number = argv[2];
     std::string pST = argv[3];
     std::string dp_fac = argv[4];
     std::string kp_fac = argv[5];
     int tx = std::stoi(argv[6]);
     int met = std::stoi(argv[7]);
-    int number_of_pdl1_doses = std::stoi(argv[8]);
-    int number_of_ctla4_doses = std::stoi(argv[9]);
-    double binding_rate_pd1_drug = std::stod(argv[10]);
+    double binding_rate_pd1_drug = std::stod(argv[8]);
     int repNum = std::stoi(argv[2]);
 
-    std::vector<std::string> txLabels = {"control","chemo","pdl1","ctla4","ici_combo"};
+    std::vector<std::string> txLabels = {"control","pdl1","ctla4","ici_combo"};
     std::vector<std::string> metLabels = {"met1","met2"};
     // TODO you probably need to change this for the cluster
-    std::string saveFolder = "../../" + folder + "/" + metLabels[met-1] + "/" + txLabels[tx] + "/dose_" + std::to_string(number_of_pdl1_doses) + "_" + std::to_string(number_of_ctla4_doses);
+    std::string saveFolder = "../../" + folder + "/" + metLabels[met-1] + "/" + txLabels[tx];
 
     //std::string str = "rm -r ./"+folder+"/set_" + set;
     //const char *command = str.c_str();
     //std::system(command);
 
     // str = "python genParams.py ./"+folder+"/set_"+set+" "+set;
-    std::string str = "conda run -n bc_env python3 ../genParams.py "+ saveFolder+" "+set + " "+ pST + " " + dp_fac + " " + kp_fac;
+    std::string str = "conda run -n bc_env python3 ../genParams.py "+ saveFolder+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
     const char *command = str.c_str();
     std::system(command);
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    Environment model(saveFolder, set,repNum); //can replace with a directory representing any other phenotype state
+    Environment model(saveFolder, replicate_number,repNum); //can replace with a directory representing any other phenotype state
 
-    model.simulate(1,tx,met,number_of_pdl1_doses, number_of_ctla4_doses,binding_rate_pd1_drug);
+    model.simulate(1,tx,met,binding_rate_pd1_drug);
 
     auto stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = stop - start;

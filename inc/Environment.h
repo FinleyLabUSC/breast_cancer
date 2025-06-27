@@ -20,7 +20,7 @@ class Environment{
 public:
     Environment(std::string folder, std::string set, int base_seed);
     //destructor needed
-    void simulate(double tstep, int tx, int met, int num_anti_pd1_doses, int num_ctla4_doses, double binding_rate_pd1_drug);
+    void simulate(double tstep, int tx, int met, double binding_rate_pd1_drug);
 
     void shuffleCells();
     void generateNums();
@@ -134,9 +134,6 @@ private:
 
     double dose_anti_pd1;
     double dose_anti_ctla4;
-
-    int number_of_anti_ctla4_doses;
-    int number_of_anti_pd1_doses;
 
     double binding_rate_pd1_drug;
 

@@ -34,6 +34,20 @@ void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, si
     init_time = init_tstamp;
 }
 
+/**
+ * This function simulations inhibition or suppression of CD8+ T cells via PD1-PDL1 binding.
+ * First, the minimum between the available PD1 and PDL1 are determined. This assumes a 1-1 binding occurs,
+ * thus if there are x PD1 molecules and y PDL1 molecules, with x < y, only x binding "events" will occur.
+ * Then, the fraction of PD1 that is bound is calculated. This strength of the inhibition via the binding is directly
+ * proportional to this fraction, and occurs with a probability equal to this fraction.
+ *
+ * @param otherX location of the cell in interacting cell (in direct contact)
+ * @param otherRadius radius of the interacting cell
+ * @param otherpdl1 level of PD-L1 expressed by the interacting cell
+ * @param dt
+ * @param master_rng
+ * @param temporary_rng
+ */
 void Cell::cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, double otherpdl1, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     // inhibition via direct contact, simulates the binding of PD-1 and PDL1.
 
@@ -85,8 +99,7 @@ void Cell::cd8_pd1_expression_level(double dt, double anti_pd1_concentration, do
         if (influence >= threshold_for_pd1_induction ) {
             temp = pd1_expression_level + dt * (influence - threshold_for_pd1_induction)/threshold_for_pd1_induction;
             pd1_expression_level = (temp < max_pd1_level) ? temp : max_pd1_level;
-        }
-        else {
+        } else {
             temp = pd1_expression_level - pd1_decay_rate * dt;
             pd1_expression_level = (temp > 0) ? temp : 0; // pd1 expression must be non-negative
         }

@@ -56,7 +56,7 @@ Environment::Environment(std::string folder, std::string set, int base_seed): rn
 }
 
 
-void Environment::simulate(double tstep, int tx, int met, int num_anti_pd1_doses, int num_anti_ctla4_doses, double bind_rate_pd1_drug) {
+void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_drug) {
 
     /*
      * initializes and runs a simulation
@@ -69,21 +69,26 @@ void Environment::simulate(double tstep, int tx, int met, int num_anti_pd1_doses
      */
     model_time = 0;
 
-    anti_pd1_treatment_schedule.resize(num_anti_pd1_doses);
-    for(int i = 0; i < num_anti_pd1_doses; ++i){
-        anti_pd1_treatment_schedule[i]=0.125 + 7.0 * i;
-    }
+    anti_pd1_treatment_schedule[0] = 0;
+    anti_pd1_treatment_schedule[1] = 96;
+    anti_pd1_treatment_schedule[2] = 168;
+    anti_pd1_treatment_schedule[3] = 240;
+    anti_pd1_treatment_schedule[4] = 312;
+    anti_pd1_treatment_schedule[5] = 432;
+
+
+    anti_ctl4_treatment_schedule[0] = 0;
+    anti_ctl4_treatment_schedule[1] = 96;
+    anti_ctl4_treatment_schedule[2] = 168;
+    anti_ctl4_treatment_schedule[3] = 240;
+    anti_ctl4_treatment_schedule[4] = 312;
+    anti_ctl4_treatment_schedule[5] = 432;
 
     int anti_pd1_count_num_dose = 0;
     anti_pd1_TS.push_back(0.0);
     bool anti_pd1_on = false;
     anti_pd1_decay_rate = 0.00193;
     binding_rate_pd1_drug = bind_rate_pd1_drug;
-
-    anti_ctl4_treatment_schedule.resize(num_anti_ctla4_doses);
-    for(int i = 0; i < num_anti_ctla4_doses; ++i){
-        anti_ctl4_treatment_schedule[i]=0.125 + 7.0 * i;
-    }
 
     int anti_ctla4_count_num_dose = 0;
     anti_ctla4_TS.push_back(0.0);
