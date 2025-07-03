@@ -20,13 +20,13 @@ pST = int(sys.argv[3]) #phenotype state transition
 dp = float(sys.argv[4])
 kp = float(sys.argv[5])
 
-print("starting simulation with phenotype state transition: {}, death probability factor: {}, kill probability factor: {}".format(pST, dp, kp) )
+print("starting simulations")
 
-tcellMigBias = 0.076
+tcellMigBias = 0.2 #0.076
 cd4Diff = 0.132
-macMigBias = 0.123
-mdscMigBias = 0.123
-nkMigBias = 0.123
+macMigBias = 0.1
+mdscMigBias = 0.1
+nkMigBias = 0.125
 macM1 = 0.187
 macM2 = 0.433
 cd8RecRate = 0.002# 0.001 #0.0001
@@ -39,7 +39,7 @@ necroticGrowth = 0 #params[12]
 necrosisLimit = 940.3
 nkKillProb = 0.2 # This is an estimate. RAB needs to find references & read literature
 
-anti_pd1_Dose = 50
+anti_pd1_Dose = 0.6667
 anti_ctla4_dose = 0.6667 # based on conversion from mg to nM of the experimental schedules from R-T group. See documentation
 
 #############################
@@ -78,7 +78,7 @@ cellParams[3, 2] = ol  # overlap
 cellParams[4, 2] = 10.0  # diameter (um)
 cellParams[5, 2] = 1/(24.0*14.0) # 1/lifespan (days) https://pmc.ncbi.nlm.nih.gov/articles/PMC4489929/
 cellParams[6, 2] = 200  # migration speed um/hr | https://onlinelibrary.wiley.com/doi/epdf/10.1038/icb.2012.75 -> scaled based on model scale
-cellParams[7, 2] = 0.1*kp # killProb Gong 2017 (other works use very different probabilities
+cellParams[7, 2] = 0.3 # killProb
 cellParams[8, 2] = 2.0  # infScale -> arbitrarily set
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
@@ -140,7 +140,7 @@ recParams[6] = mdscRecRate # mdscRecRate
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 1#5.0 #5.0 # simulation duration (days)
+envParams[1] = 32#5.0 #5.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
 envParams[3] = 0#0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)

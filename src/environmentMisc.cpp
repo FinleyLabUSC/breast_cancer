@@ -6,7 +6,7 @@
 #include <sstream>
 
 void Environment::initializeCellsFromFile(std::string filePathway) {
-
+    RNG initialize_from_file_rng(722); // Use this rng for the initialization. Then the starting point will be exactly the same for all replicates of a condition.
     std::fstream file;
     file.open(filePathway);
 
@@ -40,7 +40,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
                 // TODO sample ages for the cells.
                 Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state]);
-                newCell.initialize_cell_from_file(cell_state,cell_list.size(),mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length,rng);
+                newCell.initialize_cell_from_file(cell_state,cell_list.size(),mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length,initialize_from_file_rng);
 
                 // Update the cell list
                 cell_list.push_back(newCell);

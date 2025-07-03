@@ -96,6 +96,8 @@ public:
     void nk_update_properties_indirect(size_t step_count);
     void nk_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug);
 
+    double sensitivity_to_antiPD1(double anti_pd1_concentration, double binding_rate_pd1_drug);
+    double sensitivity_to_antiCTLA4();
     // MDSC specific
     void mdsc_gainPDL1(double dt);
 
@@ -175,7 +177,7 @@ public:
     double pd1_decay_rate;
     double max_pd1_level;
 
-    double inhibition_proportion;// This specifies the level of reduction in kill prob and migration prob from PD1 - PDL1 binding.
+    double inhibitory_effect_of_binding_PD1_PDL1;// This specifies the level of reduction in kill prob and migration prob from PD1 - PDL1 binding.
     std::array<double, 11> influences;
     std::array<double, 8> chemotaxVals;
     double probTh;
@@ -217,6 +219,7 @@ public:
     int id;
     int type;
     int state;
+    int mother_uniqueID;
 
     //lifespan
     size_t init_time;

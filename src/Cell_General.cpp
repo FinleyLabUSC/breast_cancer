@@ -84,7 +84,7 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     pdl1_decay = 0.025; // arbitrary
     max_pdl1_level = 5; // arbitrary
 
-    inhibition_proportion = 0.01; // arbitrary
+    inhibitory_effect_of_binding_PD1_PDL1 = 0.01; // arbitrary
 
     if(cellType == 0){
         initialize_Cancer_Cell(cellParams,0);
@@ -698,9 +698,11 @@ void Cell::mutate(RNG& master_rng) {
  * @param master_rng used to sample the appropriate distribution
  */
 void Cell::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) {
+
     state = cell_state;
     runtime_index = cell_list_length;
     birthTime = master_rng.uniform(0, 1 / deathProb);
+    mother_uniqueID = -1; // A mother_uniqueID of -1 indicates that the cell was part of the initialization of the tumor.
 
     // Cancer. Assign the cell cycle length, and position within the cell cycle.
     if (type == 0 && state == 3) {
@@ -724,6 +726,22 @@ void Cell::initialize_cell_from_file(int cell_state, int cell_list_length, doubl
         killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
     } else if (state == 2 || state == 5 || state == 10){
         pdl1_expression_level = master_rng.uniform(0,max_pdl1_level);
+    }
+}
+
+double Cell::sensitivity_to_antiPD1(double anti_pd1_concentration, double binding_rate_pd1_drug) {
+    if (4 * killProb < kill_prob_base && 4 * migrationSpeed < migration_speed_base  && deathProb > 4 * death_prob_base) {
+        return 0; // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
+    }else {
+        return anti_pd1_concentration / (anti_pd1_concentration + binding_rate_pd1_drug);
+    }
+}
+
+double Cell::sensitivity_to_antiCTLA4() {
+    if (4 * killProb < kill_prob_base && 4 * migrationSpeed < migration_speed_base  && deathProb > 4 * death_prob_base) {
+        return 0; // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
+    }else {
+        return 1;
     }
 }
 

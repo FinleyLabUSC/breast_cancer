@@ -61,6 +61,7 @@ void Environment::save(double tstep, double tstamp) {
            << cell.x[1] << ","
            << cell.radius << ","
             << cell.state << ","
+            << cell.mother_uniqueID << ","
             << cell.pd1_expression_level<< ","
             << cell.pd1_available<< ","
            << cell.migrationSpeed/cell.migration_speed_base << ","
@@ -75,6 +76,7 @@ void Environment::save(double tstep, double tstamp) {
                 << cell.x[1] << ","
                 << cell.radius << ","
                 << cell.state << ","
+                << cell.mother_uniqueID << ","
                 << cell.pdl1_expression_level <<  ","
             <<cell.cellCycleLength<< std::endl;
         }

@@ -173,8 +173,10 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
                 cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type));
                 cell_list.back().birthTime = model_time;
                 cell_list.back().runtime_index = cell_list.size()-1;
+                cell_list.back().mother_uniqueID = cell_list[i].unique_cell_ID;
 
                 cell_list[cell_list.size() - 1].inherit(cell_list[i].inheritanceProperties());
+
             }
         }
     }

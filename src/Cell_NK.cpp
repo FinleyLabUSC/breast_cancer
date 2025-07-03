@@ -32,11 +32,12 @@ void Cell::nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, d
     double distance = calcDistance(otherX);
     if(distance <= radius+otherRadius){
         // the line below assumes a one to one binding of pd1 and pdl1. You can only bind the minimum num of molecules of either pd1 or pdl1.
-        double effective_inhibitory_signal = std::min(otherpdl1, pd1_available) / pd1_expression_level; // this turns it into a fraction.
+        double percent_binding = std::min(otherpdl1, pd1_available) / pd1_expression_level; // this turns it into a fraction.
         double rnd = master_rng.uniform(0,1,temporary_rng);
-        if(rnd < effective_inhibitory_signal * inhibition_proportion){
-            next_killProb = killProb * effective_inhibitory_signal;
-            next_migrationSpeed = migrationSpeed * effective_inhibitory_signal;
+        if(rnd < percent_binding ){
+            next_killProb = killProb * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
+            next_migrationSpeed = migrationSpeed * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
+            next_death_prob = deathProb * (1 + percent_binding) * inhibitory_effect_of_binding_PD1_PDL1;
         }
     }
 }
@@ -56,8 +57,6 @@ void Cell::nk_update_properties_indirect(size_t step_count){
 
     next_killProb = next_killProb*pow(infScale, scale);
     next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
-    next_death_prob = next_death_prob*pow(deathScale,scale);
-
 }
 
 void Cell::nk_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug){
@@ -73,7 +72,9 @@ void Cell::nk_pd1_expression_level(double dt, double anti_pd1_concentration, dou
             temp = pd1_expression_level - pd1_decay_rate * dt;
             pd1_expression_level = (temp > 0) ? temp : 0; // pd1 expression must be non-negative
         }
-        double fraction_pd1_bound_by_drug = anti_pd1_concentration / (anti_pd1_concentration + binding_rate_pd1_drug);
+
+        double fraction_pd1_bound_by_drug = sensitivity_to_antiPD1(anti_pd1_concentration,binding_rate_pd1_drug);
+
         pd1_drug_bound = pd1_expression_level * fraction_pd1_bound_by_drug;
         pd1_available = pd1_expression_level * (1-fraction_pd1_bound_by_drug);
     }
