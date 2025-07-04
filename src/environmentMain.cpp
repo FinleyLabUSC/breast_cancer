@@ -69,6 +69,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
      */
     model_time = 0;
 
+    anti_pd1_treatment_schedule.resize(6);
     anti_pd1_treatment_schedule[0] = 0;
     anti_pd1_treatment_schedule[1] = 96;
     anti_pd1_treatment_schedule[2] = 168;
@@ -76,7 +77,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     anti_pd1_treatment_schedule[4] = 312;
     anti_pd1_treatment_schedule[5] = 432;
 
-
+    anti_ctl4_treatment_schedule.resize(6);
     anti_ctl4_treatment_schedule[0] = 0;
     anti_ctl4_treatment_schedule[1] = 96;
     anti_ctl4_treatment_schedule[2] = 168;
@@ -109,11 +110,10 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
-   //std::vector<std::string> metLabels = {"../mihc/121223 P9msP61-2 #06 NT2.5 LM Lungs 16d-1_met_2_adjusted.csv", "../mihc/121223 P9msP61-2 #25 NeuN NT2.5 LM 5 wks #1_met_5_adjusted.csv"};
-   std::vector<std::string> metLabels = {"../mihc/test.csv"};
+   std::string metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";
 
 
-     initializeCellsFromFile(metLabels[met-1]);
+     initializeCellsFromFile(metLabel);
 
     std::cout << "starting simulations...\n";
 
@@ -160,7 +160,6 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
         runCells(tstep, tstep*steps);
         mutateCells();
         removeDeadCells(); // loops through, removes the dead cells
-
          shuffleCells(); // shuffles the cells in the list
         updateCell_list(); // loops through, updates the runtimeindex
 

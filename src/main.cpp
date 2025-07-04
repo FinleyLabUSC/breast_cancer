@@ -65,13 +65,12 @@ int main(int argc, char **argv) {
     std::string kp_fac = argv[5];
     int tx = std::stoi(argv[6]);
     int met = std::stoi(argv[7]);
-    double binding_rate_pd1_drug = std::stod(argv[8]);
+    double binding_rate_pd1_drug = 0.1;
     int repNum = std::stoi(argv[2]);
 
     std::vector<std::string> txLabels = {"control","pdl1","ctla4","ici_combo"};
-    std::vector<std::string> metLabels = {"met1","met2"};
     // TODO you probably need to change this for the cluster
-    std::string saveFolder = "../../" + folder + "/" + metLabels[met-1] + "/" + txLabels[tx];
+    std::string saveFolder = "../../" + folder + "/met_" + argv[7] + "/" + txLabels[tx];
 
     //std::string str = "rm -r ./"+folder+"/set_" + set;
     //const char *command = str.c_str();
