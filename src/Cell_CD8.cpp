@@ -18,14 +18,14 @@ void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, si
     infScale = cellParams[8][2];
     influenceRadius = cellParams[9][2];
     migrationBias = cellParams[10][2];
-    divProb_base = cellParams[11][2];
+    divProb_base =  cellParams[11][2];
+    divProb = divProb_base;
     deathScale = cellParams[12][2];
     migScale = cellParams[13][2];
 
     migration_speed_base =migrationSpeed;
     kill_prob_base = baseKillProb;
     killProb = baseKillProb;
-
 
     death_prob_base = deathProb;
 

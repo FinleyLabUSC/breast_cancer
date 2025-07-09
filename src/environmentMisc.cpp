@@ -70,9 +70,9 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 void Environment::initializeInVitro() {
     int idx = 0;
-    for (int i = 0; i < 1000; i++) {
-        double x = rng.uniform(-1500,1500);
-        double y = rng.uniform(-1500,1500);
+    for (int i = 0; i < 30; i++) {
+        double x = rng.uniform(-500,500);
+        double y = rng.uniform(-500,500);
         Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling
         newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
         newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
@@ -81,6 +81,12 @@ void Environment::initializeInVitro() {
         cell_list.push_back(newCell);
         ++idx;
     }
+
+    tumorSize(); // always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    save(0, 0);
+    countPops_updateTimeSeries();
+    recordPopulation(0.0);
+    std::cout<<"Model initialized. Populations recorded. "<<std::endl;
 
 }
 
@@ -142,7 +148,6 @@ void Environment::initializeCells() {
 
 
 void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
-
     // Recruitment of different immune cell types are governed by different cancer-related events.
     // M0, CD4 and MDSC's are recruited proportional to the number of cancer cell "births" in the previous time step.
     // CD8's and NK's are recruited proportional to the number of cancer cell deaths in the previous time step.
@@ -166,6 +171,9 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
             immuneCells2rec[i] -= 1;
         }
     }
+
+    num_cancer_births = 0;
+    num_cancer_deaths = 0;
 }
 
 

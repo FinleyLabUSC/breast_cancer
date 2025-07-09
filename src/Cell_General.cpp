@@ -237,6 +237,7 @@ void Cell::isCompressed() { // :
 std::array<double, 3> Cell::proliferate(double dt, RNG& master_rng) {
     // positions 0 and 1 are cell location
     // position 2 is boolean didProliferate?
+
     if(!canProlif || state==-1){return {0,0,0};}
 
     if (type == 0) { // CANCER CELL PROLIFERATION
@@ -365,7 +366,7 @@ void Cell::proliferationState(double anti_ctla4_concentration) {
         if (!(state == -1 || compressed)) {
             cellCyclePos++;
         }
-        if (static_cast<double>(cellCyclePos) > cellCycleLength && state == 3 && !compressed) {
+        if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && state == 3 && !compressed) {
             canProlif = true;
         }
 
@@ -374,7 +375,7 @@ void Cell::proliferationState(double anti_ctla4_concentration) {
         // assume CTLs need IL-2 from Th to proliferate
         canProlif = !(state == 7 || compressed);
 
-        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb_base;
+        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb;
     } else {
         canProlif = false;
     }

@@ -114,10 +114,12 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
-   std::string metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
+    // CARC
+   //std::string metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
+    std::string metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";
 
-
-     initializeCellsFromFile(metLabel);
+     //initializeCellsFromFile(metLabel);
+    initializeInVitro();
 
     std::cout << "starting simulations...\n";
 
@@ -160,10 +162,9 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
          }
 
 
-        //recruitImmuneCells_proportionalTumorBurden(tstep, tstep*steps);
          recruitImmuneCells_cancerBirthDeath(tstep);
         runCells(tstep, tstep*steps);
-        mutateCells();
+       // mutateCells();
         removeDeadCells(); // loops through, removes the dead cells
          shuffleCells(); // shuffles the cells in the list
         updateCell_list(); // loops through, updates the runtimeindex
