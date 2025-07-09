@@ -88,8 +88,8 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
 
     if(cellType == 0){
         initialize_Cancer_Cell(cellParams,0);
-        mutationProbability_inherent = 0.01;
-        mutation_prob_PDL1 = 0.01;
+        mutationProbability_inherent = 0.0;
+        mutation_prob_PDL1 = 0.0;
 
     } else if(cellType == 1){
         initialize_Macrophage_Cell(cellParams);

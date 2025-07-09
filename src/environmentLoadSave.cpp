@@ -48,9 +48,9 @@ void Environment::save(double tstep, double tstamp) {
     const char *command = str.c_str();
     std::system(command);
 
-    myfile.open(saveDir+"/necroticRadius.csv");
-    myfile << necroticRadius << std::endl;
-    myfile.close();
+    // myfile.open(saveDir+"/necroticRadius.csv");
+    // myfile << necroticRadius << std::endl;
+    // myfile.close();
 
     myfile.open(day_dir+"/cells.csv");
     for(auto &cell : cell_list){
@@ -152,7 +152,7 @@ void Environment::record_proliferation(double tstep, int prolifCount) {
         const char *command = str.c_str();
         std::system(command);
         myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);
-        myfile << "Hr" << "prolif_count"<< std::endl;
+        myfile << "Hr"  << "," <<  "prolif_count"<< std::endl;
     }
 
     myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);

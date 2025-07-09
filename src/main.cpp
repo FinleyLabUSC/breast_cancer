@@ -74,18 +74,22 @@ int main(int argc, char **argv) {
     std::vector<std::string> txLabels = {"control","pdl1","ctla4","ici_combo"};
     std::vector<std::string> parameter_levels = {"low","high"};
 
-    int cd4_id = (th_treg==0.3) ? 0 : 1;
+    int cd4_id = (th_treg==0.45) ? 0 : 1;
     int m1m2_id = (m1_m2==0.1) ? 0 : 1;
     int m2m1_id = (m2_m1==0.1) ? 0 : 1;
     // TODO you probably need to change this for the cluster
-    std::string saveFolder = "../../" + folder + "/met_" + argv[7] + "/" + txLabels[tx] +"/cd4_" + parameter_levels[cd4_id] + "/m1m2_" +parameter_levels[m1m2_id] + "/m2m1_" + parameter_levels[m2m1_id]; // update to also have the three parameters im sweeping over
+    // std::string saveFolder = "../../" + folder + "/met_" + argv[7] + "/" + txLabels[tx] +"/cd4_" + parameter_levels[cd4_id] + "/m1m2_" +parameter_levels[m1m2_id] + "/m2m1_" + parameter_levels[m2m1_id]; // update to also have the three parameters im sweeping over
 
     //std::string str = "rm -r ./"+folder+"/set_" + set;
     //const char *command = str.c_str();
     //std::system(command);
 
     // str = "python genParams.py ./"+folder+"/set_"+set+" "+set;
-    std::string str = "conda run -n bc_env python3 ../genParams.py "+ saveFolder+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
+
+    // This is the verison for the CARC
+    std::string saveFolder = "./" + folder + "/met_" + argv[7] + "/" + txLabels[tx] +"/cd4_" + parameter_levels[cd4_id] + "/m1m2_" +parameter_levels[m1m2_id] + "/m2m1_" + parameter_levels[m2m1_id];;
+    std::string str = "conda run -n bc_env_new python3 genParams.py "+ saveFolder+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
+
     const char *command = str.c_str();
     std::system(command);
 

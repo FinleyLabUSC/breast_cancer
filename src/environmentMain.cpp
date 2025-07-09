@@ -114,7 +114,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
-   std::string metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";
+   std::string metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
 
 
      initializeCellsFromFile(metLabel);
