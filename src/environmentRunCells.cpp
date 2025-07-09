@@ -148,6 +148,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
     int numCells = cell_list.size();
 
     int count_num_cd8_proliferation = 0;
+    int count_cancer_prolif = 0;
     for(int i=0; i<numCells; ++i){
         if (cell_list[i].state != -1) {
             cell_list[i].set_cellAge(step_count); // this function figures out the age of the cell.
@@ -161,8 +162,9 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
                     // if cancer cell has divided, reset the mother cell's cellCyclePos
                     cell_list[i].prevDivTime = cell_list[i].currDivTime;
                     cell_list[i].currDivTime = step_count;
-                    cell_list[i].cellCyclePos =0;
+                    cell_list[i].cellCyclePos = 0;
                     cell_list[i].canProlif = false;
+                    count_cancer_prolif++;
                 }
 
                 if (cell_list[i].type ==3) {
@@ -181,6 +183,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
         }
     }
     record_proliferation(step_count,count_num_cd8_proliferation);
+    num_cancer_births = count_cancer_prolif;
 }
 
 void Environment::runCells(double tstep, size_t step_count) {
@@ -254,7 +257,7 @@ void Environment::removeDeadCells() {
     for(auto &i : dead){
         cell_list.erase(cell_list.begin()+i);
     }
-
+    num_cancer_deaths = count_age_deaths + count_cd8_contact_deaths + count_nk_contact_deaths;
     record_cancerdeath(model_time,count_age_deaths,count_cd8_contact_deaths,count_nk_contact_deaths);
 }
 

@@ -138,7 +138,40 @@ void Environment::initializeCells() {
 
 
 
-void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
+
+
+
+void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
+
+    // Recruitment of different immune cell types are governed by different cancer-related events.
+    // M0, CD4 and MDSC's are recruited proportional to the number of cancer cell "births" in the previous time step.
+    // CD8's and NK's are recruited proportional to the number of cancer cell deaths in the previous time step.
+    auto day = static_cast<double>(tstep*steps/24.0);
+    if(day < recruitmentDelay){return;}
+
+    // CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+    std::vector<int> births_deaths = {num_cancer_deaths, num_cancer_births, num_cancer_births, num_cancer_deaths, num_cancer_births};
+
+    for(int i=0; i<immuneCellRecRates.size(); ++i){ // From genParams.py: [0] cd8, [1] macrophages, [2] cd4, [3] nk, [4] mdsc
+
+        double recRate = immuneCellRecRates[i] * static_cast<double>(births_deaths[i]);
+        immuneCells2rec[i] += tstep*recRate;
+        while(immuneCells2rec[i] >= 1){
+            std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
+
+            // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+            cell_list.push_back(Cell(recLoc,cellParams,immuneCellRecTypes[i]));
+            cell_list.back().runtime_index = cell_list.size()-1;
+
+            immuneCells2rec[i] -= 1;
+        }
+    }
+}
+
+
+
+
+void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size_t step_count) {
 
     // recruitment is scaled by number of cancer cells
     auto day = static_cast<double>(tstep*steps/24.0);
@@ -160,7 +193,6 @@ void Environment::recruitImmuneCells(double tstep,  size_t step_count) {
             immuneCells2rec[i] -= 1;
         }
     }
-
 }
 
 /** This function generates and returns a random location within the square defined by the tumorRadius + recDist size.

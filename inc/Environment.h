@@ -44,7 +44,9 @@ private:
     void runCells(double tstep, size_t step_count);
     void neighborInfluenceInteractions(double tstep, size_t step_count);
     void internalCellFunctions(double tstep, size_t step_count);
-    void recruitImmuneCells(double tstep, size_t step_count);
+    void recruitImmuneCells_proportionalTumorBurden(double tstep, size_t step_count);
+    void recruitImmuneCells_cancerBirthDeath(double tstep);
+
     std::array<double, 2> generate_random_location_for_immune_recruitment();
     void tumorSize();
     void necrosis(double tstep);
@@ -142,6 +144,8 @@ private:
     double mean_cancer_cell_cycle_length = 30;
     double std_cancer_cell_cycle_length = 2;
 
+    int num_cancer_deaths =0;
+    int num_cancer_births =0;
 
     RNG rng;
 
