@@ -32,7 +32,7 @@ void Cell::initialize_Cancer_Cell(std::vector<std::vector<double>> &cellParams, 
 
 
 
-void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
+void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double immune_cell_kill_prob, double dt, RNG& master_rng, std::mt19937& temporary_rng) {
     /*
      * die from CTL based on a probability
      * contact required
@@ -41,19 +41,21 @@ void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, d
 
     if(calcDistance(otherX) <= radius+otherRadius){
         double rnd = master_rng.uniform(0,1,temporary_rng);
-        if(rnd < kp){
+        if(rnd < immune_cell_kill_prob){
             next_state = -1;
+            death_type = 1;
         }
     }
 }
 
-void Cell::cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt, RNG& master_rng,std::mt19937& temporary_rng) {
+void Cell::cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double immune_cell_kill_prob, double dt, RNG& master_rng,std::mt19937& temporary_rng) {
     if (type !=0) {return;}
 
     if(calcDistance(otherX) <= radius+otherRadius){ // this checks whether the interacting cells are in direct contact with each other
         double rnd = master_rng.uniform(0,1,temporary_rng);
-        if(rnd < kp){
+        if(rnd < immune_cell_kill_prob){
             next_state = -1;
+            death_type = 2;
         }
     }
 }

@@ -23,12 +23,12 @@ kp = float(sys.argv[5])
 print("starting simulations")
 
 tcellMigBias = 0.2 #0.076
-cd4Diff = 0.132
+cd4Diff = 0.3
 macMigBias = 0.1
 mdscMigBias = 0.1
 nkMigBias = 0.125
-macM1 = 0.187
-macM2 = 0.433
+macM1 = 0.4 # This needs to be fine tuned, but the data from ERT shows more than double M1 than M2
+macM2 = 0.2 # This needs to be fine tuned, but the data from ERT shows more than double M1 than M2
 cd8RecRate = 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
 cd4RecRate = 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
 macRecRate = 0.00125 # these are the percentages of mature myeloid cells from non-tx tumors provided by ERT
@@ -37,9 +37,9 @@ mdscRecRate = 0.00469 # these are the percentages of MDSCs from non-tx tumors pr
 recDelay = 0.00
 necroticGrowth = 0 #params[12]
 necrosisLimit = 940.3
-nkKillProb = 0.2 # This is an estimate. RAB needs to find references & read literature
+nkKillProb = 0.7 # This has been arbitrarily chosen.
 
-anti_pd1_Dose = 0.6667
+anti_pd1_Dose = 1.5
 anti_ctla4_dose = 0.6667 # based on conversion from mg to nM of the experimental schedules from R-T group. See documentation
 
 #############################
@@ -54,8 +54,8 @@ cellParams[1, 0] = k  # kc
 cellParams[2, 0] = d  # damping
 cellParams[3, 0] = ol  # overlap
 cellParams[4, 0] = 20.0  # diameter (um)
-cellParams[5, 0] = 1/24.0  # div probability (hours) # Gong 2017
-cellParams[6, 0] = 1/(24.0*5.0) # death probability (hours) # Gong 2017
+cellParams[5, 0] = 1/24.0  # div probability (hours)
+cellParams[6, 0] = 1/(24.0*3.5) # death probability (hours)
 cellParams[7, 0] = 40.0  # influence distance
 
 # cd4 params
@@ -78,7 +78,7 @@ cellParams[3, 2] = ol  # overlap
 cellParams[4, 2] = 10.0  # diameter (um)
 cellParams[5, 2] = 1/(24.0*14.0) # 1/lifespan (days) https://pmc.ncbi.nlm.nih.gov/articles/PMC4489929/
 cellParams[6, 2] = 200  # migration speed um/hr | https://onlinelibrary.wiley.com/doi/epdf/10.1038/icb.2012.75 -> scaled based on model scale
-cellParams[7, 2] = 0.3 # killProb
+cellParams[7, 2] = 0.8 # killProb
 cellParams[8, 2] = 2.0  # infScale -> arbitrarily set
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
@@ -133,14 +133,15 @@ recParams = np.zeros((7, 1))
 recParams[0] = cd8RecRate # cd8RecRate
 recParams[1] = macRecRate # mRecRate
 recParams[2] = cd4RecRate # cd4RecRate
-recParams[3] = 50.0  # recDist (recruit a uniform distribution recDist away from the tumor edge
-recParams[4] = recDelay # recruitment delay (days)
-recParams[5] = nkRecRate # nkRecRate
-recParams[6] = mdscRecRate # mdscRecRate
+recParams[3] = nkRecRate # nkRecRate
+recParams[4] = mdscRecRate # mdscRecRate
+
+recParams[5] = 100.0  # recDist (recruit a uniform distribution recDist away from the tumor edge
+recParams[6] = recDelay # recruitment delay (days)
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 32#5.0 #5.0 # simulation duration (days)
+envParams[1] = 25.0#5.0 #5.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
 envParams[3] = 0#0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)

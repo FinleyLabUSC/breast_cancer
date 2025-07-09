@@ -86,9 +86,9 @@ public:
     void cd8_update_properties_indirect();
 
     // cancer specific
-    void cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& localgen);
+    void cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, double immune_cell_kill_prob, double dt, RNG& master_rng, std::mt19937& localgen);
     void cancer_gainPDL1(double dt);
-    void cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double kp, double dt, RNG& master_rng, std::mt19937& local_gen);
+    void cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, double immune_cell_kill_prob, double dt, RNG& master_rng, std::mt19937& local_gen);
     void mutate(RNG& master_rng); // cause = 0 ("natural" mutations)
 
     // NK specific
@@ -220,6 +220,8 @@ public:
     int type;
     int state;
     int mother_uniqueID;
+
+    int death_type;
 
     //lifespan
     size_t init_time;

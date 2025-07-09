@@ -35,9 +35,9 @@ void Cell::nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, d
         double percent_binding = std::min(otherpdl1, pd1_available) / pd1_expression_level; // this turns it into a fraction.
         double rnd = master_rng.uniform(0,1,temporary_rng);
         if(rnd < percent_binding ){
-            next_killProb = killProb * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
-            next_migrationSpeed = migrationSpeed * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
-            next_death_prob = deathProb * (1 + percent_binding) * inhibitory_effect_of_binding_PD1_PDL1;
+            next_killProb = next_killProb * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
+            next_migrationSpeed = next_migrationSpeed * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
+            next_death_prob = next_death_prob * (1 + percent_binding) * inhibitory_effect_of_binding_PD1_PDL1;
         }
     }
 }

@@ -84,12 +84,12 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     pdl1_decay = 0.025; // arbitrary
     max_pdl1_level = 5; // arbitrary
 
-    inhibitory_effect_of_binding_PD1_PDL1 = 0.01; // arbitrary
+    inhibitory_effect_of_binding_PD1_PDL1 = 0.5; // moderate suppression
 
     if(cellType == 0){
         initialize_Cancer_Cell(cellParams,0);
-        mutationProbability_inherent = 0.2;
-        mutation_prob_PDL1 = 0.1;
+        mutationProbability_inherent = 0.01;
+        mutation_prob_PDL1 = 0.01;
 
     } else if(cellType == 1){
         initialize_Macrophage_Cell(cellParams);
@@ -274,6 +274,10 @@ void Cell::age(double dt, size_t step_count,  RNG& master_rng) {
      */
     double rand = master_rng.uniform(0,1);
     if(rand < deathProb){
+        if (state == 3) {
+            death_type = 0;
+        }
+
         state = -1;
     }
 }

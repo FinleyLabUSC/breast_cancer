@@ -15,6 +15,7 @@ void Environment::loadParams() {
     dataCP.close();
 
     std::ifstream dataRP(saveDir+"/params/recParams.csv");
+    
     while(std::getline(dataRP, line)){
         std::stringstream lineStream(line);
         std::string cell;
@@ -94,12 +95,13 @@ void Environment::recordPopulation(double timestamp) {
     // is there a way that i can check if it's already been created?
     std::ofstream myfile;
 
-    if (timestamp==0) {
+    if (timestamp==0.0) {
         std::string str = "mkdir -p " + saveDir;
         const char *command = str.c_str();
         std::system(command);
         myfile.open(saveDir + "/populations_TS.csv", std::ios_base::app);
         myfile << "Hr" << "," << "m0" << "," << "m1" << "," << "m2" << "," << "c" << "," << "cd4_th" << "," << "cd4_treg" << "," << "cd8" << "," << "nk"<< "," << "mdsc" << ","  << "radius" << std::endl;
+        myfile << timestamp << "," << m0TS.back() << "," << m1TS.back() << "," << m2TS.back() << "," <<  cancerTS.back() << "," << cd4_th_TS.back() << "," << cd4_treg_TS.back() << "," << cd8TS.back() << "," << nkTS.back() << "," << mdscTS.back() << ","  << radiusTS.back() << std::endl;
     }
 
     myfile.open(saveDir + "/populations_TS.csv", std::ios_base::app);
@@ -158,4 +160,22 @@ void Environment::record_proliferation(double tstep, int prolifCount) {
 
     myfile.close();
 }
+
+
+void Environment::record_cancerdeath(double tstep, int count_age_deaths, int count_cd8_contact_deaths, int count_nk_contact_deaths) {
+    std::ofstream myfile;
+    if (tstep==0) {
+        std::string str = "mkdir -p " + saveDir;
+        const char *command = str.c_str();
+        std::system(command);
+        myfile.open(saveDir + "/cancer_death.csv", std::ios_base::app);
+        myfile << "Hr" << "," << "age" << "," << "cd8" << "," <<"nk"<< std::endl;
+    }
+
+    myfile.open(saveDir + "/cancer_death.csv", std::ios_base::app);
+    myfile << tstep << "," << count_age_deaths << "," << count_cd8_contact_deaths  << "," << count_nk_contact_deaths << std::endl;
+
+    myfile.close();
+}
+
 

@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem; 
 
-Environment::Environment(std::string folder, std::string set, int base_seed): rng(base_seed) {
+Environment::Environment(std::string folder, std::string set, double prob_th_treg, double prob_m1_to_m2, double prob_m2_to_m1, int base_seed): rng(base_seed) {
 
     /*
      * initialize a simulation environment
@@ -23,11 +23,15 @@ Environment::Environment(std::string folder, std::string set, int base_seed): rn
 
     loadParams();
 
-    // cd8RecRate = recParams[0];
-    // mRecRate = recParams[1];
-    // cd4RecRate = recParams[2];
+    // changes to kM1, kM2, cd4Diff
+    cellParams[7][1] = prob_th_treg; // prob of differentiating from cd4 to treg
+    cellParams[7][3] = prob_m1_to_m2; // prob of differentiating from m1 to m2
+    cellParams[8][3] = prob_m2_to_m1; // prob of differentiating from m2 to m1
 
-    for(int i=0; i<3; ++i){
+
+    immuneCellRecRates.resize(5);
+
+    for(int i=0; i<5; ++i){
         immuneCellRecRates.push_back(recParams[i]);
         immuneCells2rec.push_back(0.0);
     }
@@ -35,8 +39,8 @@ Environment::Environment(std::string folder, std::string set, int base_seed): rn
     immuneCellRecTypes = {3, 1, 2, 4, 5}; // {CD8, macrophage, CD4, NK, MDSC} -> same order as RecRates, values for CELL_STATE
 
     //recDist = recParams[3];
-    maxRecCytoConc = recParams[3];
-    recruitmentDelay = recParams[4];
+    maxRecCytoConc = recParams[5];
+    recruitmentDelay = recParams[6];
 
     simulationDuration = envParams[1];
     necroticGrowth = envParams[2];
@@ -124,7 +128,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
              anti_pd1_drug(tstep,0);
          } else {
              if (anti_pd1_count_num_dose < anti_pd1_treatment_schedule.size()) {
-                 if (timePoint == anti_pd1_treatment_schedule[anti_pd1_count_num_dose]) {
+                 if (steps == anti_pd1_treatment_schedule[anti_pd1_count_num_dose]) {
                      std::cout<<"Dose "<< anti_pd1_count_num_dose + 1<<" of anti PD-1 administered."<<std::endl;
                      anti_pd1_drug(tstep,dose_anti_pd1);
                      anti_pd1(tstep);
@@ -143,7 +147,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
              anti_ctla4_drug(tstep,0);
          } else {
              if (anti_ctla4_count_num_dose<anti_ctl4_treatment_schedule.size()) {
-                 if (timePoint == anti_ctl4_treatment_schedule[anti_ctla4_count_num_dose]) {
+                 if (steps == anti_ctl4_treatment_schedule[anti_ctla4_count_num_dose]) {
                      std::cout<<"Dose "<< anti_ctla4_count_num_dose  + 1 <<" anti CTLA-4 administered."<<std::endl;
                      anti_ctla4_drug(tstep,dose_anti_ctla4);
                      anti_ctla4_count_num_dose++;
@@ -177,6 +181,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
         }
 
         if (cancerTS.back() == 0) {
+            std::cout<<"Cancer eradicated."<<std::endl;
             save(tstep, steps*tstep);
             break;
         }

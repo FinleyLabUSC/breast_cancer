@@ -67,10 +67,18 @@ int main(int argc, char **argv) {
     int met = std::stoi(argv[7]);
     double binding_rate_pd1_drug = 0.1;
     int repNum = std::stoi(argv[2]);
+    double th_treg = std::stod(argv[8]);
+    double m1_m2 = std::stod(argv[9]);
+    double m2_m1 = std::stod(argv[10]);
 
     std::vector<std::string> txLabels = {"control","pdl1","ctla4","ici_combo"};
+    std::vector<std::string> parameter_levels = {"low","high"};
+
+    int cd4_id = (th_treg==0.3) ? 0 : 1;
+    int m1m2_id = (m1_m2==0.1) ? 0 : 1;
+    int m2m1_id = (m2_m1==0.1) ? 0 : 1;
     // TODO you probably need to change this for the cluster
-    std::string saveFolder = "../../" + folder + "/met_" + argv[7] + "/" + txLabels[tx];
+    std::string saveFolder = "../../" + folder + "/met_" + argv[7] + "/" + txLabels[tx] +"/cd4_" + parameter_levels[cd4_id] + "/m1m2_" +parameter_levels[m1m2_id] + "/m2m1_" + parameter_levels[m2m1_id]; // update to also have the three parameters im sweeping over
 
     //std::string str = "rm -r ./"+folder+"/set_" + set;
     //const char *command = str.c_str();
@@ -83,7 +91,7 @@ int main(int argc, char **argv) {
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    Environment model(saveFolder, replicate_number,repNum); //can replace with a directory representing any other phenotype state
+    Environment model(saveFolder, replicate_number,th_treg,m1_m2,m2_m1,repNum); //can replace with a directory representing any other phenotype state
 
     model.simulate(1,tx,met,binding_rate_pd1_drug);
 

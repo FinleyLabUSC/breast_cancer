@@ -22,26 +22,24 @@ void Environment::countPops_updateTimeSeries() {
     int m2 = 0;
 
     for(auto &cell : cell_list){
-        if(cell.type == 3){
-            numT8++;
+        if(cell.type == 0){
+            numC++;
+        } else if (cell.type==1) {
+            if (cell.state == 0) { m0++; }
+            if (cell.state == 1) { m1++; }
+            if (cell.state == 2) { m2++; }
         } else if(cell.type == 2) {
             if (cell.state == 4) {
                 numT4_th++;
-            } else {
+            } else if (cell.state == 5){
                 numT4_treg++;
             }
-        } else if(cell.type == 0){
-            numC++;
+        } else if(cell.type == 3){
+            numT8++;
         } else if (cell.type == 4) {
             numNK++;
         } else if (cell.type == 5) {
             numMDSC++;
-        } else if (cell.type==1) {
-            if (cell.state == 0) {
-                if (cell.state == 0) { m0++; }
-                if (cell.state == 1) { m1++; }
-                if (cell.state == 2) { m2++; }
-            }
         }
     }
 

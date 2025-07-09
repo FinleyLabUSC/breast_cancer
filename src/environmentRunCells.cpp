@@ -230,8 +230,22 @@ void Environment::mutateCells() {
 
 void Environment::removeDeadCells() {
     // remove dead cells
+    int count_age_deaths = 0;
+    int count_cd8_contact_deaths = 0;
+    int count_nk_contact_deaths = 0;
+
     std::vector<int> dead;
     for(int i=0; i<cell_list.size(); ++i){
+        if (cell_list[i].type ==0) {
+            if (cell_list[i].death_type == 0) {
+                count_age_deaths++;
+            } else if (cell_list[i].death_type == 1) {
+                count_cd8_contact_deaths++;
+            } else if (cell_list[i].death_type == 2) {
+                count_nk_contact_deaths++;
+            }
+        }
+
         if(cell_list[i].state == -1){
             dead.push_back(i);
         }
@@ -240,6 +254,8 @@ void Environment::removeDeadCells() {
     for(auto &i : dead){
         cell_list.erase(cell_list.begin()+i);
     }
+
+    record_cancerdeath(model_time,count_age_deaths,count_cd8_contact_deaths,count_nk_contact_deaths);
 }
 
 void Environment::updateCell_list() {

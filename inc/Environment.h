@@ -18,7 +18,7 @@
 class Environment{
 
 public:
-    Environment(std::string folder, std::string set, int base_seed);
+    Environment(std::string folder, std::string set, double prob_th_treg, double prob_m1_to_m2, double prob_m2_to_m1,int base_seed);
     //destructor needed
     void simulate(double tstep, int tx, int met, double binding_rate_pd1_drug);
 
@@ -62,6 +62,8 @@ private:
     void recordPopulation(double tstamp);
     void record_proliferation(double tstep, int prolifcount);
     void record_drug(double tstep, int tx_type);
+
+    void record_cancerdeath(double model_time, int count_age_deaths, int count_cd8_contact_deaths, int count_nk_contact_deaths);
 
     void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
@@ -137,8 +139,9 @@ private:
 
     double binding_rate_pd1_drug;
 
-    double mean_cancer_cell_cycle_length = 17;
+    double mean_cancer_cell_cycle_length = 30;
     double std_cancer_cell_cycle_length = 2;
+
 
     RNG rng;
 
