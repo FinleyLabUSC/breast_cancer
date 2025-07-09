@@ -29,9 +29,9 @@ Environment::Environment(std::string folder, std::string set, double prob_th_tre
     cellParams[8][3] = prob_m2_to_m1; // prob of differentiating from m2 to m1
 
 
-    immuneCellRecRates.resize(5);
+    immuneCellRecRates.reserve(5);
 
-    for(int i=0; i<5; ++i){
+    for (int i = 0; i < 5; ++i) {
         immuneCellRecRates.push_back(recParams[i]);
         immuneCells2rec.push_back(0.0);
     }
