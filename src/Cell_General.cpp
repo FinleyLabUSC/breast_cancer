@@ -76,12 +76,13 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     pdl1_expression_level = 0;
 
     max_pd1_level = 5; // arbitrary
-    threshold_for_pd1_induction = 0.5; // arbitrary
-    pd1_decay_rate = 0.025; // arbitrary
+    threshold_for_pd1_induction = 0.08; // arbitrary
+    pd1_decay_rate = 0.005; // arbitrary
+    pd1_induction_rate = 0.05;
 
-    threshold_for_pdl1_induction = 0.5;
+    threshold_for_pdl1_induction = 0.08; // arbitrary
     pdl1_induction_rate = 0.05;
-    pdl1_decay = 0.025; // arbitrary
+    pdl1_decay = 0.005; // arbitrary
     max_pdl1_level = 5; // arbitrary
 
     inhibitory_effect_of_binding_PD1_PDL1 = 0.5; // moderate suppression
@@ -313,7 +314,7 @@ void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
         // Find the nearest cancer cell
         std::array<double, 2> nearestCancer = {0.0, 0.0};
         bool nearestCancerFound = false;
-        double min_distance = 100 * rmax;
+        double min_distance = 250 * rmax; // the value used to be 100. I'm changing it for testing purposes.
 
         double dist;
 
@@ -342,10 +343,14 @@ void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
             }
             dx_movement = unitVector(dx_movement);
 
+
         } else {
             // only take random into account
             dx_movement = dx_random;
+
          }
+
+        if (dx_movement[0] == 0 && dx_movement[1] == 0){std::cout<<dx_movement[0]<<" "<<dx_movement[1]<<std::endl;}
 
         for(int i=0; i<2; ++i){
             x[i] += dt*migrationSpeed*dx_movement[i];

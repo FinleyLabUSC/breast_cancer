@@ -48,9 +48,16 @@ void Environment::save(double tstep, double tstamp) {
     const char *command = str.c_str();
     std::system(command);
 
-    // myfile.open(saveDir+"/necroticRadius.csv");
-    // myfile << necroticRadius << std::endl;
-    // myfile.close();
+     myfile.open(day_dir+"/influences.csv");
+    for (auto &cell : cell_list) {
+        myfile<<cell.unique_cell_ID;
+        for (int i = 0 ; i<cell.influences.size();i++) {
+            myfile<<","<<cell.influences[i];
+        }
+        myfile<<std::endl;
+    }
+     myfile.close();
+
 
     myfile.open(day_dir+"/cells.csv");
     for(auto &cell : cell_list){
@@ -79,7 +86,11 @@ void Environment::save(double tstep, double tstamp) {
                 << cell.state << ","
                 << cell.mother_uniqueID << ","
                 << cell.pdl1_expression_level <<  ","
-            <<cell.cellCycleLength<< std::endl;
+            <<cell.cellCycleLength<< ","
+              <<-1<< ","
+              <<-1<<","
+              <<-1<<","
+              <<-1<< std::endl;
         }
     }
     myfile.close();

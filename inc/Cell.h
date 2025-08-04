@@ -170,6 +170,7 @@ public:
     double pdl1_decay;
     double max_pdl1_level;
 
+    double pd1_induction_rate;
     double pd1_drug_bound;
     double pd1_available;
     double pd1_expression_level;

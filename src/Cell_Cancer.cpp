@@ -15,7 +15,7 @@ void Cell::initialize_Cancer_Cell(std::vector<std::vector<double>> &cellParams, 
     deathProb = cellParams[6][0];
     influenceRadius = cellParams[7][0];
 
-    migrationSpeed = 200; // TODO: select more appropriate migration speed for cancer cells. Current: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7547847/ Fig 1C, Parental median
+    migrationSpeed = 30; // 30 microns per hour ref 10.1529/biophysj.106.088898. HER2+ breast cancer cells.
 
     rmax = 1.5*radius*2;
 
@@ -40,10 +40,12 @@ void Cell::cancer_dieFromCD8(std::array<double, 2> otherX, double otherRadius, d
     if(type != 0){return;}
 
     if(calcDistance(otherX) <= radius+otherRadius){
+
         double rnd = master_rng.uniform(0,1,temporary_rng);
         if(rnd < immune_cell_kill_prob){
             next_state = -1;
             death_type = 1;
+
         }
     }
 }
@@ -53,9 +55,11 @@ void Cell::cancer_dieFromNK(std::array<double,2> otherX, double otherRadius, dou
 
     if(calcDistance(otherX) <= radius+otherRadius){ // this checks whether the interacting cells are in direct contact with each other
         double rnd = master_rng.uniform(0,1,temporary_rng);
+
         if(rnd < immune_cell_kill_prob){
             next_state = -1;
             death_type = 2;
+
         }
     }
 }
