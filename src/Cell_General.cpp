@@ -535,7 +535,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
         // CD8 active
         if(interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10){
             // interactionProperties = {radius, pdl1}
-            cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
+     //       cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     }
@@ -543,7 +543,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
         // NK active
         // M2 cells, Cancer cells, Tregs and MDSCs can induce PDL1 expression on NK cells.
         if (interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10) {
-            nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
+     //       nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     }

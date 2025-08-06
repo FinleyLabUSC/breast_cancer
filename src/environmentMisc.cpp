@@ -71,9 +71,9 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 void Environment::initializeInVitro() {
     int idx = 0;
     for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-100,100);
-        double y = rng.uniform(-100,100);
-        Cell newCell = Cell({x,y}, cellParams,5); // TODO update age sampling
+        double x = rng.uniform(-300,300);
+        double y = rng.uniform(-300,300);
+        Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling
         newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
         newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
 
@@ -83,35 +83,9 @@ void Environment::initializeInVitro() {
     }
 
     for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-100,100);
-        double y = rng.uniform(-100,100);
-        Cell newCell = Cell({x,y}, cellParams,4); // TODO update age sampling
-        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-
-        newCell.runtime_index = cell_list.size();
-        cell_list.push_back(newCell);
-        ++idx;
-    }
-
-    for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-100,100);
-        double y = rng.uniform(-100,100);
+        double x = rng.uniform(-300,300);
+        double y = rng.uniform(-300,300);
         Cell newCell = Cell({x,y}, cellParams,3); // TODO update age sampling
-        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-
-        newCell.runtime_index = cell_list.size();
-        cell_list.push_back(newCell);
-        ++idx;
-    }
-
-    for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-100,100);
-        double y = rng.uniform(-100,100);
-        Cell newCell = Cell({x,y}, cellParams,2); // TODO update age sampling
-        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
 
         newCell.runtime_index = cell_list.size();
         cell_list.push_back(newCell);

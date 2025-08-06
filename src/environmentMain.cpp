@@ -166,9 +166,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
              }
          }
 
-
-        //recruitImmuneCells_proportionalTumorBurden(tstep, tstep*steps);
-         recruitImmuneCells_cancerBirthDeath(tstep);
+       //  recruitImmuneCells_cancerBirthDeath(tstep);
         runCells(tstep, tstep*steps);
         mutateCells();
         removeDeadCells(); // loops through, removes the dead cells

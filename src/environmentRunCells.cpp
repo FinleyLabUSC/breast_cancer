@@ -42,7 +42,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
 
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
-        cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
+      //  cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
     }
 
 #pragma omp parallel for schedule(dynamic)
@@ -57,6 +57,8 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
                                             tstep, rng, temporary_rng2);
         }
     }
+
+
 
 #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
@@ -189,7 +191,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
 void Environment::runCells(double tstep, size_t step_count) {
     neighborInfluenceInteractions(tstep, step_count);
     calculateForces(tstep,step_count);
-    internalCellFunctions(tstep, step_count);
+    //internalCellFunctions(tstep, step_count);
 }
 
 

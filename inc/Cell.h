@@ -130,6 +130,8 @@ public:
     std::vector<std::array<double, 2> > cancer_neighbors;
     int cellAge;
 
+    int count_contacts=0;
+
     // age, division, and lifespan
     double divProb;
     double divProb_base;
