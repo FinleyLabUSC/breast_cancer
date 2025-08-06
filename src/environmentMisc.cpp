@@ -10,7 +10,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
     std::fstream file;
     file.open(filePathway);
 
-    // Check whether file exists
+    // Check whether the file exists
     std::vector<int> numCells = {0,0,0,0,0,0,0,0,0,0,0};
     std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5};
 
@@ -56,7 +56,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         std::cout<<"\033[32mModel initialized from mIHC file!\033[0m"<<std::endl;
         file.close(); // Close the input file
 
-        tumorSize(); // always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+        tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
         save(0, 0);
         countPops_updateTimeSeries();
         recordPopulation(0.0);
@@ -118,7 +118,7 @@ void Environment::initializeInVitro() {
         ++idx;
     }
 
-    tumorSize(); // always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
     save(0, 0);
     countPops_updateTimeSeries();
     recordPopulation(0.0);
@@ -215,7 +215,7 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
 
 void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size_t step_count) {
 
-    // recruitment is scaled by number of cancer cells
+    // recruitment is scaled by the number of cancer cells
     auto day = static_cast<double>(tstep*steps/24.0);
     if(day < recruitmentDelay){return;}
 

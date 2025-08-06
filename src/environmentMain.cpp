@@ -117,11 +117,9 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
-
-    std::string metLabel;
-    if (onLocal) {
-        metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
-    } else {
+    // Default setting is running on the local machine. If onLocal = false, then the positions are set appropriately to run on the CARC
+    std::string metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";;
+    if (!onLocal) {
         metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";
     }
 

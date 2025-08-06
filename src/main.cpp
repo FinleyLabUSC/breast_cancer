@@ -79,15 +79,13 @@ int main(int argc, char **argv) {
     int death_id = (cd8_death==0.005) ? 0 : 1;
     int rec_id = (cd8_rec==0.25) ? 0 : 1;
 
-    bool onLocal;
+    // By default the code is set up for running on the local machine. This only changes if run_location == CARC
+    bool onLocal = true;
     std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
-    std::string str;
-    std::string saveFolderPath;
-    if (run_location == "local") {
-        onLocal = true;
-         saveFolderPath = "../../" + saveFolder;
-        str = "rm -r ./"+folder+"/set_" + replicate_number;
-    } else {
+    std::string str = "rm -r ./"+folder+"/set_" + replicate_number;
+    std::string saveFolderPath = "../../" + saveFolder;
+
+    if (run_location == "CARC") {
         onLocal = false;
         saveFolderPath = "./" + saveFolder;
         str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
