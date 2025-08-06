@@ -15,7 +15,7 @@ void Cell::initialize_Cancer_Cell(std::vector<std::vector<double>> &cellParams, 
     deathProb = cellParams[6][0];
     influenceRadius = cellParams[7][0];
 
-    migrationSpeed = 200; // TODO: select more appropriate migration speed for cancer cells. Current: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7547847/ Fig 1C, Parental median
+    migrationSpeed = 30; // 30 microns per hour ref 10.1529/biophysj.106.088898. HER2+ breast cancer cells.
 
     rmax = 1.5*radius*2;
 

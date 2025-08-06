@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem; 
 
-Environment::Environment(std::string folder, std::string set, double prob_th_treg, double prob_m1_to_m2, double prob_m2_to_m1, int base_seed): rng(base_seed) {
+Environment::Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec, int base_seed): rng(base_seed) {
 
     /*
      * initialize a simulation environment
@@ -23,10 +23,13 @@ Environment::Environment(std::string folder, std::string set, double prob_th_tre
 
     loadParams();
 
-    // changes to kM1, kM2, cd4Diff
-    cellParams[7][1] = prob_th_treg; // prob of differentiating from cd4 to treg
-    cellParams[7][3] = prob_m1_to_m2; // prob of differentiating from m1 to m2
-    cellParams[8][3] = prob_m2_to_m1; // prob of differentiating from m2 to m1
+    std::cout<<"cell params rows "<<cellParams.size()<< " cols  "<<cellParams[0].size() <<std::endl;
+    std::cout<<"rec params rows "<<recParams.size()<<std::endl;
+
+    // changes to cd8_prolif, cd8_death, cd8_rec
+    cellParams[11][2] = cd8_prolif;
+    cellParams[5][2] = cd8_death;
+    recParams[0] = cd8_rec;
 
 
     immuneCellRecRates.reserve(5);
@@ -60,7 +63,7 @@ Environment::Environment(std::string folder, std::string set, double prob_th_tre
 }
 
 
-void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_drug) {
+void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_drug, bool onLocal) {
 
     /*
      * initializes and runs a simulation
@@ -114,10 +117,16 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
-   std::string metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
 
+    std::string metLabel;
+    if (onLocal) {
+        metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
+    } else {
+        metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";
+    }
 
-     initializeCellsFromFile(metLabel);
+     //initializeCellsFromFile(metLabel);
+    initializeTesting();
 
     std::cout << "starting simulations...\n";
 
@@ -187,4 +196,8 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
             break;
         }
      }
+
+    for (auto & cell : cell_list) {
+        cell.printLocations();
+    }
 }

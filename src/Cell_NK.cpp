@@ -65,16 +65,18 @@ void Cell::nk_pd1_expression_level(double dt, double anti_pd1_concentration, dou
         // Assumes that the expression of PD1 is induced in a contact independent manner, by M2 macs, cancer, Tregs and MDSCs.
         double influence = 1 - (1-influences[2]) * (1-influences[3])*(1-influences[5])*(1-influences[10]);
         if (influence >= threshold_for_pd1_induction ) {
-            temp = pd1_expression_level + dt * (influence - threshold_for_pd1_induction)/threshold_for_pd1_induction;
-            pd1_expression_level = (temp < max_pd1_level) ? temp : max_pd1_level;
+            double pd1_increase_amount = (influence - threshold_for_pd1_induction) * pd1_induction_rate * dt;
+            pd1_expression_level += pd1_increase_amount;
+            pd1_expression_level = (pd1_expression_level < max_pd1_level) ? pd1_expression_level : max_pd1_level; // expression level must be non negative
         }
         else {
-            temp = pd1_expression_level - pd1_decay_rate * dt;
-            pd1_expression_level = (temp > 0) ? temp : 0; // pd1 expression must be non-negative
+            double pd1_decrease_amount = pd1_decay_rate * dt;
+            pd1_expression_level = pd1_expression_level- pd1_decrease_amount;
+            pd1_expression_level = (pd1_expression_level>0) ? pd1_expression_level : 0; // expression level must be non negative
+
         }
 
         double fraction_pd1_bound_by_drug = sensitivity_to_antiPD1(anti_pd1_concentration,binding_rate_pd1_drug);
-
         pd1_drug_bound = pd1_expression_level * fraction_pd1_bound_by_drug;
         pd1_available = pd1_expression_level * (1-fraction_pd1_bound_by_drug);
     }

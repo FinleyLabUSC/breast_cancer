@@ -58,46 +58,50 @@
 
 
 int main(int argc, char **argv) {
-    std::string folder = argv[1];
-    std::string replicate_number = argv[2];
-    std::string pST = argv[3];
-    std::string dp_fac = argv[4];
-    std::string kp_fac = argv[5];
-    int tx = std::stoi(argv[6]);
-    int met = std::stoi(argv[7]);
+    std::string run_location = argv[1];
+    std::string folder = argv[2];
+    std::string replicate_number = argv[3];
+    std::string pST = argv[4];
+    std::string dp_fac = argv[5];
+    std::string kp_fac = argv[6];
+    int tx = std::stoi(argv[7]);
+    int met = std::stoi(argv[8]);
     double binding_rate_pd1_drug = 0.1;
-    int repNum = std::stoi(argv[2]);
-    double th_treg = std::stod(argv[8]);
-    double m1_m2 = std::stod(argv[9]);
-    double m2_m1 = std::stod(argv[10]);
+    int repNum = std::stoi(argv[3]);
+    double cd8_prolif = std::stod(argv[9]);
+    double cd8_death = std::stod(argv[10]);
+    double cd8_rec = std::stod(argv[11]);
 
-    std::vector<std::string> txLabels = {"control","pdl1","ctla4","ici_combo"};
+    std::vector<std::string> txLabels = {"control","pdl1","ctla4","hfdjk","ici_combo"};
     std::vector<std::string> parameter_levels = {"low","high"};
 
-    int cd4_id = (th_treg==0.45) ? 0 : 1;
-    int m1m2_id = (m1_m2==0.1) ? 0 : 1;
-    int m2m1_id = (m2_m1==0.1) ? 0 : 1;
-    // TODO you probably need to change this for the cluster
-    // std::string saveFolder = "../../" + folder + "/met_" + argv[7] + "/" + txLabels[tx] +"/cd4_" + parameter_levels[cd4_id] + "/m1m2_" +parameter_levels[m1m2_id] + "/m2m1_" + parameter_levels[m2m1_id]; // update to also have the three parameters im sweeping over
+    int prolif_id = (cd8_prolif==0.08) ? 0 : 1;
+    int death_id = (cd8_death==0.005) ? 0 : 1;
+    int rec_id = (cd8_rec==0.25) ? 0 : 1;
 
-    //std::string str = "rm -r ./"+folder+"/set_" + set;
-    //const char *command = str.c_str();
-    //std::system(command);
+    bool onLocal;
+    std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+    std::string str;
+    std::string saveFolderPath;
+    if (run_location == "local") {
+        onLocal = true;
+         saveFolderPath = "../../" + saveFolder;
+        str = "rm -r ./"+folder+"/set_" + replicate_number;
+    } else {
+        onLocal = false;
+        saveFolderPath = "./" + saveFolder;
+        str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
+    }
 
     // str = "python genParams.py ./"+folder+"/set_"+set+" "+set;
-
-    // This is the verison for the CARC
-    std::string saveFolder = "./" + folder + "/met_" + argv[7] + "/" + txLabels[tx] +"/cd4_" + parameter_levels[cd4_id] + "/m1m2_" +parameter_levels[m1m2_id] + "/m2m1_" + parameter_levels[m2m1_id];;
-    std::string str = "conda run -n bc_env_new python3 genParams.py "+ saveFolder+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
-
     const char *command = str.c_str();
     std::system(command);
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    Environment model(saveFolder, replicate_number,th_treg,m1_m2,m2_m1,repNum); //can replace with a directory representing any other phenotype state
+    Environment model(saveFolderPath, replicate_number,cd8_prolif,cd8_death,cd8_rec,repNum); //can replace with a directory representing any other phenotype state
 
-    model.simulate(1,tx,met,binding_rate_pd1_drug);
+    model.simulate(1,tx,met,binding_rate_pd1_drug,onLocal);
 
     auto stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = stop - start;

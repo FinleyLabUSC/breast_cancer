@@ -19,6 +19,7 @@ void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, si
     influenceRadius = cellParams[9][2];
     migrationBias = cellParams[10][2];
     divProb_base = cellParams[11][2];
+    divProb = divProb_base;
     deathScale = cellParams[12][2];
     migScale = cellParams[13][2];
 
@@ -59,9 +60,9 @@ void Cell::cd8_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, 
         double rnd = master_rng.uniform(0,1,temporary_rng);
         if(rnd < percent_binding){
             // The effect of the pd1-pdl1 binding is a function of the percent_binding and the inhibitory_effect_of_binding.
-            next_killProb = killProb * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
-            next_migrationSpeed = migrationSpeed * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
-            next_death_prob = deathProb * (1 + percent_binding) * inhibitory_effect_of_binding_PD1_PDL1;
+            next_killProb = next_killProb * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
+            next_migrationSpeed = next_migrationSpeed * percent_binding * inhibitory_effect_of_binding_PD1_PDL1;
+            next_death_prob = next_death_prob * (1 + percent_binding) * inhibitory_effect_of_binding_PD1_PDL1;
         }
     }
 }
@@ -103,11 +104,12 @@ void Cell::cd8_pd1_expression_level(double dt, double anti_pd1_concentration, do
         double temp;
         double influence = 1 - (1-influences[2]) * (1-influences[3])*(1-influences[5])*(1-influences[10]); // interactions with m2, cancer, treg, mdsc
         if (influence >= threshold_for_pd1_induction ) {
-            temp = pd1_expression_level + dt * (influence - threshold_for_pd1_induction)/threshold_for_pd1_induction;
-            pd1_expression_level = (temp < max_pd1_level) ? temp : max_pd1_level;
+            double pd1_increase_amount = (influence - threshold_for_pd1_induction) * pd1_induction_rate * dt;
+            pd1_expression_level = (pd1_expression_level < max_pd1_level)?pd1_expression_level : max_pd1_level;
         } else {
-            temp = pd1_expression_level - pd1_decay_rate * dt;
-            pd1_expression_level = (temp > 0) ? temp : 0; // pd1 expression must be non-negative
+            double pd1_decrease_amount = pd1_decay_rate * dt;
+            pd1_expression_level -= pd1_decrease_amount;
+            pd1_expression_level = (pd1_expression_level > 0) ? pd1_expression_level : 0;
         }
 
         // determines if the cell is "sensitive" to the drug based on how exhausted it is.

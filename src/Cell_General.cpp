@@ -76,12 +76,13 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     pdl1_expression_level = 0;
 
     max_pd1_level = 5; // arbitrary
-    threshold_for_pd1_induction = 0.5; // arbitrary
-    pd1_decay_rate = 0.025; // arbitrary
+    threshold_for_pd1_induction = 0.08; // arbitrary
+    pd1_decay_rate = 0.005; // arbitrary
+    pd1_induction_rate = 0.05;
 
-    threshold_for_pdl1_induction = 0.5;
+    threshold_for_pdl1_induction = 0.08;
     pdl1_induction_rate = 0.05;
-    pdl1_decay = 0.025; // arbitrary
+    pdl1_decay = 0.005; // arbitrary
     max_pdl1_level = 5; // arbitrary
 
     inhibitory_effect_of_binding_PD1_PDL1 = 0.5; // moderate suppression
@@ -365,7 +366,7 @@ void Cell::proliferationState(double anti_ctla4_concentration) {
         if (!(state == -1 || compressed)) {
             cellCyclePos++;
         }
-        if (static_cast<double>(cellCyclePos) > cellCycleLength && state == 3 && !compressed) {
+        if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && state == 3 && !compressed) {
             canProlif = true;
         }
 
@@ -374,7 +375,7 @@ void Cell::proliferationState(double anti_ctla4_concentration) {
         // assume CTLs need IL-2 from Th to proliferate
         canProlif = !(state == 7 || compressed);
 
-        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb_base;
+        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb; //QUESTION: should this be divProb or divProb_next?
     } else {
         canProlif = false;
     }
@@ -750,6 +751,19 @@ double Cell::sensitivity_to_antiCTLA4() {
 }
 
 // OTHER FUNCTIONS
+
+void Cell::printLocations() {
+    std::ofstream myFile;
+
+    myFile.open("./location_history/" + std::to_string(unique_cell_ID)+".csv");
+
+    for (auto & pos : location_history) {
+        myFile << pos[0] << "," << pos[1] << std::endl;
+    }
+
+    myFile.close();
+}
+
 double Cell::calcDistance(std::array<double, 2> otherX) {
     double d0 = (otherX[0] - x[0]);
     double d1 = (otherX[1] - x[1]);

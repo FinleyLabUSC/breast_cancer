@@ -20,7 +20,7 @@
 		"files" : 
 		[
 			"CMakeLists.txt",
-			"/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.30/Modules/FindOpenMP.cmake"
+			"/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/share/cmake-3.31/Modules/FindOpenMP.cmake"
 		],
 		"nodes" : 
 		[
@@ -46,7 +46,7 @@
 			{
 				"command" : 1,
 				"file" : 1,
-				"line" : 639,
+				"line" : 655,
 				"parent" : 3
 			},
 			{
