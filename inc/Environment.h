@@ -66,7 +66,7 @@ private:
     void record_drug(double tstep, int tx_type);
 
     void record_cancerdeath(double model_time, int count_age_deaths, int count_cd8_contact_deaths, int count_nk_contact_deaths);
-
+    void record_immuneCount(double tstep, int count);
     void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
 
@@ -86,7 +86,8 @@ private:
     std::array<std::vector<Cell>,12> createSubLists();
 
     double nearestNeighborRadius(int state1, int state2);
-    
+
+    std::vector<int> count_immune_contacts;
     double dt;
 
     // cell lists

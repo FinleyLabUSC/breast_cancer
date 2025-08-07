@@ -36,7 +36,7 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     x = loc;
 
     radius = 0;
-    compressed = false;
+    compressed = false; // Question: did I adjust the isCompressed and forces when the model is initialized from files?
     currentOverlap = 0;
     divProb = 0;
     divProb_base = 0;
@@ -52,6 +52,8 @@ Cell::Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellPara
     migrationBias = 0;
 
     influenceRadius = 0;
+
+    immuneSynapseFormed = false; // this indicates whether a cancer cell and a CD8 or NK are in contact. It affects how the migration and forces are handled.
 
     for(int i=0; i<influences.size(); ++i){
         influences[i] = 0;
@@ -155,12 +157,14 @@ void Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, int
     }
 }
 
-void Cell::resolveForces(double dt, std::array<double, 2> &tumorCenter, double &necroticRadius, double &necroticForce, RNG& master_rng, std::mt19937& temporary_rng) {
+void Cell::resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
 
-    // resolving the forces between cells.
-    x[0] += (dt/damping)*currentForces[0];
-    x[1] += (dt/damping)*currentForces[1];
-
+    // Only resolve forces on cells that have not formed immune synapses.
+    if (!immuneSynapseFormed) {
+        // resolving the forces between cells.
+        x[0] += (dt/damping)*currentForces[0];
+        x[1] += (dt/damping)*currentForces[1];
+    }
     resetForces(master_rng,temporary_rng);
 }
 
@@ -230,6 +234,11 @@ void Cell::resetOverlap() {
 
 void Cell::isCompressed() { // :
     compressed = currentOverlap > maxOverlap;
+
+    // Cells that have formed an immune synapse would be affected by contact-inhibition and thus not proliferating.
+    if (immuneSynapseFormed) {
+        compressed = true;
+    }
     resetOverlap();
 }
 
@@ -284,9 +293,10 @@ void Cell::age(double dt, size_t step_count,  RNG& master_rng) {
 }
 
 void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
-    // Dead cells, suppressed CD8's, suppressed NKs don't move
+    // Dead cells, suppressed CD8's, suppressed NKs don't move.
+    // Cancer or immune cells that have formed an immune synapse also don't move.
 
-    if(state == -1 || state == 7 || state == 9) {return;}
+    if(state == -1 || state == 7 || state == 9 || immuneSynapseFormed) {return;}
      if (type == 0) { // Cancer
         // do random migration
          double temp_x = master_rng.normal(0,1,temporary_rng);
@@ -353,6 +363,7 @@ void Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
                 throw std::runtime_error("migration NaN");
             }
         }
+        location_history.push_back(x);
     }
 }
 
@@ -750,16 +761,30 @@ double Cell::sensitivity_to_antiCTLA4() {
     }
 }
 
+void Cell::resetImmuneSynapse() {
+    // We assume that NK - Cancer and CD8 - Cancer synapses exist for an hour at most. So they're reset every time step.
+    if (state ) {
+        immuneSynapseFormed = false;
+    }
+
+}
+
 // OTHER FUNCTIONS
 
 void Cell::printLocations() {
-    std::ofstream myFile;
 
-    myFile.open("./location_history/" + std::to_string(unique_cell_ID)+".csv");
+    std::ofstream myFile;
+    std::string day_dir = "../../location_history/";
+    std::string str = "mkdir -p " + day_dir;
+    const char *command = str.c_str();
+    std::system(command);
+
+    myFile.open(day_dir+ std::to_string(unique_cell_ID)+".csv");
 
     for (auto & pos : location_history) {
         myFile << pos[0] << "," << pos[1] << std::endl;
     }
+
 
     myFile.close();
 }

@@ -38,7 +38,7 @@ public:
     std::array<double, 2> attractiveForce(std::array<double, 2> dx, double otherRadius);
     std::array<double, 2> repulsiveForce(std::array<double, 2> dx, double otherRadius);
     void calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType);
-    void resolveForces(double dt, std::array<double, 2> &tumorCenter, double &necroticRadius, double &necroticForce, RNG& master_rng, std::mt19937& temporary_rng);
+    void resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng);
     void resetForces(RNG& master_rng, std::mt19937& local_gen);
 
     void determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state);
@@ -114,6 +114,7 @@ public:
     void set_cellAge(size_t step_count);
 
     void updateRunTimeIndex(int index);
+    void resetImmuneSynapse();
 
     /*
      * PARAMETERS
@@ -129,8 +130,6 @@ public:
     std::vector<int> neighbors;
     std::vector<std::array<double, 2> > cancer_neighbors;
     int cellAge;
-
-    int count_contacts=0;
 
     // age, division, and lifespan
     double divProb;
@@ -162,6 +161,7 @@ public:
     double migrationBias;
     double migration_speed_base;
 
+    bool immuneSynapseFormed = false; // by default all cells have no immune synapses formed.
     // interactions with other cells
     double influenceRadius;
 
@@ -224,7 +224,7 @@ public:
     int state;
     int mother_uniqueID;
 
-    int death_type;
+    int death_type = -1;
 
     //lifespan
     size_t init_time;

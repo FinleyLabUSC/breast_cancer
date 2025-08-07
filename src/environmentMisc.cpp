@@ -70,7 +70,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 void Environment::initializeInVitro() {
     int idx = 0;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 200; i++) {
         double x = rng.uniform(-300,300);
         double y = rng.uniform(-300,300);
         Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling

@@ -27,6 +27,7 @@ void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, si
     kill_prob_base = baseKillProb;
     killProb = baseKillProb;
 
+    location_history.push_back(x);
 
     death_prob_base = deathProb;
 

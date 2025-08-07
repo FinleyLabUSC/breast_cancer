@@ -59,7 +59,6 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
     }
 
 
-
 #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
         unsigned int seed_for_temp_rng3 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,3);
@@ -105,10 +104,9 @@ void Environment::calculateForces(double tstep, size_t step_count) {
     for(int q=0; q<Nsteps; ++q) {
         // migrate first
         #pragma omp parallel for schedule(dynamic)
-            for(int i=0; i<cell_list.size(); ++i){
+            for(int i=0; i<cell_list.size(); ++i) {
                 unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,4);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
-
                 cell_list[i].migrate_NN(dt, rng, temporary_rng);
             }
 
@@ -126,18 +124,46 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,5);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
 
-                cell_list[i].resolveForces(dt, tumorCenter, necroticRadius, necroticForce,rng, temporary_rng);
+                cell_list[i].resolveForces(dt, rng, temporary_rng);
+            }
+
+        // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
+        // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
+        #pragma omp parallel for schedule(dynamic)
+            for (int i = 0; i < cell_list.size(); ++i) {
+                for (int j = 0; j < cell_list.size(); ++j) {
+                    if (i!=j && (!cell_list[i].immuneSynapseFormed || !cell_list[j].immuneSynapseFormed)){
+                        if ((cell_list[i].type == 3 || cell_list[i].type == 4) && cell_list[j].type == 0 && cell_list[i].calcDistance(cell_list[j].x) <= cell_list[i].radius + cell_list[j].radius) {
+                        cell_list[i].immuneSynapseFormed = true; // immune cells
+                        cell_list[j].immuneSynapseFormed = true; // cancer
+                        }
+                    }
+                }
             }
     }
 
+    //TODO: I think these calculations are incorrect. The migration has already happened, but this considers cells & their neighbors where they were prior to their migration.
         // calculate overlaps and proliferation states
-         #pragma omp parallel for
+        #pragma omp parallel for
         for(int i=0; i<cell_list.size(); ++i){
             for(auto &c : cell_list[i].neighbors){
                 cell_list[i].calculateOverlap(cell_list[c].x, cell_list[c].radius);
             }
             cell_list[i].isCompressed();
         }
+
+    int count_temp = 0;
+    for(auto & cellA : cell_list){
+        for(auto &cellB : cell_list) {
+            if (cellA.type == 3 && cellB.type==0){
+                double dist = sqrt((cellA.x[0] - cellB.x[0]) * (cellA.x[0] - cellB.x[0]) + (cellA.x[1] - cellB.x[1]) * (cellA.x[1] - cellB.x[1]));
+                if (dist <= (cellA.radius + cellB.radius)) {
+                    ++count_temp;
+                }
+            }
+        }
+    }
+    record_immuneCount(step_count, count_temp);
 }
 
 void Environment::internalCellFunctions(double tstep, size_t step_count) {
@@ -191,7 +217,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
 void Environment::runCells(double tstep, size_t step_count) {
     neighborInfluenceInteractions(tstep, step_count);
     calculateForces(tstep,step_count);
-    //internalCellFunctions(tstep, step_count);
+  //  internalCellFunctions(tstep, step_count);
 }
 
 
@@ -207,6 +233,7 @@ void Environment::anti_ctla4_drug(double tstep, double new_dose) {
     double temp = (current_drug_Value>0) ? current_drug_Value : 0;
     anti_ctla4_TS.push_back(temp);
 }
+
 
 void Environment::anti_pd1(double tstep) {
     int count_cells_inhibited=0;
@@ -227,12 +254,21 @@ void Environment::anti_pd1(double tstep) {
 void  Environment::treatment(int tx_flag) {}
 
 
+/**
+ * Runs the mutation functions for cells.
+ */
 void Environment::mutateCells() {
     for(auto & cell : cell_list) {
         cell.mutate(rng);
     }
 }
 
+
+/**
+ * Loops through the cell_list array, counts the cancer cells that died due to age, CD8 interactions, and NK interactions.
+ * Removed the dead cells from the cell_list.
+ * Currently (2025/08/07) also prints the location history of cells for migration testing.
+ */
 void Environment::removeDeadCells() {
     // remove dead cells
     int count_age_deaths = 0;
@@ -252,20 +288,29 @@ void Environment::removeDeadCells() {
         }
 
         if(cell_list[i].state == -1){
+            cell_list[i].printLocations();
             dead.push_back(i);
         }
     }
+
     std::reverse(dead.begin(), dead.end());
     for(auto &i : dead){
+
         cell_list.erase(cell_list.begin()+i);
     }
     num_cancer_deaths = count_age_deaths + count_cd8_contact_deaths + count_nk_contact_deaths;
     record_cancerdeath(model_time,count_age_deaths,count_cd8_contact_deaths,count_nk_contact_deaths);
 }
 
+/**
+ * Updates the runTimeIndices to their index in the cell_list, and
+ * resets the immuneSynapseFormed boolean of the surviving cells.
+ */
 void Environment::updateCell_list() {
     for(int i=0; i<cell_list.size(); ++i){
         cell_list[i].updateRunTimeIndex(i);
+        cell_list[i].resetImmuneSynapse(); // reset the immune synapses.
+
         if(cell_list[i].state == -1){
             throw std::runtime_error("Environment::internalCellFunctions -> dead cell not removed");
         }

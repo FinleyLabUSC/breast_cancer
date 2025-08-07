@@ -81,9 +81,10 @@ int main(int argc, char **argv) {
 
     // By default the code is set up for running on the local machine. This only changes if run_location == CARC
     bool onLocal = true;
-    std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
-    std::string str = "rm -r ./"+folder+"/set_" + replicate_number;
+    std::string saveFolder = folder + "/invitro_testing/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+   // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
     std::string saveFolderPath = "../../" + saveFolder;
+    std::string str  = "conda run -n bc_env python3 ../genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
 
     if (run_location == "CARC") {
         onLocal = false;
@@ -91,7 +92,6 @@ int main(int argc, char **argv) {
         str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
     }
 
-    // str = "python genParams.py ./"+folder+"/set_"+set+" "+set;
     const char *command = str.c_str();
     std::system(command);
 

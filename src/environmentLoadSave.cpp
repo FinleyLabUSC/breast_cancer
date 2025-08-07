@@ -156,6 +156,25 @@ void Environment::record_drug(double tstep, int tx_type) {
     }
 }
 
+void Environment::record_immuneCount(double tstep, int contact_count) {
+    std::ofstream myfile;
+    if (tstep==0) {
+        std::string str = "mkdir -p " + saveDir;
+        const char *command = str.c_str();
+        std::system(command);
+        myfile.open(saveDir + "/immune_contact.csv", std::ios_base::app);
+        myfile << "Hr"  << "," <<  "contact_count"<< std::endl;
+    }
+
+    myfile.open(saveDir + "/immune_contact.csv", std::ios_base::app);
+    myfile << tstep << "," << contact_count << std::endl;
+
+    myfile.close();
+}
+
+
+
+
 void Environment::record_proliferation(double tstep, int prolifCount) {
     std::ofstream myfile;
     if (tstep==0) {

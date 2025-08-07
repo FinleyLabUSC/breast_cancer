@@ -124,7 +124,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     }
 
      //initializeCellsFromFile(metLabel);
-    initializeTesting();
+    initializeInVitro();
 
     std::cout << "starting simulations...\n";
 
@@ -182,7 +182,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
         recordPopulation(steps); // saves the count of each cell to a file.
          record_drug((steps * tstep)/24, tx); // saves the drug concentration
-        if (fmod(steps * tstep, 12) == 0) { // change the y value depending on how frequently you want the stuff to be saved.
+        if (fmod(steps * tstep, 1) == 0) { // change the y value depending on how frequently you want the stuff to be saved.
             save(tstep, steps*tstep);
         }
 
@@ -194,6 +194,8 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
      }
 
     for (auto & cell : cell_list) {
+        std::cout<<"Locations prints"<<std::endl;
         cell.printLocations();
     }
+
 }
