@@ -3,8 +3,8 @@ import os
 import numpy as np
 
 # force params
-m = 50
-k = 10
+m = 3 # calculated from Dunn et al, PLOS ONE (2013) overlapping spheres model, units are Ns^-1 um^-1
+k = 10 # the combination of (m=3, d = 1, k = 10) results in a somewhat smooth fall off of the attraction force.
 ol = 0.25
 d = 1
 
@@ -141,7 +141,7 @@ recParams[6] = recDelay # recruitment delay (days)
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 10#25.0#5.0 #5.0 # simulation duration (days)
+envParams[1] = 1#25.0#5.0 #5.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
 envParams[3] = 0#0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)

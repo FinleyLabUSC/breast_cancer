@@ -131,6 +131,11 @@ std::array<double, 2> Cell::repulsiveForce(std::array<double, 2> dx, double othe
     double sij = radius + otherRadius;
 
     double scaleFactor = mu*sij*log10(1 + (dxNorm - sij)/sij);
+
+    if (scaleFactor < -maxRepulsiveForce) {
+        scaleFactor = -maxRepulsiveForce;
+    }
+
     double F0 = dxUnit[0]*scaleFactor;
     double F1 = dxUnit[1]*scaleFactor;
 
@@ -158,6 +163,7 @@ void Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, int
 }
 
 void Cell::resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
+
 
     // Only resolve forces on cells that have not formed immune synapses.
     if (!immuneSynapseFormed) {
@@ -771,10 +777,10 @@ void Cell::resetImmuneSynapse() {
 
 // OTHER FUNCTIONS
 
-void Cell::printLocations() {
+void Cell::printLocations(std::string saveDir) {
 
     std::ofstream myFile;
-    std::string day_dir = "../../location_history/";
+    std::string day_dir = saveDir + "/location_history/";
     std::string str = "mkdir -p " + day_dir;
     const char *command = str.c_str();
     std::system(command);

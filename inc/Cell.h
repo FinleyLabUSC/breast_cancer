@@ -128,7 +128,8 @@ public:
     bool compressed;
     double currentOverlap;
     std::vector<int> neighbors;
-    std::vector<std::array<double, 2> > cancer_neighbors;
+    std::vector<std::array<double, 2>> cancer_neighbors;
+
     int cellAge;
 
     // age, division, and lifespan
@@ -154,6 +155,8 @@ public:
     double damping;
     double maxOverlap;
     double rmax;
+
+    double maxRepulsiveForce = 30;
     std::array<double, 2> currentForces;
 
     // migration
@@ -212,7 +215,7 @@ public:
     double anti_pdl1_hill_coeff = 1; // steepness of sigmoid
 
     std::vector<std::array<double, 2> > location_history;
-    void printLocations();
+    void printLocations(std::string saveDir);
 
     // mutation probability
     double mutationProbability_inherent;

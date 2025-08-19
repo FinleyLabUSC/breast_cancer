@@ -103,9 +103,11 @@ double Cell::cd8_setProliferationScale(double anti_ctla4_concentration) {
 void Cell::cd8_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug) {
     if (type == 3) {
         double temp;
+        // interaction with pro-tumor and tumor cells induce PD1. These also happen to be cells that can express PDL1, but that isn't considered here.
         double influence = 1 - (1-influences[2]) * (1-influences[3])*(1-influences[5])*(1-influences[10]); // interactions with m2, cancer, treg, mdsc
         if (influence >= threshold_for_pd1_induction ) {
             double pd1_increase_amount = (influence - threshold_for_pd1_induction) * pd1_induction_rate * dt;
+            pd1_expression_level += pd1_increase_amount;
             pd1_expression_level = (pd1_expression_level < max_pd1_level)?pd1_expression_level : max_pd1_level;
         } else {
             double pd1_decrease_amount = pd1_decay_rate * dt;

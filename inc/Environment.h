@@ -60,13 +60,14 @@ private:
 
     void mutateCells();
 
+    void count_cancer_immune_contacts(double step_count);
     void save(double tstep, double tstamp);
     void recordPopulation(double tstamp);
     void record_proliferation(double tstep, int prolifcount);
     void record_drug(double tstep, int tx_type);
 
     void record_cancerdeath(double model_time, int count_age_deaths, int count_cd8_contact_deaths, int count_nk_contact_deaths);
-    void record_immuneCount(double tstep, int count);
+    void record_immuneCount(double tstep, int contact_cancer_count, int contact_immune_count);
     void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
 

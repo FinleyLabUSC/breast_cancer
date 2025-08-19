@@ -156,19 +156,18 @@ void Environment::record_drug(double tstep, int tx_type) {
     }
 }
 
-void Environment::record_immuneCount(double tstep, int contact_count) {
+void Environment::record_immuneCount(double tstep, int contact_cancer_count, int contact_immune_count) {
     std::ofstream myfile;
-    if (tstep==0) {
+    if (tstep==-1) {
         std::string str = "mkdir -p " + saveDir;
         const char *command = str.c_str();
         std::system(command);
         myfile.open(saveDir + "/immune_contact.csv", std::ios_base::app);
-        myfile << "Hr"  << "," <<  "contact_count"<< std::endl;
+        myfile << "Hr"  << "," <<  "contact_cancer_count" <<","<< "contact_immune_count"<< std::endl;
+        myfile << tstep << "," << contact_cancer_count<<"," << contact_immune_count << std::endl;
     }
-
     myfile.open(saveDir + "/immune_contact.csv", std::ios_base::app);
-    myfile << tstep << "," << contact_count << std::endl;
-
+    myfile << tstep << "," << contact_cancer_count<<"," << contact_immune_count << std::endl;
     myfile.close();
 }
 
@@ -183,11 +182,11 @@ void Environment::record_proliferation(double tstep, int prolifCount) {
         std::system(command);
         myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);
         myfile << "Hr"  << "," <<  "prolif_count"<< std::endl;
+        myfile << tstep << "," << prolifCount << std::endl;
+    } else {
+        myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);
+        myfile << tstep << "," << prolifCount << std::endl;
     }
-
-    myfile.open(saveDir + "/cd8_proliferation.csv", std::ios_base::app);
-    myfile << tstep << "," << prolifCount << std::endl;
-
     myfile.close();
 }
 
@@ -200,11 +199,12 @@ void Environment::record_cancerdeath(double tstep, int count_age_deaths, int cou
         std::system(command);
         myfile.open(saveDir + "/cancer_death.csv", std::ios_base::app);
         myfile << "Hr" << "," << "age" << "," << "cd8" << "," <<"nk"<< std::endl;
+        myfile << tstep << "," << count_age_deaths << "," << count_cd8_contact_deaths  << "," << count_nk_contact_deaths << std::endl;
+
+    } else {
+        myfile.open(saveDir + "/cancer_death.csv", std::ios_base::app);
+        myfile << tstep << "," << count_age_deaths << "," << count_cd8_contact_deaths  << "," << count_nk_contact_deaths << std::endl;
     }
-
-    myfile.open(saveDir + "/cancer_death.csv", std::ios_base::app);
-    myfile << tstep << "," << count_age_deaths << "," << count_cd8_contact_deaths  << "," << count_nk_contact_deaths << std::endl;
-
     myfile.close();
 }
 

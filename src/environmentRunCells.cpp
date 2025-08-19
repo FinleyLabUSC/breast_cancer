@@ -30,6 +30,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
 
         // reset neighborhood and influence
         cell_list[i].neighbors.clear();
+        cell_list[i].cancer_neighbors.clear();
         cell_list[i].clearInfluence();
 
         for(int j = 0; j < cell_list.size(); ++j){
@@ -42,7 +43,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
 
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i].unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
-      //  cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
+        cell_list[i].indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
     }
 
 #pragma omp parallel for schedule(dynamic)
@@ -110,6 +111,20 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 cell_list[i].migrate_NN(dt, rng, temporary_rng);
             }
 
+        // update the neighborlists
+        #pragma omp parallel for
+            for(int i=0; i<cell_list.size(); ++i){
+                cell_list[i].neighbors.clear();
+                cell_list[i].cancer_neighbors.clear();
+
+                for(int j = 0; j < cell_list.size(); ++j){
+                    // assume that a cell cannot influence itself
+                    if(cell_list[i].unique_cell_ID != cell_list[j].unique_cell_ID){
+                        cell_list[i].determine_neighboringCells(cell_list[j].x,cell_list[j].runtime_index,cell_list[j].state);
+                    }
+                }
+            }
+
         // calc forces
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
@@ -127,6 +142,20 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 cell_list[i].resolveForces(dt, rng, temporary_rng);
             }
 
+        // update the neighborlists
+        #pragma omp parallel for
+            for(int i=0; i<cell_list.size(); ++i){
+                cell_list[i].neighbors.clear();
+                cell_list[i].cancer_neighbors.clear();
+                for(int j = 0; j < cell_list.size(); ++j){
+                    // assume that a cell cannot influence itself
+                    if(cell_list[i].unique_cell_ID != cell_list[j].unique_cell_ID){
+                        cell_list[i].determine_neighboringCells(cell_list[j].x,cell_list[j].runtime_index,cell_list[j].state);
+                    }
+                }
+            }
+
+
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
         // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
         #pragma omp parallel for schedule(dynamic)
@@ -134,8 +163,8 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 for (int j = 0; j < cell_list.size(); ++j) {
                     if (i!=j && (!cell_list[i].immuneSynapseFormed || !cell_list[j].immuneSynapseFormed)){
                         if ((cell_list[i].type == 3 || cell_list[i].type == 4) && cell_list[j].type == 0 && cell_list[i].calcDistance(cell_list[j].x) <= cell_list[i].radius + cell_list[j].radius) {
-                        cell_list[i].immuneSynapseFormed = true; // immune cells
-                        cell_list[j].immuneSynapseFormed = true; // cancer
+                        cell_list[i].immuneSynapseFormed = false; // immune cells
+                        cell_list[j].immuneSynapseFormed = false; // cancer
                         }
                     }
                 }
@@ -152,19 +181,34 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             cell_list[i].isCompressed();
         }
 
-    int count_temp = 0;
+    count_cancer_immune_contacts(step_count);
+}
+
+
+
+void Environment::count_cancer_immune_contacts(double step_count) {
+    int count_cancer_cells = 0;
+    int count_immune_cells = 0;
     for(auto & cellA : cell_list){
-        for(auto &cellB : cell_list) {
-            if (cellA.type == 3 && cellB.type==0){
-                double dist = sqrt((cellA.x[0] - cellB.x[0]) * (cellA.x[0] - cellB.x[0]) + (cellA.x[1] - cellB.x[1]) * (cellA.x[1] - cellB.x[1]));
-                if (dist <= (cellA.radius + cellB.radius)) {
-                    ++count_temp;
+        bool inContact = false;
+        if (cellA.type == 0) {
+            for(auto &cellB : cell_list) {
+                if ((cellB.type == 3 || cellB.type == 4)){
+                    double dist = sqrt((cellA.x[0] - cellB.x[0]) * (cellA.x[0] - cellB.x[0]) + (cellA.x[1] - cellB.x[1]) * (cellA.x[1] - cellB.x[1]));
+                    if (dist <= (cellA.radius + cellB.radius)) {
+                        if (!inContact) {
+                            ++count_cancer_cells;
+                            inContact = true;
+                        }
+                        ++count_immune_cells;
+                    }
                 }
             }
         }
     }
-    record_immuneCount(step_count, count_temp);
+    record_immuneCount(step_count, count_cancer_cells, count_immune_cells);
 }
+
 
 void Environment::internalCellFunctions(double tstep, size_t step_count) {
     /*
@@ -217,7 +261,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
 void Environment::runCells(double tstep, size_t step_count) {
     neighborInfluenceInteractions(tstep, step_count);
     calculateForces(tstep,step_count);
-  //  internalCellFunctions(tstep, step_count);
+    internalCellFunctions(tstep, step_count);
 }
 
 
@@ -288,7 +332,7 @@ void Environment::removeDeadCells() {
         }
 
         if(cell_list[i].state == -1){
-            cell_list[i].printLocations();
+            cell_list[i].printLocations(saveDir);
             dead.push_back(i);
         }
     }
@@ -299,7 +343,7 @@ void Environment::removeDeadCells() {
         cell_list.erase(cell_list.begin()+i);
     }
     num_cancer_deaths = count_age_deaths + count_cd8_contact_deaths + count_nk_contact_deaths;
-    record_cancerdeath(model_time,count_age_deaths,count_cd8_contact_deaths,count_nk_contact_deaths);
+    record_cancerdeath(steps,count_age_deaths,count_cd8_contact_deaths,count_nk_contact_deaths);
 }
 
 /**

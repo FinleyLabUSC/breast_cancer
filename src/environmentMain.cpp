@@ -118,17 +118,18 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
     // Default setting is running on the local machine. If onLocal = false, then the positions are set appropriately to run on the CARC
-    std::string metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";;
+    std::string metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";;
     if (!onLocal) {
-        metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";
+        metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
     }
 
-     //initializeCellsFromFile(metLabel);
+    // initializeCellsFromFile(metLabel);
     initializeInVitro();
 
     std::cout << "starting simulations...\n";
 
      while(tstep*steps/24 <simulationDuration ) { // simulationDuration
+
          double timePoint = tstep*steps/24;
 
          if (!anti_pd1_on) {
@@ -165,14 +166,12 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
                  anti_ctla4_drug(tstep,0);
              }
          }
-
-       //  recruitImmuneCells_cancerBirthDeath(tstep);
+         recruitImmuneCells_cancerBirthDeath(tstep);
         runCells(tstep, tstep*steps);
         mutateCells();
         removeDeadCells(); // loops through, removes the dead cells
-         shuffleCells(); // shuffles the cells in the list
+        shuffleCells(); // shuffles the cells in the list
         updateCell_list(); // loops through, updates the runtimeindex
-
         tumorSize(); // loops through twice, calculates the tumor center, calculates the furthest distance from the center to a cancer cell.
         steps += 1;
         countPops_updateTimeSeries(); // loops through and saves the count of each cell type
@@ -194,8 +193,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
      }
 
     for (auto & cell : cell_list) {
-        std::cout<<"Locations prints"<<std::endl;
-        cell.printLocations();
+        cell.printLocations(saveDir);
     }
 
 }

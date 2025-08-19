@@ -61,6 +61,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         countPops_updateTimeSeries();
         recordPopulation(0.0);
 
+        count_cancer_immune_contacts(-1.0);
         std::cout<<"Model initialized. Populations recorded. "<<std::endl;
     } else {
         std::cout<<"\033[31mCouldn't open mIHC file: "<< filePathway << ". Check file pathway or file name!\033[0m"<<std::endl;
@@ -96,7 +97,12 @@ void Environment::initializeInVitro() {
     save(0, 0);
     countPops_updateTimeSeries();
     recordPopulation(0.0);
+    count_cancer_immune_contacts(-1.0);
     std::cout<<"Model initialized. Populations recorded. "<<std::endl;
+
+    std::cout << "Time: 0 "  << " | cancer: " << std::setw(10) << cancerTS.back()
+       << " | cd8: " << std::setw(10) << cd8TS.back() << " | cd4: " << std::setw(10) << cd4_th_TS.back() << " | treg: " << std::setw(10) << cd4_treg_TS.back()  << " | m0: " << std::setw(10) << m0TS.back()
+       << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
 }
 
 
@@ -119,6 +125,17 @@ void Environment::initializeTesting() {
     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
     newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
     cell_list.push_back(newCell);
+
+    tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    save(0, 0);
+    countPops_updateTimeSeries();
+    recordPopulation(0.0);
+    std::cout<<"Model initialized. Populations recorded. "<<std::endl;
+    count_cancer_immune_contacts(-1.0);
+
+    std::cout << "Time: 0 "  << " | cancer: " << std::setw(10) << cancerTS.back()
+       << " | cd8: " << std::setw(10) << cd8TS.back() << " | cd4: " << std::setw(10) << cd4_th_TS.back() << " | treg: " << std::setw(10) << cd4_treg_TS.back()  << " | m0: " << std::setw(10) << m0TS.back()
+       << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
 
 }
 
@@ -148,6 +165,18 @@ void Environment::initializeCells() {
             cell_list.push_back(newCell);
         }
     }
+
+    tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    save(0, 0);
+    countPops_updateTimeSeries();
+    recordPopulation(0.0);
+    std::cout<<"Model initialized. Populations recorded. "<<std::endl;
+    count_cancer_immune_contacts(-1.0);
+
+    std::cout << "Time: 0 "  << " | cancer: " << std::setw(10) << cancerTS.back()
+       << " | cd8: " << std::setw(10) << cd8TS.back() << " | cd4: " << std::setw(10) << cd4_th_TS.back() << " | treg: " << std::setw(10) << cd4_treg_TS.back()  << " | m0: " << std::setw(10) << m0TS.back()
+       << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
+
 }
 
 
