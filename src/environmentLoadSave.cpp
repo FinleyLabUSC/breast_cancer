@@ -122,7 +122,7 @@ void Environment::recordPopulation(double timestamp) {
 }
 
 void Environment::record_drug(double tstep, int tx_type) {
-    if (tx_type == 2 || tx_type == 4) {
+    if (tx_type == 1 || tx_type == 3) {
         bool file_exists = std::filesystem::exists(saveDir + "/anti_pd1.csv");
         std::ofstream myfile;
         if (!file_exists) {
@@ -138,7 +138,7 @@ void Environment::record_drug(double tstep, int tx_type) {
         }
 
     }
-    if (tx_type == 3 || tx_type == 4) {
+    if (tx_type == 2 || tx_type == 3) {
         // check if file exists, if not, create it.
         bool file_exists = std::filesystem::exists(saveDir + "/anti_ctla4.csv");
         std::ofstream myfile;

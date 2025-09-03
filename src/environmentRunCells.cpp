@@ -163,15 +163,15 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 for (int j = 0; j < cell_list.size(); ++j) {
                     if (i!=j && (!cell_list[i].immuneSynapseFormed || !cell_list[j].immuneSynapseFormed)){
                         if ((cell_list[i].type == 3 || cell_list[i].type == 4) && cell_list[j].type == 0 && cell_list[i].calcDistance(cell_list[j].x) <= cell_list[i].radius + cell_list[j].radius) {
-                        cell_list[i].immuneSynapseFormed = false; // immune cells
-                        cell_list[j].immuneSynapseFormed = false; // cancer
+                        cell_list[i].immuneSynapseFormed = true; // immune cells
+                        cell_list[j].immuneSynapseFormed = true; // cancer
                         }
                     }
                 }
             }
     }
 
-    //TODO: I think these calculations are incorrect. The migration has already happened, but this considers cells & their neighbors where they were prior to their migration.
+
         // calculate overlaps and proliferation states
         #pragma omp parallel for
         for(int i=0; i<cell_list.size(); ++i){
@@ -181,7 +181,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             cell_list[i].isCompressed();
         }
 
-    count_cancer_immune_contacts(step_count);
+    count_cancer_immune_contacts(step_count); // Records the number of cancer cells in contact with CD8/NK cells, and the number of CD8/NK cells in contact with cancer cells.
 }
 
 
@@ -254,8 +254,8 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
             }
         }
     }
-    record_proliferation(step_count,count_num_cd8_proliferation);
-    num_cancer_births = count_cancer_prolif;
+    record_proliferation(step_count,count_num_cd8_proliferation); // Records CD8 proliferation counts (you can use this to see if the ICI is working / tweak parameters).
+    num_cancer_births = count_cancer_prolif; // Used for immune cell recruitment.
 }
 
 void Environment::runCells(double tstep, size_t step_count) {

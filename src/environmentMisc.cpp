@@ -71,9 +71,9 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 void Environment::initializeInVitro() {
     int idx = 0;
-    for (int i = 0; i < 200; i++) {
-        double x = rng.uniform(-300,300);
-        double y = rng.uniform(-300,300);
+    for (int i = 0; i < 100; i++) {
+        double x = rng.uniform(-20,20);
+        double y = rng.uniform(-20,20);
         Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling
         newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
         newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
@@ -83,15 +83,15 @@ void Environment::initializeInVitro() {
         ++idx;
     }
 
-    for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-300,300);
-        double y = rng.uniform(-300,300);
-        Cell newCell = Cell({x,y}, cellParams,3); // TODO update age sampling
-
-        newCell.runtime_index = cell_list.size();
-        cell_list.push_back(newCell);
-        ++idx;
-    }
+    // for (int i = 0; i < 100; i++) {
+    //     double x = rng.uniform(-10,10);
+    //     double y = rng.uniform(-10,10);
+    //     Cell newCell = Cell({x,y}, cellParams,3); // TODO update age sampling
+    //
+    //     newCell.runtime_index = cell_list.size();
+    //     cell_list.push_back(newCell);
+    //     ++idx;
+    // }
 
     tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
     save(0, 0);

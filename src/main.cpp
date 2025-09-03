@@ -58,13 +58,9 @@
 
 
 int main(int argc, char **argv) {
-
-    for (int j = 0; j<1; ++j) {
-        std::cout<<"rep "<<j<<std::endl;
         std::string run_location = argv[1];
         std::string folder = argv[2];
-        //std::string replicate_number = argv[3];
-        std::string replicate_number = std::to_string(j);
+        std::string replicate_number = argv[3];
         std::string pST = argv[4];
         std::string dp_fac = argv[5];
         std::string kp_fac = argv[6];
@@ -76,7 +72,8 @@ int main(int argc, char **argv) {
         double cd8_death = std::stod(argv[10]);
         double cd8_rec = std::stod(argv[11]);
 
-        std::vector<std::string> txLabels = {"control","pdl1","ctla4","hfdjk","ici_combo"};
+    // These labels correspond to the type of treatment administered according to the value of tx. If tx = 1, then the simulation uses anti-PD1.
+        std::vector<std::string> txLabels = {"control","pd1","ctla4","ici_combo"};
         std::vector<std::string> parameter_levels = {"low","high"};
 
         int prolif_id = (cd8_prolif==0.08) ? 0 : 1;
@@ -85,7 +82,7 @@ int main(int argc, char **argv) {
 
         // By default the code is set up for running on the local machine. This only changes if run_location == CARC
         bool onLocal = true;
-        std::string saveFolder = folder + "/invitro_testing/prev_interactions/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+        std::string saveFolder = folder + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
         // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
         std::string saveFolderPath = "../../" + saveFolder;
         std::string str  = "conda run -n bc_env python3 ../genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
@@ -108,7 +105,6 @@ int main(int argc, char **argv) {
         auto stop = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> ms_double = stop - start;
         std::cout << "Duration: " << ms_double.count() << std::endl;
-    }
 
     return 0;
 }

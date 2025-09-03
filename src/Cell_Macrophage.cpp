@@ -55,6 +55,7 @@ void Cell::macrophage_differentiation(double dt, RNG& master_rng, std::mt19937& 
 
 void Cell::macrophage_pdl1_expression_level(double dt) {
 
+    // CD4, CD8, NK
     double posInfluence = 1 - (1-influences[4])*(1 - influences[6])*(1 - influences[8]);
 
     if (posInfluence >= threshold_for_pdl1_induction) {

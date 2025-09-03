@@ -23,14 +23,12 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
 
     loadParams();
 
-    std::cout<<"cell params rows "<<cellParams.size()<< " cols  "<<cellParams[0].size() <<std::endl;
-    std::cout<<"rec params rows "<<recParams.size()<<std::endl;
-
-    // changes to cd8_prolif, cd8_death, cd8_rec
+    // changes to cd8_prolif, cd8_death, cd8_rec.
+    // These three lines are to update the parameters which we're sweeping over.
+    // If you're sweeping over different parameters change the corresponding elements of cellParams and recParams, and the arguments which pass to main().
     cellParams[11][2] = cd8_prolif;
     cellParams[5][2] = cd8_death;
     recParams[0] = cd8_rec;
-
 
     immuneCellRecRates.reserve(5);
 
@@ -41,7 +39,6 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
 
     immuneCellRecTypes = {3, 1, 2, 4, 5}; // {CD8, macrophage, CD4, NK, MDSC} -> same order as RecRates, values for CELL_STATE
 
-    //recDist = recParams[3];
     maxRecCytoConc = recParams[5];
     recruitmentDelay = recParams[6];
 
@@ -76,6 +73,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
      */
     model_time = 0;
 
+    // Hard coded treatment schedule in hours. This corresponds to the schedules used experimentally.
     anti_pd1_treatment_schedule.resize(6);
     anti_pd1_treatment_schedule[0] = 0;
     anti_pd1_treatment_schedule[1] = 96;
@@ -95,7 +93,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     int anti_pd1_count_num_dose = 0;
     anti_pd1_TS.push_back(0.0);
     bool anti_pd1_on = false;
-    anti_pd1_decay_rate = 0.00193;
+    anti_pd1_decay_rate = 0.00193; // Calculated from half-life
     binding_rate_pd1_drug = bind_rate_pd1_drug;
 
     int anti_ctla4_count_num_dose = 0;
@@ -103,13 +101,15 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     bool anti_ctla4_on = false;
     anti_ctla4_decay_rate = -log(0.5)/(14.7 * 24.0); // Half  life of approx 14.7 days ref: 10.1111/bcp.12323
 
-    if (tx==2){
+
+    // Treatment defaults to OFF.
+    if (tx==1){
         // anti pd1 monotherapy
         anti_pd1_on = true;
-    } else if (tx==3) {
+    } else if (tx==2) {
         // anti ctla4 monotherapy
         anti_ctla4_on = true;
-    } else if (tx==4) {
+    } else if (tx==3) {
         // combination
         anti_pd1_on = true;
         anti_ctla4_on = true;
@@ -123,8 +123,10 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
         metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
     }
 
-    // initializeCellsFromFile(metLabel);
-    initializeInVitro();
+    // Whichever line is uncommented is how the model will be initialized.
+    // The argument passed here is a pseudonym for whichever metastasis is used to initialize the model. The "construction" of the string metLabel is done above.
+     initializeCellsFromFile(metLabel);
+     //initializeInVitro(); // This is used for testing purposes.
 
     std::cout << "starting simulations...\n";
 

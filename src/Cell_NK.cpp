@@ -46,7 +46,7 @@ void Cell::nk_pdl1Inhibition(std::array<double, 2> otherX, double otherRadius, d
 
 void Cell::nk_update_properties_indirect(size_t step_count){
     // Indirect interactions, models the secretion of stimulatory or inhibitory soluble factors
-    // Assumes Cancer cells don't secrete the soluble factors, only other imme cells.
+    // Assumes Cancer cells don't secrete the soluble factors, only other immune cells.
     if(state != 8){return;}
 
     // posInfluence is M1 + Th
@@ -61,7 +61,7 @@ void Cell::nk_update_properties_indirect(size_t step_count){
 
 void Cell::nk_pd1_expression_level(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug){
     if (type == 4) {
-        double temp;
+
         // Assumes that the expression of PD1 is induced in a contact independent manner, by M2 macs, cancer, Tregs and MDSCs.
         double influence = 1 - (1-influences[2]) * (1-influences[3])*(1-influences[5])*(1-influences[10]);
         if (influence >= threshold_for_pd1_induction ) {
@@ -73,7 +73,6 @@ void Cell::nk_pd1_expression_level(double dt, double anti_pd1_concentration, dou
             double pd1_decrease_amount = pd1_decay_rate * dt;
             pd1_expression_level = pd1_expression_level- pd1_decrease_amount;
             pd1_expression_level = (pd1_expression_level>0) ? pd1_expression_level : 0; // expression level must be non negative
-
         }
 
         double fraction_pd1_bound_by_drug = sensitivity_to_antiPD1(anti_pd1_concentration,binding_rate_pd1_drug);

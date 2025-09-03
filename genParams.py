@@ -22,7 +22,7 @@ kp = float(sys.argv[5])
 
 print("starting simulations")
 
-tcellMigBias = 0.2 #0.076
+tcellMigBias = 0.2
 cd4Diff = 0.3
 macMigBias = 0.1
 mdscMigBias = 0.1
@@ -34,8 +34,8 @@ cd4RecRate = 0.1# 0.00192 # these are the percentages of T cells from non-tx tum
 macRecRate = 0.1 # 0.00125 # these are the percentages of mature myeloid cells from non-tx tumors provided by ERT
 nkRecRate = 0.1 # 0.00044 # these are the percentages of NK cells from non-tx tumors provided by ERT
 mdscRecRate = 0.1 # 0.00469 # these are the percentages of MDSCs from non-tx tumors provided by ERT
-recDelay = 0.00
-necroticGrowth = 0 #params[12]
+recDelay = 0.00 # In the Tangella 2024 paper, they had a delay of 3 days. But because this mdoel is initialized from tumor images, we neglect that delay.
+necroticGrowth = 0 #params[12] # You can very easily remove any mention of the necrotic growth & limit.
 necrosisLimit = 940.3
 nkKillProb = 0.7 # This has been arbitrarily chosen.
 
@@ -54,7 +54,7 @@ cellParams[1, 0] = k  # kc
 cellParams[2, 0] = d  # damping
 cellParams[3, 0] = ol  # overlap
 cellParams[4, 0] = 20.0  # diameter (um)
-cellParams[5, 0] = 1/24.0  # div probability (hours)
+cellParams[5, 0] = 1/24.0  # div probability (hours) # No longer used. Just didn't want to remove it.
 cellParams[6, 0] = 1/(24.0*3.5) # death probability (hours)
 cellParams[7, 0] = 40.0  # influence distance
 
@@ -64,7 +64,7 @@ cellParams[1, 1] = k  # kc
 cellParams[2, 1] = d  # damping
 cellParams[3, 1] = ol  # overlap
 cellParams[4, 1] = 10.0  # diameter (um)
-cellParams[5, 1] = 1/(24.0*3.0) # lifespan (days) # Gong 2017 (for CD8 cells)
+cellParams[5, 1] = 1/(24.0*3.0) # lifespan (hours) # Gong 2017 (for CD8 cells)
 cellParams[6, 1] = 90.0  # migration speed base um/hr
 cellParams[7, 1] = cd4Diff  # differentiation to Treg
 cellParams[8, 1] = 40.0  # influence distance
@@ -76,7 +76,7 @@ cellParams[1, 2] = k  # kc
 cellParams[2, 2] = d  # damping
 cellParams[3, 2] = ol  # overlap
 cellParams[4, 2] = 10.0  # diameter (um)
-cellParams[5, 2] = 1/(24.0*14.0) # 1/lifespan (days) https://pmc.ncbi.nlm.nih.gov/articles/PMC4489929/
+cellParams[5, 2] = 1/(24.0*14.0) # 1/lifespan (hours) https://pmc.ncbi.nlm.nih.gov/articles/PMC4489929/
 cellParams[6, 2] = 90  # migration speed um/hr |
 cellParams[7, 2] = 0.8 # killProb
 cellParams[8, 2] = 2.0  # infScale -> arbitrarily set
@@ -136,14 +136,14 @@ recParams[2] = cd4RecRate # cd4RecRate
 recParams[3] = nkRecRate # nkRecRate
 recParams[4] = mdscRecRate # mdscRecRate
 
-recParams[5] = 100.0  # recDist (recruit a uniform distribution recDist away from the tumor edge
+recParams[5] = 100.0  # recDist (recruit a uniform distribution recDist away from the tumor edge # you can easily change this. Or even make the recruitment circular. Having a ever growing domain complicates things.
 recParams[6] = recDelay # recruitment delay (days)
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 1#25.0#5.0 #5.0 # simulation duration (days)
+envParams[1] = 2 #25.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
-envParams[3] = 0#0.5 # necrotic region outward force
+envParams[3] = 0 #0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)
 envParams[5] = anti_pd1_Dose
 envParams[6] = anti_ctla4_dose # experimental data

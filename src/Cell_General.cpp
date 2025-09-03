@@ -183,32 +183,6 @@ void Cell::resetForces(RNG& master_rng, std::mt19937& temporary_rng) {
     currentForces = {temp_x,temp_y};
 }
 
-// void Cell::neighboringCells(std::array<double, 2> otherX, int otherID){
-//
-//     /*
-//      * determine which cells are within 10*maximum interaction distance
-//      * stores the index in cell_list (runtime_index of the cell in Environment) of the neighboring cells
-//      */
-//     double dis = calcDistance(otherX);
-//     if(dis <= 10*rmax){
-//         neighbors.push_back(otherID);
-//     }
-// }
-//
-// void Cell::neighboringCancerCells(std::array<double, 2> otherX, int otherState){
-//
-//     /*
-//      * determine which cancer cells are within 10*maximum interaction distance
-//      * stores the index in cell_list (in Environment) of the neighboring cells
-//      */
-//     double dis = calcDistance(otherX);
-//     if (type != 0 && otherState == 3) { // If the cell under consideration is an immune cell, and the other is a cancer cell
-//         if(dis <= 10*rmax){
-//             cancer_neighbors.push_back(otherX);
-//         }
-//     }
-// }
-
 void Cell::determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state) {
     double dis = calcDistance(otherX);
 
@@ -241,7 +215,7 @@ void Cell::resetOverlap() {
 void Cell::isCompressed() { // :
     compressed = currentOverlap > maxOverlap;
 
-    // Cells that have formed an immune synapse would be affected by contact-inhibition and thus not proliferating.
+    // This forces cells that have formed immune synapses to not proliferate. The assumption is that these cells (because they're in contact with others) would be affected by contact-inhibition and thus not proliferating.
     if (immuneSynapseFormed) {
         compressed = true;
     }
@@ -392,7 +366,7 @@ void Cell::proliferationState(double anti_ctla4_concentration) {
         // assume CTLs need IL-2 from Th to proliferate
         canProlif = !(state == 7 || compressed);
 
-        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb; //QUESTION: should this be divProb or divProb_next?
+        divProb = cd8_setProliferationScale(anti_ctla4_concentration)*divProb;
     } else {
         canProlif = false;
     }
@@ -540,7 +514,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
     if (state == 3){
         // cancer
         if(interactingState == 6){
-            // interactionProperties = {radius, killProb}
+            //Definition of: interactionProperties = {radius, killProb}
             cancer_dieFromCD8(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         if (interactingState == 8){
@@ -551,8 +525,8 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
     if (state == 6){
         // CD8 active
         if(interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10){
-            // interactionProperties = {radius, pdl1}
-     //       cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
+
+            cd8_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     }
@@ -560,7 +534,7 @@ void Cell::directInteractions(int interactingState, std::array<double, 2> intera
         // NK active
         // M2 cells, Cancer cells, Tregs and MDSCs can induce PDL1 expression on NK cells.
         if (interactingState == 2 || interactingState == 3 || interactingState == 5 ||  interactingState == 10) {
-     //       nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
+            nk_pdl1Inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_rng, temporary_rng);
         }
         return;
     }
@@ -670,7 +644,7 @@ void Cell::set_cell_cycle_length(double cell_cycle_length) {
 
 
 void Cell::mutate(RNG& master_rng) {
-    // properties that can mutate: proliferation rate, migration rate, or PDL1 expression,
+    // properties that can mutate: proliferation rate or PDL1 expression,
 
     double sampleMutation = master_rng.uniform(0,1);
 
@@ -683,19 +657,13 @@ void Cell::mutate(RNG& master_rng) {
             case 0: {
                 // proliferation
                 // Increase or decrease according to kappa sampled from a uniform distribution [0, std dev of cell cycle].
-                // The position within the cell cycle is changed as well.
+                // The position within the cell cycle is scale appropriately.
 
                 float deltaCellCycle = master_rng.uniform(0,2);
                 cellCycleLength *= deltaCellCycle;
                 break;
             }
             case 1: {
-                // migration rate, incremented or decremented by a percentage (-100%, 100%). If migChange < 1 then decrease speed, if migChange > 1 increase speed
-                double migrationDelta = master_rng.uniform(0,2);
-                migrationSpeed *= migrationDelta;
-                break;
-            }
-            case 2: {
                 // PDL1 expression
                 double scale = master_rng.uniform(0,2);
                 pdl1_expression_level *= scale;
