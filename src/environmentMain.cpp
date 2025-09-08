@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem; 
 
-Environment::Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec, int base_seed): rng(base_seed) {
+Environment::Environment(std::string folder, std::string set, double cd8_rec, double mac_rec, double cd4_rec, double nk_rec, double mdsc_rec, int base_seed): rng(base_seed) {
 
     /*
      * initialize a simulation environment
@@ -23,12 +23,15 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
 
     loadParams();
 
-    // changes to cd8_prolif, cd8_death, cd8_rec.
+    // changes to immune cell recruitment rates
     // These three lines are to update the parameters which we're sweeping over.
     // If you're sweeping over different parameters change the corresponding elements of cellParams and recParams, and the arguments which pass to main().
-    cellParams[11][2] = cd8_prolif;
-    cellParams[5][2] = cd8_death;
     recParams[0] = cd8_rec;
+    recParams[1] = mac_rec;
+    recParams[2] = cd4_rec;
+    recParams[3] = nk_rec;
+    recParams[4] = mdsc_rec;
+
 
     immuneCellRecRates.reserve(5);
 
@@ -118,9 +121,9 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     record_drug((steps * tstep)/24, tx); // saves the drug concentration
 
     // Default setting is running on the local machine. If onLocal = false, then the positions are set appropriately to run on the CARC
-    std::string metLabel = "../mihc/in_silico_" + std::to_string(met) + ".csv";;
+    std::string metLabel = "../mihc/in_silico_met_" + std::to_string(met) + ".csv";;
     if (!onLocal) {
-        metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
+        metLabel = "./mihc/in_silico_met_" + std::to_string(met) + ".csv";
     }
 
     // Whichever line is uncommented is how the model will be initialized.

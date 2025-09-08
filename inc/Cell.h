@@ -156,7 +156,7 @@ public:
     double maxOverlap;
     double rmax;
 
-    double maxRepulsiveForce = 30;
+    double maxRepulsiveForce = 20;
     std::array<double, 2> currentForces;
 
     // migration

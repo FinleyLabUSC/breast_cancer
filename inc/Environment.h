@@ -18,7 +18,7 @@
 class Environment{
 
 public:
-    Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec,int base_seed);
+    Environment(std::string folder, std::string set, double cd8_rec, double mac_rec, double cd4_rec, double nk_rec, double mdsc_rec,int base_seed);
     //destructor needed
     void simulate(double tstep, int tx, int met, double binding_rate_pd1_drug, bool onLocal);
 

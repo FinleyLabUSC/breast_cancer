@@ -37,7 +37,7 @@ mdscRecRate = 0.1 # 0.00469 # these are the percentages of MDSCs from non-tx tum
 recDelay = 0.00 # In the Tangella 2024 paper, they had a delay of 3 days. But because this mdoel is initialized from tumor images, we neglect that delay.
 necroticGrowth = 0 #params[12] # You can very easily remove any mention of the necrotic growth & limit.
 necrosisLimit = 940.3
-nkKillProb = 0.7 # This has been arbitrarily chosen.
+nkKillProb = 0.03 # This has been arbitrarily chosen, but is the same as the CD8+ T cells.
 
 anti_pd1_Dose = 1.5
 anti_ctla4_dose = 0.6667 # based on conversion from mg to nM of the experimental schedules from R-T group. See documentation
@@ -78,11 +78,11 @@ cellParams[3, 2] = ol  # overlap
 cellParams[4, 2] = 10.0  # diameter (um)
 cellParams[5, 2] = 1/(24.0*14.0) # 1/lifespan (hours) https://pmc.ncbi.nlm.nih.gov/articles/PMC4489929/
 cellParams[6, 2] = 90  # migration speed um/hr |
-cellParams[7, 2] = 0.8 # killProb
+cellParams[7, 2] = 0.03 # killProb from Alfonso et al : 10.1016/j.neo.2021.09.003 This is not calibrated
 cellParams[8, 2] = 2.0  # infScale -> arbitrarily set
-cellParams[9, 2] = 40.0  # influence distance
+cellParams[9, 2] = 40.0  # influence distance # This is not what is listed in Tangella et al. They list 25 microns.
 cellParams[10, 2] = tcellMigBias  # migration bias base
-cellParams[11, 2] = 0.25 # only for testing #0.053  # proliferation prob
+cellParams[11, 2] = 0.053  # proliferation prob From Tangella et al.
 cellParams[12, 2] = 2.0 # arbitrary death scale
 cellParams[13, 2] = 2.0 # arbitrary migrate scale
 
@@ -141,7 +141,7 @@ recParams[6] = recDelay # recruitment delay (days)
 
 envParams = np.zeros((7, 1))
 envParams[0] = 15.0  # initTumorSize x | circle radius
-envParams[1] = 2 #25.0 # simulation duration (days)
+envParams[1] = 5 #25.0 # simulation duration (days)
 envParams[2] = necroticGrowth # necrotic growth
 envParams[3] = 0 #0.5 # necrotic region outward force
 envParams[4] = necrosisLimit # necrosis limit (accounts for diffusion limit of oxygen, but is adjustable based on the scale of the simulation)
