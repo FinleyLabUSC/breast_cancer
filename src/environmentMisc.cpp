@@ -70,10 +70,10 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 void Environment::initializeInVitro() {
     int idx = 0;
-    for (int i = 0; i < 1000; i++) {
-        double x = rng.uniform(-1500,1500);
-        double y = rng.uniform(-1500,1500);
-        Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling
+    for (int i = 0; i < 100; i++) {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        Cell newCell = Cell({x,y}, cellParams,5); // TODO update age sampling
         newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
         newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
 
@@ -81,6 +81,48 @@ void Environment::initializeInVitro() {
         cell_list.push_back(newCell);
         ++idx;
     }
+
+    for (int i = 0; i < 100; i++) {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        Cell newCell = Cell({x,y}, cellParams,4); // TODO update age sampling
+        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+
+        newCell.runtime_index = cell_list.size();
+        cell_list.push_back(newCell);
+        ++idx;
+    }
+
+    for (int i = 0; i < 100; i++) {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        Cell newCell = Cell({x,y}, cellParams,3); // TODO update age sampling
+        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+
+        newCell.runtime_index = cell_list.size();
+        cell_list.push_back(newCell);
+        ++idx;
+    }
+
+    for (int i = 0; i < 100; i++) {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        Cell newCell = Cell({x,y}, cellParams,2); // TODO update age sampling
+        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+
+        newCell.runtime_index = cell_list.size();
+        cell_list.push_back(newCell);
+        ++idx;
+    }
+
+    tumorSize(); // always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    save(0, 0);
+    countPops_updateTimeSeries();
+    recordPopulation(0.0);
+    std::cout<<"Model initialized. Populations recorded. "<<std::endl;
 
 }
 
@@ -93,17 +135,17 @@ void Environment::initializeTesting() {
 
     cell_list.push_back(newCell);
 
-    newCell =Cell({-100,0}, cellParams,0);
+    newCell =Cell({-100,0}, cellParams,3);
     newCell.runtime_index = cell_list.size();
     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
     newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
     cell_list.push_back(newCell);
 
-    newCell =Cell({-100,100}, cellParams,0);
-    newCell.runtime_index = cell_list.size();
-    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-    cell_list.push_back(newCell);
+    // newCell =Cell({-100,100}, cellParams,0);
+    // newCell.runtime_index = cell_list.size();
+    // newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    // newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+    // cell_list.push_back(newCell);
 
 }
 
@@ -114,24 +156,23 @@ void Environment::initializeCells() {
 
     double radiiCells = envParams[0];
     int q = 1;
-    cell_list.push_back(Cell({0.0,0.0}, cellParams, 0));
-    cell_list.back().cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-    cell_list.back().cellCyclePos = rng.uniform(0,cell_list.back().cellCycleLength);
+    cell_list.push_back(Cell({0.0,0.0}, cellParams, 3));
     cell_list.back().runtime_index = q;
 
     for(int i=1; i<radiiCells; ++i){
         double circumfrence = 2*i*cellParams[4][0]*3.1415;
         double nCells = circumfrence/cellParams[4][0];
         for(int j=0; j<nCells; ++j){
+            q++;
             double x = i * cellParams[4][0] * cos(2 * 3.1415 * j / nCells);
             double y = i * cellParams[4][0] * sin(2 * 3.1415 * j / nCells);
             Cell newCell = Cell({x, y},  cellParams, 0);
             newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
             newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-            newCell.runtime_index = cell_list.size();
+            newCell.runtime_index = q;
 
             cell_list.push_back(newCell);
-            q++;
+
         }
     }
 }
@@ -142,7 +183,6 @@ void Environment::initializeCells() {
 
 
 void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
-
     // Recruitment of different immune cell types are governed by different cancer-related events.
     // M0, CD4 and MDSC's are recruited proportional to the number of cancer cell "births" in the previous time step.
     // CD8's and NK's are recruited proportional to the number of cancer cell deaths in the previous time step.
@@ -166,6 +206,9 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
             immuneCells2rec[i] -= 1;
         }
     }
+
+    num_cancer_births = 0;
+    num_cancer_deaths = 0;
 }
 
 

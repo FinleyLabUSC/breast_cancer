@@ -152,36 +152,36 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
     for(int i=0; i<numCells; ++i){
         if (cell_list[i].state != -1) {
             cell_list[i].set_cellAge(step_count); // this function figures out the age of the cell.
-            cell_list[i].age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
-            cell_list[i].proliferationState(anti_ctla4_TS.back());
-            std::array<double, 3> newLoc = cell_list[i].proliferate(tstep, rng);
+     cell_list[i].age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
+      cell_list[i].proliferationState(anti_ctla4_TS.back());
+      std::array<double, 3> newLoc = cell_list[i].proliferate(tstep, rng);
 
-            if(newLoc[2] == 1){
+      if(newLoc[2] == 1){
 
-                if(cell_list[i].type == 0) {
-                    // if cancer cell has divided, reset the mother cell's cellCyclePos
-                    cell_list[i].prevDivTime = cell_list[i].currDivTime;
-                    cell_list[i].currDivTime = step_count;
-                    cell_list[i].cellCyclePos = 0;
-                    cell_list[i].canProlif = false;
-                    count_cancer_prolif++;
-                }
+          if(cell_list[i].type == 0) {
+              // if cancer cell has divided, reset the mother cell's cellCyclePos
+              cell_list[i].prevDivTime = cell_list[i].currDivTime;
+              cell_list[i].currDivTime = step_count;
+              cell_list[i].cellCyclePos = 0;
+              cell_list[i].canProlif = false;
+              count_cancer_prolif++;
+          }
 
-                if (cell_list[i].type ==3) {
-                    // increase count if CD8+ cell proliferated. Testing purposes.
-                    count_num_cd8_proliferation++;
-                }
+          if (cell_list[i].type ==3) {
+              // increase count if CD8+ cell proliferated. Testing purposes.
+              count_num_cd8_proliferation++;
+          }
 
-                cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type));
-                cell_list.back().birthTime = model_time;
-                cell_list.back().runtime_index = cell_list.size()-1;
-                cell_list.back().mother_uniqueID = cell_list[i].unique_cell_ID;
+          cell_list.push_back(Cell({newLoc[0], newLoc[1]},cellParams,cell_list[i].type));
+          cell_list.back().birthTime = model_time;
+          cell_list.back().runtime_index = cell_list.size()-1;
+          cell_list.back().mother_uniqueID = cell_list[i].unique_cell_ID;
 
-                cell_list[cell_list.size() - 1].inherit(cell_list[i].inheritanceProperties());
+          cell_list[cell_list.size() - 1].inherit(cell_list[i].inheritanceProperties());
 
-            }
-        }
+      }
     }
+     }
     record_proliferation(step_count,count_num_cd8_proliferation);
     num_cancer_births = count_cancer_prolif;
 }
