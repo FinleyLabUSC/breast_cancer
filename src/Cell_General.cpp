@@ -748,7 +748,7 @@ void Cell::resetImmuneSynapse() {
 void Cell::printLocations(std::string saveDir) {
 
     std::ofstream myFile;
-    std::string day_dir = saveDir + "/location_history/";
+    std::string day_dir = saveDir + "\\location_history\\";
     std::string str = "mkdir -p " + day_dir;
     const char *command = str.c_str();
     std::system(command);

@@ -1,8 +1,8 @@
 #include <omp.h>
+#include <thread>
 
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
-
 
 namespace fs = std::filesystem; 
 
@@ -19,7 +19,7 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
      * set environment variables to their respective values
      */
 
-    saveDir = "./"+folder+"/set_"+set;
+    saveDir = ".\\"+folder+"\\set_"+set;
 
     loadParams();
 

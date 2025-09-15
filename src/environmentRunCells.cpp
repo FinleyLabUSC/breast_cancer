@@ -7,6 +7,9 @@
 
 void Environment::neighborInfluenceInteractions(double tstep, size_t step_count) {
 
+    // explicitly stating how many threads are permitted in OpenMP
+    omp_set_num_threads(16);
+
     /*
      * FIRST LOOP
      * - determine neighbors
@@ -100,9 +103,13 @@ void Environment::calculateForces(double tstep, size_t step_count) {
 
     int Nsteps = static_cast<int>(tstep/dt);
 
+    // explicitly stating how many threads are permitted in OpenMP
+    omp_set_num_threads(16);
+
     // iterate through Nsteps, calculating and resolving forces between neighbors
     // also includes migration
     for(int q=0; q<Nsteps; ++q) {
+        std::cout << "This is step " << q+1 << " of " << Nsteps << " for hour " << step_count << std::endl;
         // migrate first
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
@@ -111,12 +118,12 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 cell_list[i].migrate_NN(dt, rng, temporary_rng);
             }
 
+        std::cout << "Updating neighbors... " << std::endl;
         // update the neighborlists
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i].neighbors.clear();
                 cell_list[i].cancer_neighbors.clear();
-
                 for(int j = 0; j < cell_list.size(); ++j){
                     // assume that a cell cannot influence itself
                     if(cell_list[i].unique_cell_ID != cell_list[j].unique_cell_ID){
@@ -125,6 +132,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 }
             }
 
+        std::cout << "Calculating forces... " << std::endl;
         // calc forces
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
@@ -133,6 +141,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 }
             }
 
+        std::cout << "Resolving forces... " << std::endl;
         // resolve forces
        #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i){
@@ -142,6 +151,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 cell_list[i].resolveForces(dt, rng, temporary_rng);
             }
 
+        std::cout << "Updating neighbors... " << std::endl;
         // update the neighborlists
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
@@ -155,7 +165,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 }
             }
 
-
+        std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
         // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
         #pragma omp parallel for schedule(dynamic)
