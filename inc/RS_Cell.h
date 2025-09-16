@@ -24,7 +24,6 @@ class RS_Cell
     // initialization
     RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
     virtual void initialize_cell_from_file(int state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng);
-    virtual void initialize_cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp=0);
 
     // force functions
     std::array<double, 2> attractiveForce(std::array<double, 2> dx, double otherRadius);
@@ -88,6 +87,7 @@ class RS_Cell
 
     // update functions
     void updateRunTimeIndex(int index);
+    void reset_all_properties();
 
     /*
      * PARAMETERS
@@ -211,7 +211,6 @@ class Cancer final : public RS_Cell
 {
     public:
     Cancer(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
-    void initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp) override;
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
@@ -219,7 +218,6 @@ class CD4 final : public RS_Cell
 {
     public:
     CD4(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
-    void initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp) override;
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
@@ -227,7 +225,6 @@ class CD8 final : public RS_Cell
 {
     public:
     CD8(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
-    void initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp) override;
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
@@ -235,7 +232,6 @@ class Macrophage final : public RS_Cell
 {
     public:
     Macrophage(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
-    void initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp) override;
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
@@ -243,7 +239,6 @@ class MDSC final : public RS_Cell
 {
     public:
     MDSC(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
-    void initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp) override;
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
@@ -251,7 +246,6 @@ class NK final : public RS_Cell
 {
     public:
     NK(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
-    void initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp) override;
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 

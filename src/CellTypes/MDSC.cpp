@@ -2,9 +2,7 @@
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
-MDSC::MDSC(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp){}
-
-void MDSC::initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp)
+MDSC::MDSC(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp)
 {
     state = 10;
     mu = cellParams[0][5];

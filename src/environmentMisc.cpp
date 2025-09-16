@@ -38,7 +38,8 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
             if (cell_state!=-10){
                 numCells[cell_state]++;
 
-                // TODO sample ages for the cells.
+                // TODO: sample ages for the cells.
+                // TODO: Need to implement switch-case here to initialize the correct cell type
                 Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state]);
                 newCell.initialize_cell_from_file(cell_state,cell_list.size(),mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length,initialize_from_file_rng);
 

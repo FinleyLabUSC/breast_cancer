@@ -2,9 +2,7 @@
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
-Cancer::Cancer(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp){}
-
-void Cancer::initialize_cell(std::vector<std::vector<double>> &cellParams, size_t init_tstamp)
+Cancer::Cancer(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp)
 {
     // state & proliferation flag
     state = 3;
@@ -29,6 +27,7 @@ void Cancer::initialize_cell(std::vector<std::vector<double>> &cellParams, size_
     birthTime = 0;
     location_history.push_back(x);
 }
+
 
 void Cancer::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
 {

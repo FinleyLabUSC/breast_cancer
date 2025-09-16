@@ -5,6 +5,7 @@ long unsigned RS_Cell::cell_counter = 0; // Defines the cell counter obj
 // Initialization
 RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp)
 {
+    // This constructor sets all parameters shared between cells
     type = cellType;
     state = 0;
     x = loc;
@@ -26,16 +27,15 @@ RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& ce
     migrationBias = 0;
 
     influenceRadius = 0;
-
     immuneSynapseFormed = false; // this indicates whether a cancer cell and a CD8 or NK are in contact. It affects how the migration and forces are handled.
 
     for(int i=0; i<influences.size(); ++i){
         influences[i] = 0;
     }
-    // TODO: can get rid of chemotaxis??
-    for(int i=0; i<chemotaxVals.size(); ++i){
+    for(int i=0; i<chemotaxVals.size(); ++i){ // TODO: can get rid of chemotaxis??
         chemotaxVals[i] = 0;
     }
+
     kTr = 0;
     kM1 = 0;
     kM2 = 0;
@@ -46,35 +46,27 @@ RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& ce
 
     // for influence distance, assume a soft-cutoff where p(distance) = probTh
     probTh = 0.01;
-
     pd1_drug_bound = 0;
     pd1_available = 0;
     pd1_expression_level = 0;
     pdl1_expression_level = 0;
-
     max_pd1_level = 5; // arbitrary
     threshold_for_pd1_induction = 0.08; // arbitrary
     pd1_decay_rate = 0.005; // arbitrary
     pd1_induction_rate = 0.05;
-
     threshold_for_pdl1_induction = 0.08;
     pdl1_induction_rate = 0.05;
     pdl1_decay = 0.005; // arbitrary
     max_pdl1_level = 5; // arbitrary
-
     inhibitory_effect_of_binding_PD1_PDL1 = 0.5; // moderate suppression
-
-    initialize_cell(cellParams, 0); // call mutable initialize cell function
-    if(cellType == 0){
-        mutationProbability_inherent = 0.0;
-        mutation_prob_PDL1 = 0.0;
-    }
+    mutationProbability_inherent = 0.0;
+    mutation_prob_PDL1 = 0.0;
 }
 
 // OVERRIDE FUNCTIONS
 void RS_Cell::initialize_cell(std::vector<std::vector<double>> &cellParams, size_t init_tstamp)
 {
-    throw std::runtime_error("Cell::Cell -> unavailable cell type"); // MUST be overridden, no default cell initialization
+    throw std::runtime_error("You cannot initialize an RS_Cell object.");
 }
 
 void RS_Cell::initialize_cell_from_file(int state, int run_time_index, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)

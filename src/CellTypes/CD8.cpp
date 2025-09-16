@@ -2,9 +2,7 @@
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
-CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp){}
-
-void CD8::initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp)
+CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp)
 {
     state = 6;
     mu = cellParams[0][2];
@@ -31,6 +29,7 @@ void CD8::initialize_cell(std::vector<std::vector<double>>& cellParams, size_t i
     rmax = 1.5*radius*2;
     init_time = init_tstamp;
 }
+
 
 void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
 {

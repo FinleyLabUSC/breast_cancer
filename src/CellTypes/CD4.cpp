@@ -2,9 +2,7 @@
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
-CD4::CD4(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp){}
-
-void CD4::initialize_cell(std::vector<std::vector<double>>& cellParams, size_t init_tstamp)
+CD4::CD4(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): RS_Cell(loc, cellParams, cellType, init_tstamp)
 {
     state = 4;
     mu = cellParams[0][1];
@@ -19,6 +17,7 @@ void CD4::initialize_cell(std::vector<std::vector<double>>& cellParams, size_t i
     migrationBias = cellParams[9][1];
     rmax = 1.5*radius*2;
 }
+
 
 void CD4::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
 {
