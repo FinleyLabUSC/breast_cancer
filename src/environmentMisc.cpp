@@ -71,6 +71,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 
 void Environment::initializeInVitro() {
+    // TODO: Need to change this so only cancer cells are created
     int idx = 0;
     for (int i = 0; i < 100; i++) {
         double x = rng.uniform(-20,20);
@@ -108,6 +109,7 @@ void Environment::initializeInVitro() {
 
 
 void Environment::initializeTesting() {
+    // TODO: Need to specify cell types here
     Cell newCell = Cell({-100,-100}, cellParams,0);
     newCell.runtime_index = cell_list.size();
     newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
@@ -143,6 +145,7 @@ void Environment::initializeTesting() {
 void Environment::initializeCells() {
     /*
      * places the initial tumor, which is a cluster of pure cancer cells
+     * TODO: Specify these as cancer cells & probably rename the function
      */
 
     double radiiCells = envParams[0];
@@ -180,13 +183,8 @@ void Environment::initializeCells() {
 
 }
 
-
-
-
-
-
 void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
-
+    // TODO: Specify which immune cells are getting recruited when looping!
     // Recruitment of different immune cell types are governed by different cancer-related events.
     // M0, CD4 and MDSC's are recruited proportional to the number of cancer cell "births" in the previous time step.
     // CD8's and NK's are recruited proportional to the number of cancer cell deaths in the previous time step.
@@ -218,7 +216,7 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
 
 
 void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size_t step_count) {
-
+    // TODO: Specify which immune cells are getting recruited when looping!
     // recruitment is scaled by the number of cancer cells
     auto day = static_cast<double>(tstep*steps/24.0);
     if(day < recruitmentDelay){return;}

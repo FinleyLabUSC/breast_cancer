@@ -48,3 +48,65 @@ void Cancer::initialize_cell_from_file(int cell_state, int cell_list_length, dou
         pdl1_expression_level = master_rng.uniform(0,max_pdl1_level);
     }
 }
+
+std::array<double, 3> Cancer::proliferate(double dt, RNG& master_rng)
+{
+    if (!canProlif || state == -1)
+    {
+        return {0,0,0}; // cannot proliferate because suppressed or dead!
+    }
+
+    return cycle_proliferate(dt, master_rng);
+}
+
+void Cancer::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+{
+    // If the cancer cell is dead or immune synapsed it can't move
+    if (state == -1 || immuneSynapseFormed) {return; }
+    // do random migration
+    double temp_x = master_rng.normal(0,1,temporary_rng);
+    double temp_y = master_rng.normal(0,1,temporary_rng);
+    std::array<double, 2> rand_unit_vec = unitVector({temp_x,temp_y});
+    for(int i=0; i<x.size(); ++i){
+        x[i] += dt*migrationSpeed*rand_unit_vec[i];
+        if(std::isnan(x[i])){
+            throw std::runtime_error("Cancer migration NaN");
+        }
+    }
+    location_history.push_back(x);
+}
+
+void Cancer::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
+{
+    // TODO: Update PDL1 expression function to match declaration
+    express_PD1L();
+}
+
+void Cancer::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+{
+    contact_die(interactingState, interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+}
+
+void Cancer::contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::mt19937& temporary_rng)
+{
+    // Cells must be in contact to perform contact death
+    if (calcDistance(otherX) <= radius + otherRadius)
+    {
+        int kill_type = 0;
+        switch(killer_state)
+        {
+        case 6: // Death by CD8
+            kill_type = 1; break;
+        case 8: // Death by NK
+            kill_type = 2; break;
+        default:
+            throw std::runtime_error("Contact killing behavior undefined for cell state " + std::to_string(killer_state) + ".");
+        }
+        double rnd = master_rng.uniform(0, 1, temporary_rng);
+        if (rnd < kill_prob)
+        {
+            next_state = -1;
+            death_type = kill_type;
+        }
+    }
+}

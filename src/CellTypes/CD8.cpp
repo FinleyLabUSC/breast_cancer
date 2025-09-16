@@ -49,3 +49,30 @@ void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double
     divProb = master_rng.uniform(0, 0.25 * divProb_base); // Low division probability
     killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
 }
+
+std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
+{
+    if (!canProlif || state == -1)
+    {
+        return {0,0,0}; // cannot proliferate because suppressed or dead!
+    }
+
+    return prob_proliferate(dt, master_rng);
+}
+
+void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
+{
+    // TODO: Should we check if the cell is dead or not? Could also j. wrap indirectInteractions call w/ this
+    // TODO: Update PD1 expression function & update_indirectProperties to match declaration
+    express_PD1();
+    update_indirectProperties();
+}
+
+void CD8::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+{
+    if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
+    {
+        // TODO: Update PDL1 inhibition function when implemented
+        pdl1_inhibition();
+    }
+}

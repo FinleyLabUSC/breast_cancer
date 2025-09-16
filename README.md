@@ -23,3 +23,7 @@
 - Changes currently being staged:
     - A new definition for the base Cell class (`RS_Cell.cpp` and `RS_Cell.h`; these will eventually replace `Cell_General.cpp` and `Cell.h`)
 
+### 16 September 2025
+- The six children classes have been created with proper constructors & file initialization functions in the `CellTypes` directory; these will eventually replace the `Cell_[Type].cpp` files in the main source directory
+- Cancer cells and CD8 cells proliferate using the new `cycle_proliferate` and `prob_proliferate` functions
+- Default migration behavior (toward nearest cancer) is default `migrate_NN`; cancer cells override to do purely random walk

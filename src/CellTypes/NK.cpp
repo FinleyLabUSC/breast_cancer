@@ -41,3 +41,19 @@ void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double 
     migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base);
     killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cytotoxic effect
 }
+
+void NK::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
+{
+    // TODO: Update PD1 expression function & update_indirectProperties to match declaration
+    express_PD1();
+    update_indirectProperties();
+}
+
+void NK::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+{
+    if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
+    {
+        // TODO: Update PDL1 inhibition function when implemented
+        pdl1_inhibition();
+    }
+}

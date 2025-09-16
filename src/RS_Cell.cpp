@@ -64,19 +64,65 @@ RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& ce
 }
 
 // OVERRIDE FUNCTIONS
-void RS_Cell::initialize_cell(std::vector<std::vector<double>> &cellParams, size_t init_tstamp)
+void RS_Cell::initialize_cell_from_file(int state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
 {
-    throw std::runtime_error("You cannot initialize an RS_Cell object.");
-}
-
-void RS_Cell::initialize_cell_from_file(int state, int run_time_index, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
-{
-
+    throw std::runtime_error("You cannot initialize an RS_Cell object from file.");
 }
 
 void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
 {
+    // The default behavior here is to perform a biased random walk toward the nearest cancer cell
+    // Suppressed cells cannot move as well
+    if (state == -1 || immuneSynapseFormed || state == 7 || state == 9) {return; }
 
+    // Define the random unit vector
+    double temp_x = master_rng.normal(0,1,temporary_rng);
+    double temp_y = master_rng.normal(0,1,temporary_rng);
+    std::array<double, 2> dx_random = {temp_x, temp_y};
+    dx_random = unitVector(dx_random);
+    std::array<double, 2> dx_movement = {0,0};
+
+    // Find the nearest cancer cell
+    std::array<double, 2> nearestCancer = {0.0, 0.0};
+    bool nearestCancerFound = false;
+    double min_distance = 100 * rmax;
+    double dist;
+    for (auto& otherCell : cancer_neighbors) {
+        dist = calcDistance(otherCell);
+        if (dist < min_distance) {
+            min_distance = dist;
+            nearestCancer = otherCell;
+            nearestCancerFound = true;
+        }
+    }
+
+    if (nearestCancerFound) {
+        std::array<double,2> targetCellDirection =  {nearestCancer[0] - x[0], nearestCancer[1] - x[1]};
+        if (std::isnan(targetCellDirection[0]) || std::isnan(targetCellDirection[1])) {
+            throw std::runtime_error("NaN encountered in targetCellDirection");
+        }
+        targetCellDirection = unitVector(targetCellDirection);
+        if (std::isnan(targetCellDirection[0]) || std::isnan(targetCellDirection[1])) {
+            throw std::runtime_error("NaN encountered after normalizing targetCellDirection");
+        }
+
+        for(int i = 0; i < 2; ++i){
+            dx_movement[i] = migrationBias * targetCellDirection[i] + (1- migrationBias) * dx_random[i];
+        }
+        dx_movement = unitVector(dx_movement);
+    } else {
+        // only take random into account
+        dx_movement = dx_random;
+    }
+
+    // Migrate!
+    for(int i=0; i<2; ++i){
+        x[i] += dt*migrationSpeed*dx_movement[i];
+        if(std::isnan(x[i])){
+            throw std::runtime_error("migration NaN");
+        }
+    }
+    location_history.push_back(x);
 }
 
 void RS_Cell::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
@@ -114,7 +160,8 @@ void RS_Cell::update_indirectProperties()
 
 }
 
-void RS_Cell::contact_die()
+void RS_Cell::contact_die(std::array<double, 2> otherX, double otherRadius, double immune_cell_kill_prob, double dt, RNG& master_rng, std::
+                          mt19937& temporary_rng)
 {
 
 }
@@ -122,6 +169,35 @@ void RS_Cell::contact_die()
 std::array<double, 3> RS_Cell::proliferate(double dt, RNG& master_rng)
 {
     return {0, 0, 0}; // Default return that the cell does not proliferate
+}
+
+std::array<double, 3> RS_Cell::cycle_proliferate(double dt, RNG& master_rng)
+{
+    // These cells set canProlif to false under normal conditions
+    // When they reach the end of their clock, they divide
+    std::array<double, 2> dx = {master_rng.normal(0, 1), master_rng.normal(0, 1)};
+    double norm = calcNorm(dx);
+    return{
+        radius * (dx[0]/norm) + x[0],
+        radius * (dx[1]/norm) + x[1],
+        1};
+}
+
+std::array<double, 3> RS_Cell::prob_proliferate(double dt, RNG& master_rng)
+{
+    // These cells set canProlif to false if suppressed
+    // They can divide at all other times they can divide
+    if (master_rng.uniform(0, 1) < divProb)
+    {
+        std::array<double, 2> dx = {master_rng.normal(0, 1), master_rng.normal(0, 1)};
+        double norm = calcNorm(dx);
+        return{
+            radius * (dx[0]/norm) + x[0],
+            radius * (dx[1]/norm) + x[1],
+            1};
+    }
+
+    return {0, 0, 0};
 }
 
 void RS_Cell::mutate(RNG& master_rng) {
