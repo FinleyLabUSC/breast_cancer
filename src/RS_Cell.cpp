@@ -86,9 +86,8 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
     std::array<double, 2> nearestCancer = {0.0, 0.0};
     bool nearestCancerFound = false;
     double min_distance = 100 * rmax;
-    double dist;
     for (auto& otherCell : cancer_neighbors) {
-        dist = calcDistance(otherCell);
+        double dist = calcDistance(otherCell);
         if (dist < min_distance) {
             min_distance = dist;
             nearestCancer = otherCell;
@@ -127,49 +126,107 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
 
 void RS_Cell::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
 {
-
+    // indirectInteractions must be specified by cell type
 }
 
 void RS_Cell::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
-
+    // directInteractions must be specified by cell type
 }
 
 std::vector<double> RS_Cell::directInteractionProperties(int interactingState, size_t step_count)
 {
-    return {0};
+    return {}; // default return nothing for direct interactions as only some cells can do this
 }
 
-void RS_Cell::express_PD1()
+void RS_Cell::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng)
 {
-
+    // Differentiation mechanics must be specified per cell type
 }
 
-void RS_Cell::express_PD1L()
+
+void RS_Cell::express_PDL1(double dt)
 {
 
+    if (state == 2 || state == 3 || state == 5 || state == 10) // M2, cancer, Treg, MDSC
+    {
+        double posInfluence = 1 - (1-influences[4])*(1 - influences[6])*(1 - influences[8]);
+
+        if (posInfluence >= threshold_for_pdl1_induction) {
+            double pdl1_increase_amount = (posInfluence - threshold_for_pdl1_induction) * pdl1_induction_rate * dt;
+            pdl1_expression_level += pdl1_increase_amount;
+            pdl1_expression_level = (pdl1_expression_level < max_pdl1_level) ? pdl1_expression_level : max_pdl1_level;
+        } else {
+            double pdl1_decrease_amount = pdl1_decay * dt;
+            pdl1_expression_level -= pdl1_decrease_amount;
+            pdl1_expression_level = (pdl1_expression_level > 0) ? pdl1_expression_level : 0;
+        }
+    }
 }
 
-void RS_Cell::pdl1_inhibition()
+void RS_Cell::express_PD1(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug)
 {
+    if (state == 6 || state == 8) // CD8s and NK cells
+    {
+        // interaction with pro-tumor and tumor cells induce PD1. These also happen to be cells that can express PDL1, but that isn't considered here.
+        double influence = 1 - (1-influences[2]) * (1-influences[3])*(1-influences[5])*(1-influences[10]); // interactions with m2, cancer, treg, mdsc
+        if (influence >= threshold_for_pd1_induction ) {
+            double pd1_increase_amount = (influence - threshold_for_pd1_induction) * pd1_induction_rate * dt;
+            pd1_expression_level += pd1_increase_amount;
+            pd1_expression_level = (pd1_expression_level < max_pd1_level)?pd1_expression_level : max_pd1_level;
+        } else {
+            double pd1_decrease_amount = pd1_decay_rate * dt;
+            pd1_expression_level -= pd1_decrease_amount;
+            pd1_expression_level = (pd1_expression_level > 0) ? pd1_expression_level : 0;
+        }
 
+        // determines if the cell is "sensitive" to the drug based on how exhausted it is.
+        double fraction_pd1_bound_by_drug = sensitivity_to_antiPD1(anti_pd1_concentration,binding_rate_pd1_drug);
+        pd1_drug_bound = pd1_expression_level * fraction_pd1_bound_by_drug;
+        pd1_available = pd1_expression_level * (1-fraction_pd1_bound_by_drug);
+    }
 }
 
-void RS_Cell::update_indirectProperties()
+void RS_Cell::pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, double otherPDL1, double dt, RNG& master_rng, std::mt19937& temporary_rng)
 {
-
+    // NK and CD8 inhibition by PD1:PDL1 occurs the same way via direct contact w/ PDL1-bearing cells
+    // This is not an override right now because we consider this behavior "standard" for killing cells
+    if (state == 6 || state == 8){
+        double distance = calcDistance(otherX);
+        if (distance <= radius+otherRadius)
+        {
+            double percent_bound = std::min(otherPDL1, pd1_available) / pd1_expression_level;
+            double rnd = master_rng.uniform(0, 1, temporary_rng);
+            if (rnd < percent_bound)
+            {
+                next_killProb = next_killProb * percent_bound * inhibitory_effect_of_binding_PD1_PDL1;
+                next_migrationSpeed = next_migrationSpeed * percent_bound * inhibitory_effect_of_binding_PD1_PDL1;
+                next_death_prob = next_death_prob * (1+percent_bound) * inhibitory_effect_of_binding_PD1_PDL1;
+            }
+        }
+    }
 }
 
-void RS_Cell::contact_die(std::array<double, 2> otherX, double otherRadius, double immune_cell_kill_prob, double dt, RNG& master_rng, std::
-                          mt19937& temporary_rng)
+void RS_Cell::update_indirectProperties(size_t step_count)
 {
+    // Which properties to update needs to be specified in the cell type
+}
 
+void RS_Cell::contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::mt19937& temporary_rng)
+{
+    // If a cell experiences contact death it must be specified in the cell type
 }
 
 std::array<double, 3> RS_Cell::proliferate(double dt, RNG& master_rng)
 {
     return {0, 0, 0}; // Default return that the cell does not proliferate
 }
+
+void RS_Cell::mutate(RNG& master_rng) {
+    // If a cell can mutate it must be specified in the cell type
+}
+
+// NEW SHARED PROLIFERATION FUNCTIONS
 
 std::array<double, 3> RS_Cell::cycle_proliferate(double dt, RNG& master_rng)
 {
@@ -198,10 +255,6 @@ std::array<double, 3> RS_Cell::prob_proliferate(double dt, RNG& master_rng)
     }
 
     return {0, 0, 0};
-}
-
-void RS_Cell::mutate(RNG& master_rng) {
-
 }
 
 // SHARED FUNCTIONS
@@ -361,19 +414,19 @@ void RS_Cell::set_cell_cycle_length(double cell_cycle_length) {
 }
 
 double RS_Cell::sensitivity_to_antiPD1(double anti_pd1_concentration, double binding_rate_pd1_drug) {
-    if (4 * killProb < kill_prob_base && 4 * migrationSpeed < migration_speed_base  && deathProb > 4 * death_prob_base) {
-        return 0; // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
-    }else {
-        return anti_pd1_concentration / (anti_pd1_concentration + binding_rate_pd1_drug);
+    if (4 * killProb < kill_prob_base && 4 * migrationSpeed < migration_speed_base  && deathProb > 4 * death_prob_base)
+    { // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
+        return 0;
     }
+    return anti_pd1_concentration / (anti_pd1_concentration + binding_rate_pd1_drug);
 }
 
 double RS_Cell::sensitivity_to_antiCTLA4() {
-    if (4 * killProb < kill_prob_base && 4 * migrationSpeed < migration_speed_base  && deathProb > 4 * death_prob_base) {
-        return 0; // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
-    }else {
-        return 1;
+    if (4 * killProb < kill_prob_base && 4 * migrationSpeed < migration_speed_base  && deathProb > 4 * death_prob_base)
+    { // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
+        return 0;
     }
+    return 1;
 }
 
 void RS_Cell::resetImmuneSynapse() {
@@ -381,7 +434,6 @@ void RS_Cell::resetImmuneSynapse() {
     if (state ) {
         immuneSynapseFormed = false;
     }
-
 }
 
 // OTHER FUNCTIONS
@@ -412,12 +464,9 @@ double RS_Cell::calcDistance(std::array<double, 2> otherX) {
 }
 
 double RS_Cell::calcInfDistance(double dist, double xth) {
-    /*
-     * calculate influence using an exponential decay based on distance from cell center
-     */
+    // calculate influence using an exponential decay based on distance from cell center
     double alpha = -log2(probTh);
     double lambda = alpha*0.693/xth;
-
     return exp(-lambda*dist);
 }
 
@@ -427,10 +476,14 @@ double RS_Cell::calcNorm(std::array<double, 2> dx){
 
 std::array<double, 2> RS_Cell::unitVector(std::array<double, 2> v) {
     double norm = calcNorm(v);
-
     return {v[0]/norm, v[1]/norm};
 }
 
 void RS_Cell::updateRunTimeIndex(int index) {
     runtime_index = index;
+}
+
+double RS_Cell::Hill_function(double concentration, double EC50, double n) {
+    double effect = 1.0 / (1.0 + pow(EC50 / concentration,n));
+    return effect;
 }

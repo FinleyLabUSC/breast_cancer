@@ -78,8 +78,7 @@ void Cancer::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
 
 void Cancer::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
 {
-    // TODO: Update PDL1 expression function to match declaration
-    express_PD1L();
+    express_PDL1(tstep);
 }
 
 void Cancer::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
@@ -107,6 +106,42 @@ void Cancer::contact_die(int killer_state, std::array<double, 2> otherX, double 
         {
             next_state = -1;
             death_type = kill_type;
+        }
+    }
+}
+
+std::vector<double> Cancer::directInteractionProperties(int interactingState, size_t step_count)
+{
+    // cancer cells can interact w/ CD8s and NK cells
+    if (interactingState == 6 || interactingState == 8)
+    {
+        return {radius, pdl1_expression_level};
+    }
+    return {};
+}
+
+void Cancer::mutate(RNG& master_rng)
+{
+    if (state == -1){return;} // Only alive cells can mutate
+
+    double sampleMutation = master_rng.uniform(0,1);
+    if(sampleMutation < mutationProbability_inherent) {
+        // Select what to mutate
+        int selectPropertyToMutate = master_rng.uniform_int(0,2);
+        switch(selectPropertyToMutate) {
+        case 0: { // Proliferation
+                // Increase or decrease according to kappa sampled from a uniform distribution [0, std dev of cell cycle].
+                // The position within the cell cycle is scale appropriately.
+                float deltaCellCycle = master_rng.uniform(0,2);
+                cellCycleLength *= deltaCellCycle;
+                break;
+        }
+        case 1: { // PDL1 expression
+                double scale = master_rng.uniform(0,2);
+                pdl1_expression_level *= scale;
+                break;
+        }
+        default: std::cout<<"Mutate Error: trying to mutate property not on the list."<<std::endl;
         }
     }
 }

@@ -62,17 +62,35 @@ std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
 
 void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
 {
-    // TODO: Should we check if the cell is dead or not? Could also j. wrap indirectInteractions call w/ this
-    // TODO: Update PD1 expression function & update_indirectProperties to match declaration
-    express_PD1();
-    update_indirectProperties();
+    express_PD1(tstep, anti_pd1_concentration, binding_rate_pd1_drug);
+    update_indirectProperties(step_count);
 }
 
 void CD8::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
     {
-        // TODO: Update PDL1 inhibition function when implemented
-        pdl1_inhibition();
+        pdl1_inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
     }
+}
+
+std::vector<double> CD8::directInteractionProperties(int interactingState, size_t step_count)
+{
+    // CD8s interact w/ alive cancer cells
+    if (interactingState == 3)
+    {
+        return {radius, killProb};
+    }
+    return {};
+}
+
+void CD8::update_indirectProperties(size_t step_count)
+{
+    double posInfluence = 1 - (1 - influences[1])*(1 - influences[4]);
+    double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
+    double scale = posInfluence - negInfluence;
+
+    // TODO: reconsider how these properties are updated
+    next_killProb = next_killProb*pow(infScale, scale);
+    next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
 }

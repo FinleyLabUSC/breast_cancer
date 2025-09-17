@@ -58,12 +58,12 @@ class RS_Cell
     virtual void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug);
     virtual void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng);
     virtual std::vector<double> directInteractionProperties(int interactingState, size_t step_count);
-    virtual void express_PD1();
-    virtual void express_PD1L();
-    virtual void pdl1_inhibition();
-    virtual void update_indirectProperties();
-    virtual void contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::
-                             mt19937& temporary_rng);
+    virtual void express_PDL1(double dt);
+    virtual void express_PD1(double dt, double anti_pd1_concentration, double binding_rate_pd1_drug);
+    virtual void update_indirectProperties(size_t step_count);
+    virtual void contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::mt19937& temporary_rng);
+    virtual void pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, double otherPDL1, double dt, RNG& master_rng, std::mt19937&
+                                 temporary_rng);
     void resetImmuneSynapse();
 
     // differentiation
@@ -220,6 +220,8 @@ class Cancer final : public RS_Cell
     void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng) override;
     void contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::
                      mt19937& temporary_rng) override;
+    std::vector<double> directInteractionProperties(int interactingState, size_t step_count) override;
+    void mutate(RNG& master_rng) override;
 };
 
 class CD4 final : public RS_Cell
@@ -228,6 +230,8 @@ class CD4 final : public RS_Cell
     CD4(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
     void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) override;
+    std::vector<double> directInteractionProperties(int interactingState, size_t step_count) override;
+    void differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng) override;
 };
 
 class CD8 final : public RS_Cell
@@ -238,7 +242,8 @@ class CD8 final : public RS_Cell
     std::array<double, 3> proliferate(double dt, RNG& master_rng) override;
     void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) override;
     void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng) override;
-    void pdl1_inhibition() override;
+    std::vector<double> directInteractionProperties(int interactingState, size_t step_count) override;
+    void update_indirectProperties(size_t step_count) override;
 };
 
 class Macrophage final : public RS_Cell
@@ -247,6 +252,8 @@ class Macrophage final : public RS_Cell
     Macrophage(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
     void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) override;
+    std::vector<double> directInteractionProperties(int interactingState, size_t step_count) override;
+    void differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng) override;
 };
 
 class MDSC final : public RS_Cell
@@ -255,6 +262,7 @@ class MDSC final : public RS_Cell
     MDSC(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
     void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) override;
+    std::vector<double> directInteractionProperties(int interactingState, size_t step_count) override;
 };
 
 class NK final : public RS_Cell
@@ -264,7 +272,8 @@ class NK final : public RS_Cell
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
     void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) override;
     void directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng) override;
-    void pdl1_inhibition() override;
+    std::vector<double> directInteractionProperties(int interactingState, size_t step_count) override;
+    void update_indirectProperties(size_t step_count) override;
 };
 
 #endif //BREAST_CANCER_RS_CELL_H

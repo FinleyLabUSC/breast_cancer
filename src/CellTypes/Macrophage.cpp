@@ -42,9 +42,40 @@ void Macrophage::indirectInteractions(double tstep, size_t step_count, RNG& mast
     // Only M2 macrophages express PDL1
     if (state == 2)
     {
-        // TODO: Update PDL1 expression function to match declaration
-        express_PD1L();
+        express_PDL1(tstep);
     }
 }
 
+std::vector<double> Macrophage::directInteractionProperties(int interactingState, size_t step_count)
+{
+    // Only M2 macrophages interact w/ CD8s and NKs
+    if (state == 2 && (interactingState == 6 || interactingState == 8))
+    {
+        return {radius, pdl1_expression_level};
+    }
+    return {};
+}
 
+void Macrophage::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+{
+    // All macrophage types can differentiate from one to another
+    double posInfluence = 1 - (1 - influences[4])*(1 - influences[6])*(1 - influences[8]);
+    double negInfluence = 1 - (1 - influences[2])*(1 - influences[3])*(1 - influences[5])*(1 - influences[10]);
+    double p1 = kM1*posInfluence;
+    double p2 = kM2*negInfluence;
+    auto p0 = static_cast<double>(state == 0); // p0 is only nonzero for M0s
+    double sum = p0 + p1 + p2;
+
+    std::array<double, 3> probs = {p0/sum, (p0 + p1)/sum, (p0 + p1 + p2)/sum};
+    int choice = 0;
+    double rnd = master_rng.uniform(0,1,temporary_rng);
+    for(int i=0; i<3; ++i){
+        if(rnd > probs[i]){choice++;}
+    }
+    state = choice;
+    if(state == 1){ // M1 macrophages don't express PDL1
+        pdl1_expression_level = 0;
+    } else if(state == 2){ // M2 macrophages do
+        express_PDL1(dt);
+    }
+}

@@ -43,8 +43,28 @@ void CD4::indirectInteractions(double tstep, size_t step_count, RNG& master_rng,
     if (state == 5)
     {
         // TODO: Update PDL1 expression function to match declaration
-        express_PD1L();
+        express_PDL1(tstep);
     }
 }
 
+std::vector<double> CD4::directInteractionProperties(int interactingState, size_t step_count)
+{
+    // Only Tregs interact with CD8s and NKs
+    if (state == 5 && (interactingState == 6 || interactingState == 8))
+    {
+        return {radius, pdl1_expression_level};
+    }
+    return {};
+}
 
+void CD4::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+{
+    if (state != 4){return;} // Only CD4 Th -> Treg allowed
+    double rnd = master_rng.uniform(0,1,temporary_rng);
+    // negInfuence is M2 + alive cancer + MDSC
+    double negInfluence = 1 - (1 - influences[2])*(1 - influences[3])*(1 - influences[10]);
+    if(rnd < kTr*negInfluence){
+        state = 5;
+        express_PDL1(dt); // Tregs express PDL1
+    }
+}
