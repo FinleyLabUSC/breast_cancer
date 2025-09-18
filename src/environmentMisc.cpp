@@ -5,6 +5,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "RS_Cell.h"
+
 void Environment::initializeCellsFromFile(std::string filePathway) {
     RNG initialize_from_file_rng(722); // Use this rng for the initialization. Then the starting point will be exactly the same for all replicates of a condition.
     std::fstream file;
@@ -39,12 +41,9 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
                 numCells[cell_state]++;
 
                 // TODO: sample ages for the cells.
-                // TODO: Need to implement switch-case here to initialize the correct cell type
-                Cell newCell = Cell({x,y}, cellParams,cell_types[cell_state]);
-                newCell.initialize_cell_from_file(cell_state,cell_list.size(),mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length,initialize_from_file_rng);
-
-                // Update the cell list
-                cell_list.push_back(newCell);
+                addCell({x, y}, cellParams, cell_types[cell_state]);
+                // We subtract one from cell_list_length because the cell has ALREADY been added
+                cell_list.back()->initialize_cell_from_file(cell_state,cell_list.size() - 1,mean_cancer_cell_cycle_length, std_cancer_cell_cycle_length,initialize_from_file_rng);
                 i++;
             }
         }
@@ -71,17 +70,18 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 
 void Environment::initializeInVitro() {
-    // TODO: Need to change this so only cancer cells are created
     int idx = 0;
     for (int i = 0; i < 100; i++) {
         double x = rng.uniform(-20,20);
         double y = rng.uniform(-20,20);
-        Cell newCell = Cell({x,y}, cellParams,0); // TODO update age sampling
-        newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-        newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+        std::array<double, 2> loc = {x, y};
 
-        newCell.runtime_index = cell_list.size();
-        cell_list.push_back(newCell);
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
         ++idx;
     }
 
@@ -109,25 +109,28 @@ void Environment::initializeInVitro() {
 
 
 void Environment::initializeTesting() {
-    // TODO: Need to specify cell types here
-    Cell newCell = Cell({-100,-100}, cellParams,0);
-    newCell.runtime_index = cell_list.size();
-    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
+    // A line of cells
+    std::array<double, 2> loc1 = {-100, -100};
+    std::array<double, 2> loc2 = {-100, 0};
+    std::array<double, 2> loc3 = {-100, 100};
 
-    cell_list.push_back(newCell);
+    std::shared_ptr<Cancer> newCancer1 = std::make_shared<Cancer>(loc1, cellParams,0);
+    newCancer1->runtime_index = cell_list.size();
+    newCancer1->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    newCancer1->cellCyclePos = rng.uniform(0,newCancer1->cellCycleLength);
+    cell_list.push_back(newCancer1);
 
-    newCell =Cell({-100,0}, cellParams,0);
-    newCell.runtime_index = cell_list.size();
-    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-    cell_list.push_back(newCell);
+    std::shared_ptr<Cancer> newCancer2 = std::make_shared<Cancer>(loc2, cellParams,0);
+    newCancer2->runtime_index = cell_list.size();
+    newCancer2->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    newCancer2->cellCyclePos = rng.uniform(0,newCancer2->cellCycleLength);
+    cell_list.push_back(newCancer2);
 
-    newCell =Cell({-100,100}, cellParams,0);
-    newCell.runtime_index = cell_list.size();
-    newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-    newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-    cell_list.push_back(newCell);
+    std::shared_ptr<CD8> newCD8 = std::make_shared<CD8>(loc3, cellParams, 0);
+    newCD8->runtime_index = cell_list.size();
+    newCD8->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    newCD8->cellCyclePos = rng.uniform(0,newCD8->cellCycleLength);
+    cell_list.push_back(newCD8);
 
     tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
     save(0, 0);
@@ -150,10 +153,12 @@ void Environment::initializeCells() {
 
     double radiiCells = envParams[0];
     int q = 1;
-    cell_list.push_back(Cell({0.0,0.0}, cellParams, 0));
-    cell_list.back().cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-    cell_list.back().cellCyclePos = rng.uniform(0,cell_list.back().cellCycleLength);
-    cell_list.back().runtime_index = q;
+    std::array<double, 2> loc = {0.0, 0.0};
+    std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+    cell_list.push_back(newCancer);
+    cell_list.back()->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+    cell_list.back()->cellCyclePos = rng.uniform(0,cell_list.back()->cellCycleLength);
+    cell_list.back()->runtime_index = q;
 
     for(int i=1; i<radiiCells; ++i){
         double circumfrence = 2*i*cellParams[4][0]*3.1415;
@@ -162,11 +167,12 @@ void Environment::initializeCells() {
             q++;
             double x = i * cellParams[4][0] * cos(2 * 3.1415 * j / nCells);
             double y = i * cellParams[4][0] * sin(2 * 3.1415 * j / nCells);
-            Cell newCell = Cell({x, y},  cellParams, 0);
-            newCell.cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
-            newCell.cellCyclePos = rng.uniform(0,newCell.cellCycleLength);
-            newCell.runtime_index = q;
-            cell_list.push_back(newCell);
+            std::array<double, 2> loc2 = {x, y};
+            std::shared_ptr<Cancer> newCancer2 = std::make_shared<Cancer>(loc2, cellParams, 0);
+            newCancer2->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+            newCancer2->cellCyclePos = rng.uniform(0,newCancer2->cellCycleLength);
+            newCancer2->runtime_index = q;
+            cell_list.push_back(newCancer2);
         }
     }
 
@@ -202,8 +208,8 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
             std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
 
             // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
-            cell_list.push_back(Cell(recLoc,cellParams,immuneCellRecTypes[i]));
-            cell_list.back().runtime_index = cell_list.size()-1;
+            addCell(recLoc, cellParams, immuneCellRecTypes[i]);
+            cell_list.back()->runtime_index = cell_list.size()-1;
 
             immuneCells2rec[i] -= 1;
         }
@@ -211,9 +217,6 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
     num_cancer_births = 0;
     num_cancer_deaths = 0;
 }
-
-
-
 
 void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size_t step_count) {
     // TODO: Specify which immune cells are getting recruited when looping!
@@ -230,9 +233,9 @@ void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size
         while(immuneCells2rec[i] >= 1){
             std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
 
-             // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
-                cell_list.push_back(Cell(recLoc,cellParams,immuneCellRecTypes[i]));
-                cell_list.back().runtime_index = cell_list.size()-1;
+            // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+            addCell(recLoc, cellParams, immuneCellRecTypes[i]);
+            cell_list.back()->runtime_index = cell_list.size()-1;
 
             immuneCells2rec[i] -= 1;
         }
@@ -255,9 +258,9 @@ void Environment::tumorSize(){
     double avgY = 0;
     double numC = 0;
     for(auto &c : cell_list){
-        if(c.type == 0) {
-            avgX += c.x[0];
-            avgY += c.x[1];
+        if(c->type == 0) {
+            avgX += c->x[0];
+            avgY += c->x[1];
             numC += 1;
         }
     }
@@ -268,8 +271,8 @@ void Environment::tumorSize(){
 
     tumorRadius = 0;
     for(auto& c : cell_list){
-        if(c.type == 0){
-            tumorRadius = std::max(tumorRadius, c.calcDistance(tumorCenter));
+        if(c->type == 0){
+            tumorRadius = std::max(tumorRadius, c->calcDistance(tumorCenter));
         }
     }
 }
@@ -277,7 +280,7 @@ void Environment::tumorSize(){
 void Environment::necrosis(double tstep) {
     int nCancer = 0;
     for(auto &c : cell_list){
-        if(c.type == 0){
+        if(c->type == 0){
             ++nCancer;
         }
     }
@@ -289,11 +292,11 @@ void Environment::necrosis(double tstep) {
 double Environment::calculateDiffusibles(std::array<double, 2> x) {
     double d = 0;
     for(auto & c: cell_list){
-        if(c.state == 3){
+        if(c->state == 3){
             // is a cancer cell
-            double alpha = -log2(c.probTh);
-            double lambda = alpha*0.693/c.influenceRadius;
-            double dist = c.calcDistance(x);
+            double alpha = -log2(c->probTh);
+            double lambda = alpha*0.693/c->influenceRadius;
+            double dist = c->calcDistance(x);
             d = 1 - (1 - d)*(1 - exp(-lambda*dist));
         }
     }
@@ -306,4 +309,49 @@ double Environment::calculateDiffusibles(std::array<double, 2> x) {
  */
 void Environment::shuffleCells() {
     std::shuffle(cell_list.begin(), cell_list.end(), rng.getGenerator());
+}
+
+void Environment::addCell(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType)
+{
+    switch (cellType)
+    {
+    case 0: // Cancer cell
+    {
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, cellType);
+        cell_list.push_back(newCancer);
+        break;
+    }
+    case 1: // Macrophage
+    {
+        std::shared_ptr<Macrophage> newMP = std::make_shared<Macrophage>(loc, cellParams, cellType);
+        cell_list.push_back(newMP);
+        break;
+    }
+    case 2: // CD4
+    {
+        std::shared_ptr<CD4> newCD4 = std::make_shared<CD4>(loc, cellParams, cellType);
+        cell_list.push_back(newCD4);
+        break;
+    }
+    case 3: // CD8
+    {
+        std::shared_ptr<CD8> newCD8 = std::make_shared<CD8>(loc, cellParams, cellType);
+        cell_list.push_back(newCD8);
+        break;
+    }
+    case 4: // NK
+    {
+        std::shared_ptr<NK> newNK = std::make_shared<NK>(loc, cellParams, cellType);
+        cell_list.push_back(newNK);
+        break;
+    }
+    case 5: // MDSC
+    {
+        std::shared_ptr<MDSC> newMDSC = std::make_shared<MDSC>(loc, cellParams, cellType);
+        cell_list.push_back(newMDSC);
+        break;
+    }
+    default:
+        throw std::runtime_error("Cannot create an unknown cell type!");
+    }
 }

@@ -44,7 +44,6 @@ void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double 
 
 void NK::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
 {
-
     express_PD1(tstep, anti_pd1_concentration, binding_rate_pd1_drug);
     update_indirectProperties(step_count);
 }
@@ -53,7 +52,6 @@ void NK::directInteractions(int interactingState, std::array<double, 2> interact
 {
     if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
     {
-        // TODO: Update PDL1 inhibition function when implemented
         pdl1_inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
     }
 }

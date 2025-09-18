@@ -53,9 +53,9 @@ void Environment::save(double tstep, double tstamp) {
 
     myfile.open(day_dir+"\\influences.csv");
     for (auto &cell : cell_list) {
-        myfile<<cell.unique_cell_ID;
-        for (int i = 0 ; i<cell.influences.size();i++) {
-            myfile<<","<<cell.influences[i];
+        myfile<<cell->unique_cell_ID;
+        for (int i = 0 ; i<cell->influences.size();i++) {
+            myfile<<","<<cell->influences[i];
         }
         myfile<<std::endl;
     }
@@ -64,35 +64,35 @@ void Environment::save(double tstep, double tstamp) {
     myfile.open(day_dir+"\\cells.csv");
     for(auto &cell : cell_list){
         //logging cell location, type and state 
-        if(cell.type == 3 || cell.type == 4){ //cd8 t cell
-            myfile << cell.unique_cell_ID << ","
-           << cell.type << ","
-           << cell.x[0] << ","
-           << cell.x[1] << ","
-           << cell.radius << ","
-            << cell.state << ","
-            << cell.mother_uniqueID << ","
-            << cell.pd1_expression_level<< ","
-            << cell.pd1_available<< ","
-           << cell.migrationSpeed/cell.migration_speed_base << ","
-            << cell.killProb/cell.kill_prob_base << ","
-            << cell.deathProb/cell.death_prob_base << ","
-            << cell.divProb/cell.divProb_base << std::endl;
+        if(cell->type == 3 || cell->type == 4){ //cd8 t cell
+            myfile << cell->unique_cell_ID << ","
+           << cell->type << ","
+           << cell->x[0] << ","
+           << cell->x[1] << ","
+           << cell->radius << ","
+            << cell->state << ","
+            << cell->mother_uniqueID << ","
+            << cell->pd1_expression_level<< ","
+            << cell->pd1_available<< ","
+           << cell->migrationSpeed/cell->migration_speed_base << ","
+            << cell->killProb/cell->kill_prob_base << ","
+            << cell->deathProb/cell->death_prob_base << ","
+            << cell->divProb/cell->divProb_base << std::endl;
         }
         else{
-            myfile << cell.unique_cell_ID << ","
-                << cell.type << ","
-                << cell.x[0] << ","
-                << cell.x[1] << ","
-                << cell.radius << ","
-                << cell.state << ","
-                << cell.mother_uniqueID << ","
-                << cell.pdl1_expression_level <<  ","
-            <<cell.cellCycleLength<< ","
-              <<-1<< ","
-              <<-1<<","
-              <<-1<<","
-              <<-1<< std::endl;
+            myfile << cell->unique_cell_ID << ","
+                << cell->type << ","
+                << cell->x[0] << ","
+                << cell->x[1] << ","
+                << cell->radius << ","
+                << cell->state << ","
+                << cell->mother_uniqueID << ","
+                << cell->pdl1_expression_level <<  ","
+                <<cell->cellCycleLength<< ","
+                <<-1<< ","
+                <<-1<<","
+                <<-1<<","
+                <<-1<< std::endl;
         }
     }
     myfile.close();

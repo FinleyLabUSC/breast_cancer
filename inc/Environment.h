@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <random>
 #include "Cell.h"
+#include "RS_Cell.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -23,6 +24,7 @@ public:
     void simulate(double tstep, int tx, int met, double binding_rate_pd1_drug, bool onLocal);
 
     void shuffleCells();
+    void addCell(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType);
     void generateNums();
 
     // Delete these safely, I don't think they're used.
@@ -76,23 +78,23 @@ private:
     void initializeInVitro();
     void calculateForces(double tstep, size_t step_count);
 
-
     void removeDeadCells();
     void updateCell_list();
 
     void countPops_updateTimeSeries();
     void printStep(double time);
 
-    void neighboringCancerCells(Cell otherCell);
-    std::array<std::vector<Cell>,12> createSubLists();
+    void neighboringCancerCells(RS_Cell otherCell);
+    std::array<std::vector<RS_Cell>,12> createSubLists();
 
     double nearestNeighborRadius(int state1, int state2);
 
     std::vector<int> count_immune_contacts;
     double dt;
 
-    // cell lists
-    std::vector<Cell> cell_list;
+    // list of pointers to cell
+    std::vector<std::shared_ptr<RS_Cell>> cell_list;
+
     // time courses
     std::vector<int> cancerTS;
     std::vector<int> cd8TS;
@@ -104,10 +106,8 @@ private:
     std::vector<int> nkTS;
     std::vector<int> mdscTS;
     std::vector<double> radiusTS;
-
     std::vector<double> anti_pd1_TS;
     std::vector<double> anti_ctla4_TS;
-
 
     // parameter lists
     std::vector<std::vector<double> > cellParams;

@@ -3,7 +3,7 @@
 long unsigned RS_Cell::cell_counter = 0; // Defines the cell counter obj
 
 // Initialization
-RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp)
+RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType, size_t init_tstamp): unique_cell_ID(cell_counter++)
 {
     // This constructor sets all parameters shared between cells
     type = cellType;
@@ -136,6 +136,7 @@ void RS_Cell::directInteractions(int interactingState, std::array<double, 2> int
 
 std::vector<double> RS_Cell::directInteractionProperties(int interactingState, size_t step_count)
 {
+    std::cout << "A cell has tried to call directInteractionProperties from RS_Cell!" << std::endl;
     return {}; // default return nothing for direct interactions as only some cells can do this
 }
 
@@ -143,7 +144,6 @@ void RS_Cell::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_
 {
     // Differentiation mechanics must be specified per cell type
 }
-
 
 void RS_Cell::express_PDL1(double dt)
 {
@@ -222,9 +222,27 @@ std::array<double, 3> RS_Cell::proliferate(double dt, RNG& master_rng)
     return {0, 0, 0}; // Default return that the cell does not proliferate
 }
 
+void RS_Cell::proliferationState(double anti_ctla4_concentration)
+{
+    // If the cell does not have its own canProlif logic then it cannot proliferate at all
+    canProlif = false;
+}
+
 void RS_Cell::mutate(RNG& master_rng) {
     // If a cell can mutate it must be specified in the cell type
 }
+
+void RS_Cell::inherit(std::vector<double> properties)
+{
+    // If a cell can create daughter cells, declare the inherit function in the cell type
+}
+
+std::vector<double> RS_Cell::inheritanceProperties()
+{
+    // Default behavior is to return nothing unless specified in the cell type
+    return {};
+}
+
 
 // NEW SHARED PROLIFERATION FUNCTIONS
 

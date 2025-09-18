@@ -83,6 +83,8 @@ void Cancer::indirectInteractions(double tstep, size_t step_count, RNG& master_r
 
 void Cancer::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
+    // Specify that cancer cells can only interact w/ CD8 or NK
+    if (interactingState != 6 && interactingState != 8){return;}
     contact_die(interactingState, interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
 }
 
@@ -143,5 +145,33 @@ void Cancer::mutate(RNG& master_rng)
         }
         default: std::cout<<"Mutate Error: trying to mutate property not on the list."<<std::endl;
         }
+    }
+}
+
+void Cancer::inherit(std::vector<double> properties)
+{
+    pdl1_expression_level = properties[0];
+    cellCycleLength = properties[1];
+}
+
+std::vector<double> Cancer::inheritanceProperties()
+{
+    return {pdl1_expression_level, cellCycleLength};
+}
+
+void Cancer::proliferationState(double anti_ctla4_concentration)
+{
+    if (state == -1){return;} // Dead cells cannot proliferate
+    if (!compressed)
+    {
+        cellCyclePos++; // if not compressed, advance in the cell cycle
+    }
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && !compressed)
+    {
+        canProlif = true;
+    }
+    else
+    {
+        canProlif = false;
     }
 }

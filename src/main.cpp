@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
         // By default the code is set up for running on the local machine. This only changes if run_location == CARC
         bool onLocal = true;
         // For testing purposes using simple saveFolder name
-        std::string saveFolder = folder; // + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+        std::string saveFolder = folder ; // + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
     // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
         std::string saveFolderPath = "..\\..\\" + saveFolder;
         std::string str  = "python genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac; // don't need to run in conda

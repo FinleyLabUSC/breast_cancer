@@ -94,3 +94,31 @@ void CD8::update_indirectProperties(size_t step_count)
     next_killProb = next_killProb*pow(infScale, scale);
     next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
 }
+
+void CD8::inherit(std::vector<double> properties)
+{
+    pd1_expression_level = properties[0];
+    killProb = properties[1];
+    migrationSpeed = properties[2];
+    divProb = properties[3];
+    deathProb = properties[4];
+}
+
+std::vector<double> CD8::inheritanceProperties()
+{
+    return {pd1_expression_level, killProb, migrationSpeed, divProb, deathProb};
+}
+
+void CD8::proliferationState(double anti_ctla4_concentration)
+{
+    canProlif = !compressed; // CD8 proliferation is only stopped if the cell is compressed
+
+    // scale divProb based on influences & CTLA
+    double posInfluence = 1 - (1 - influences[4])*(1 - influences[8]);
+    double negInfluence = 1 - (1 - influences[2])*(1 - influences[10]);
+    double anti_ctla4_effect = Hill_function(anti_ctla4_concentration,anti_CTLA4_IC50,anti_CTLA4_hill_coeff) * sensitivity_to_antiCTLA4();
+    double scale_anti_CTLA4_effect = (divProb > divProb_base) ? 1.1 : 1;
+    double effective_antiCTLA4_effect = (anti_ctla4_effect * scale_anti_CTLA4_effect < 1) ? anti_ctla4_effect * scale_anti_CTLA4_effect : 1;
+    double ctla_scale = posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) - negInfluence;
+    divProb = ctla_scale * divProb;
+}

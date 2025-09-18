@@ -17,7 +17,8 @@ set(CMAKE_CXX_FLAGS "-fopenmp -std=c++17 -O3")
 
 include_directories(inc)
 file(GLOB SOURCES "src/*.cpp")
-add_executable(breast_cancer ${SOURCES})
+file(GLOB CELLTYPES "src/CellTypes/*.cpp")
+add_executable(breast_cancer ${SOURCES} ${CELLTYPES})
 
 target_compile_options(breast_cancer PRIVATE -g -O0)
 ## Adding compile options for Address Sanitizer in Windows -- removing for now
