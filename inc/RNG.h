@@ -11,6 +11,7 @@
 
 class RNG {
 public:
+    int times_invoked;
     explicit RNG(int seed);
 
     double uniform(double min, double max);

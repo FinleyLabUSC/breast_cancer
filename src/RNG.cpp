@@ -12,10 +12,12 @@
 
 
 RNG::RNG(int seed) : base_seed(seed) {
+    times_invoked = 0;
     instance_generator.seed(seed);
 }
 
 std::mt19937 &RNG::getGenerator() {
+    times_invoked++;
     return instance_generator;
 }
 
@@ -28,21 +30,25 @@ unsigned int RNG::get_context_seed(size_t timestep, unsigned long uniqueCellID, 
 }
 
 double RNG::uniform(double min, double max) {
+    times_invoked++;
     std::uniform_real_distribution<double> dist(min, max);
     return dist(instance_generator);
 }
 
 int RNG::uniform_int(int min, int max) {
+    times_invoked++;
     std::uniform_int_distribution<int> dist(min, max);
     return dist(instance_generator);
 }
 
 double RNG::normal(double mean, double stddev) {
+    times_invoked++;
     std::normal_distribution<double> dist(mean, stddev);
     return dist(instance_generator);
 }
 
 int RNG::poisson(double mean) {
+    times_invoked++;
     std::poisson_distribution<int> dist(mean);
     return dist(instance_generator);
 }

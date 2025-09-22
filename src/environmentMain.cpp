@@ -1,6 +1,7 @@
 #include <omp.h>
 #include <thread>
 
+#include "../inc/RS_Cell.h"
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 
@@ -20,6 +21,7 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
      */
 
     saveDir = ".\\"+folder+"\\set_"+set;
+    std::cout << "Base seed is " << base_seed << std::endl;
 
     loadParams();
 
@@ -133,6 +135,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     while(tstep*steps/24 <simulationDuration ) { // simulationDuration
 
          double timePoint = tstep*steps/24;
+         std::cout << "Before the start of step " << steps << "the RNG has been invoked " << rng.times_invoked << "times." << std::endl;
 
          if (!anti_pd1_on) {
              anti_pd1_drug(tstep,0);
@@ -168,11 +171,17 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
                  anti_ctla4_drug(tstep,0);
              }
          }
-         recruitImmuneCells_cancerBirthDeath(tstep);
+        recruitImmuneCells_cancerBirthDeath(tstep);
+        std::cout << "After recruitImmuneCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         runCells(tstep, tstep*steps);
+        std::cout << "After runCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
+        std::cout << "There are " << cell_list.size() << " cells prior to mutation" << std::endl;
         mutateCells();
+        std::cout << "After mutateCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         removeDeadCells(); // loops through, removes the dead cells
+        std::cout << "After removeDeadCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         shuffleCells(); // shuffles the cells in the list
+        std::cout << "After shuffleCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         updateCell_list(); // loops through, updates the runtimeindex
         tumorSize(); // loops through twice, calculates the tumor center, calculates the furthest distance from the center to a cancer cell.
         steps += 1;

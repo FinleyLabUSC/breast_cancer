@@ -71,7 +71,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 void Environment::initializeInVitro() {
     int idx = 0;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 10; i++) {
         double x = rng.uniform(-20,20);
         double y = rng.uniform(-20,20);
         std::array<double, 2> loc = {x, y};
@@ -308,6 +308,7 @@ double Environment::calculateDiffusibles(std::array<double, 2> x) {
  * Shuffles the cells in the cell_list so that there are no spatial artifacts.
  */
 void Environment::shuffleCells() {
+
     std::shuffle(cell_list.begin(), cell_list.end(), rng.getGenerator());
 }
 

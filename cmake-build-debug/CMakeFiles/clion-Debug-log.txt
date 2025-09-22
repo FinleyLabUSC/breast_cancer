@@ -71,8 +71,8 @@ The package stb provides CMake targets:
 
     find_package(Stb REQUIRED)
     target_include_directories(main PRIVATE ${Stb_INCLUDE_DIR})
-All requested installations completed successfully in: 2.38 ms
+All requested installations completed successfully in: 3.23 ms
 -- Running vcpkg install - done
--- Configuring done (5.0s)
--- Generating done (0.1s)
+-- Configuring done (17.9s)
+-- Generating done (0.3s)
 -- Build files have been written to: C:/Users/tyler/CLionProjects/breast_cancer/cmake-build-debug

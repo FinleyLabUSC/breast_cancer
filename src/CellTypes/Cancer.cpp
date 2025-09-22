@@ -1,4 +1,5 @@
 #include "../inc/RS_Cell.h"
+#include <iostream>
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
@@ -7,6 +8,7 @@ Cancer::Cancer(std::array<double, 2> loc, std::vector<std::vector<double>>& cell
     // state & proliferation flag
     state = 3;
     canProlif = false;
+    std::cout << "Made a cancer cell!" << std::endl;
 
     // Set parameters
     mu = cellParams[0][0];
@@ -124,12 +126,15 @@ std::vector<double> Cancer::directInteractionProperties(int interactingState, si
 
 void Cancer::mutate(RNG& master_rng)
 {
-    if (state == -1){return;} // Only alive cells can mutate
-
+    std::cout << "Entered mutation code  for cell " << unique_cell_ID << std::endl;
+    // The mutation RNG is generated here to match an old version of the code
+    // Can be moved later, perhaps
     double sampleMutation = master_rng.uniform(0,1);
+    if (state == -1){return;} // Only alive cells can mutate
     if(sampleMutation < mutationProbability_inherent) {
         // Select what to mutate
         int selectPropertyToMutate = master_rng.uniform_int(0,2);
+        std::cout << "The mutation selected was: " << selectPropertyToMutate << std::endl;
         switch(selectPropertyToMutate) {
         case 0: { // Proliferation
                 // Increase or decrease according to kappa sampled from a uniform distribution [0, std dev of cell cycle].
