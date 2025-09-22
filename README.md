@@ -27,3 +27,9 @@
 - The six children classes have been created with proper constructors & file initialization functions in the `CellTypes` directory; these will eventually replace the `Cell_[Type].cpp` files in the main source directory
 - Cancer cells and CD8 cells proliferate using the new `cycle_proliferate` and `prob_proliferate` functions
 - Default migration behavior (toward nearest cancer) is default `migrate_NN`; cancer cells override to do purely random walk
+
+### 22 September 2025
+- All remaining functionality has been restored
+- Default initialization changed to `initializeInVitro()` which seeds 100 cancer cells
+- Because of RNG call behavior, this model will NOT yield identical outcomes to the previous ABM
+- Currently checking to make sure the overall (summary) behavior of the ABMs are similar!

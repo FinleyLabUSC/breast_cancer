@@ -71,7 +71,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
 
 void Environment::initializeInVitro() {
     int idx = 0;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
         double x = rng.uniform(-20,20);
         double y = rng.uniform(-20,20);
         std::array<double, 2> loc = {x, y};
