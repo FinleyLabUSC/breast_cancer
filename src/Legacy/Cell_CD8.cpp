@@ -1,5 +1,5 @@
-#include "../inc/Cell.h"
-#include "../inc/ModelUtil.h"
+#include "../../inc/Cell.h"
+#include "../../inc/ModelUtil.h"
 #include <cmath>
 
 void Cell::initialize_CD8_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp) {

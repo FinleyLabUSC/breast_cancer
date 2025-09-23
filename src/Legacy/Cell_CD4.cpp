@@ -1,4 +1,4 @@
-#include "../inc/Cell.h"
+#include "../../inc/Cell.h"
 
 void Cell::initialize_CD4_Cell(std::vector<std::vector<double> > &cellParams, size_t init_tstamp) {
     state = 4;

@@ -1,6 +1,6 @@
-#include "../inc/Environment.h"
+#include "../../inc/Environment.h"
 
-#include "../inc/Cell.h"
+#include "../../inc/Cell.h"
 
 /*
  * CELL TYPES

@@ -33,3 +33,7 @@
 - Default initialization changed to `initializeInVitro()` which seeds 100 cancer cells
 - Because of RNG call behavior, this model will NOT yield identical outcomes to the previous ABM
 - Currently checking to make sure the overall (summary) behavior of the ABMs are similar!
+- The old C++ files have been migrated into the Legacy folder; currently they are excluded from sources so will not compile
+
+### 23 September 2025
+- Added function to initialize heterogeneous tumor

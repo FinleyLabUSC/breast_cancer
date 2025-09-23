@@ -76,6 +76,7 @@ private:
     void initializeCells();
     void initializeTesting();
     void initializeInVitro();
+    void initializeHeterogeneous();
     void calculateForces(double tstep, size_t step_count);
 
     void removeDeadCells();
