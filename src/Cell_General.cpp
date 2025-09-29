@@ -657,16 +657,22 @@ void Cell::mutate(RNG& master_rng) {
             case 0: {
                 // proliferation
                 // Increase or decrease according to kappa sampled from a uniform distribution [0, std dev of cell cycle].
-                // The position within the cell cycle is scale appropriately.
+                // The position within the cell cycle is scaled appropriately.
 
-                float deltaCellCycle = master_rng.uniform(0,2);
-                cellCycleLength *= deltaCellCycle;
+                float deltaCellCycle = master_rng.uniform(0.95,1.05);
+
+                if (cellCycleLength*deltaCellCycle >= 12.0) {
+                    cellCycleLength *= deltaCellCycle;
+                }
+
                 break;
             }
             case 1: {
                 // PDL1 expression
-                double scale = master_rng.uniform(0,2);
-                pdl1_expression_level *= scale;
+                double scale = master_rng.uniform(0.95,1.05);
+                if (pdl1_expression_level * scale <= max_pdl1_level) {
+                 pdl1_expression_level *= scale;
+                }
                 break;
             }
 
