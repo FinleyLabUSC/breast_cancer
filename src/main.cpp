@@ -85,12 +85,12 @@ int main(int argc, char **argv) {
         // For testing purposes using simple saveFolder name
         std::string saveFolder = folder ; // + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
     // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
-        std::string saveFolderPath = "..\\..\\" + saveFolder;
+        std::string saveFolderPath = "../../" + saveFolder;
         std::string str  = "python genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac; // don't need to run in conda
 
         if (run_location == "CARC") {
             onLocal = false;
-            saveFolderPath = ".\\" + saveFolder;
+            saveFolderPath = "./" + saveFolder;
             str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
         }
 

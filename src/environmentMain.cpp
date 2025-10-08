@@ -20,7 +20,7 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
      * set environment variables to their respective values
      */
 
-    saveDir = ".\\"+folder+"\\set_"+set;
+    saveDir = "./"+folder+"/set_"+set;
     std::cout << "Base seed is " << base_seed << std::endl;
 
     loadParams();

@@ -3,12 +3,12 @@ project(breast_cancer)
 
 set(CMAKE_CXX_STANDARD 17)
 
-## This is the Apple compilation line
-## set(CMAKE_CXX_FLAGS "-std=c++14 -g -O0 ${OpenMP_CXX_FLAGS}")
+## This is the Apple / Linux compilation line
+set(CMAKE_CXX_FLAGS "-std=c++14 -g -O0 ${OpenMP_CXX_FLAGS}")
 
 ## This is the Windows compilation line
-set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_FLAGS "-fopenmp -std=c++17 -O3")
+## set(CMAKE_CXX_COMPILER "g++")
+## set(CMAKE_CXX_FLAGS "-fopenmp -std=c++17 -O3")
 
 ## Enable AddressSanitizer -- disabling for now
 ## set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer -g")
