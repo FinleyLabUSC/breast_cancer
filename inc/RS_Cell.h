@@ -282,4 +282,22 @@ class NK final : public RS_Cell
     void update_indirectProperties(size_t step_count) override;
 };
 
+class Lymphoid final : public RS_Cell
+{
+    public:
+    Lymphoid(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+};
+
+class Myeloid final : public RS_Cell
+{
+    public:
+    Myeloid(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+};
+
+class Stromal final : public RS_Cell
+{
+    public:
+    Stromal(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+};
+
 #endif //BREAST_CANCER_RS_CELL_H

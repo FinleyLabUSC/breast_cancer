@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         double cd8_death = std::stod(argv[10]);
         double cd8_rec = std::stod(argv[11]);
 
-    // These labels correspond to the type of treatment administered according to the value of tx. If tx = 1, then the simulation uses anti-PD1.
+        // These labels correspond to the type of treatment administered according to the value of tx. If tx = 1, then the simulation uses anti-PD1.
         std::vector<std::string> txLabels = {"control","pd1","ctla4","ici_combo"};
         std::vector<std::string> parameter_levels = {"low","high"};
 
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         bool onLocal = true;
         // For testing purposes using simple saveFolder name
         std::string saveFolder = folder ; // + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
-    // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+        // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
         std::string saveFolderPath = "../../" + saveFolder;
         std::string str  = "python genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac; // don't need to run in conda
 

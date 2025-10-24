@@ -6,7 +6,9 @@ In addition to cancer cells, the model currently includes three macrophages phen
 After compiling the program using CMake, the executable can be run on the command line as described in the Changelog (see Sept. 3, 2025).
 The program will produce CSV files that describe the spatial organization of the TME at pre-specified intervals (default is currently 1 hour), alongside details into cell state and cell state-variables.
 The program also produces CSV files that describe the location of each cell (by index) at a finer increment (currently .005 hr). 
-It also will produce summary information about bulk populations over time and by what mechanisms cancer cells die.
+It also will produce summary information about bulk populations over time and by what mechanisms cancer cells die.e
+
+The repository is currently configured to produce HETEROGENOUS INITIAL CONDITIONS if not given mIHC data.
 
 ## CHANGELOG
 

@@ -228,7 +228,6 @@ void Environment::initializeCells() {
 }
 
 void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
-    // TODO: Specify which immune cells are getting recruited when looping!
     // Recruitment of different immune cell types are governed by different cancer-related events.
     // M0, CD4 and MDSC's are recruited proportional to the number of cancer cell "births" in the previous time step.
     // CD8's and NK's are recruited proportional to the number of cancer cell deaths in the previous time step.
@@ -257,7 +256,6 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
 }
 
 void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size_t step_count) {
-    // TODO: Specify which immune cells are getting recruited when looping!
     // recruitment is scaled by the number of cancer cells
     auto day = static_cast<double>(tstep*steps/24.0);
     if(day < recruitmentDelay){return;}
