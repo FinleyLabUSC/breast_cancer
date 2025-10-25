@@ -102,8 +102,8 @@ void Environment::initializeHeterogeneous()
     // Make 100 cancer cells
     int idx = 0;
     for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-20,20);
-        double y = rng.uniform(-20,20);
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
         std::array<double, 2> loc = {x, y};
 
         // Create cell
@@ -121,8 +121,8 @@ void Environment::initializeHeterogeneous()
         // Make 10 of each other cell type
         for (int j = 0; j < 10; j++)
         {
-            double x = rng.uniform(-20,20);
-            double y = rng.uniform(-20,20);
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
             std::array<double, 2> loc = {x, y};
 
             // Create cell
