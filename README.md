@@ -52,3 +52,7 @@ The repository is currently configured to produce HETEROGENOUS INITIAL CONDITION
 
 ### 8 October 2025
 - The summary behaviour of this ABM is equivalent to the old ABM for homogenous tumor initializations
+
+### 27 October 2025
+- Performed heterogeous testing and validated restructured behavior against original framework
+- Changed restructuring branch to MAIN branch of the repo; all other branches which use the old framework are now legacy branches
