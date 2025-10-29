@@ -125,11 +125,12 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
         metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
     }
 
+    // TODO: Change this so that we can select a method using negative numbers
     // Whichever line is uncommented is how the model will be initialized.
     // The argument passed here is a pseudonym for whichever metastasis is used to initialize the model. The "construction" of the string metLabel is done above.
-    // initializeCellsFromFile(metLabel);
-    // initializeInVitro(); // This is used for testing purposes.
-    initializeHeterogeneous();
+    // initializeCellsFromFile(metLabel); [0 or greater]
+    // initializeInVitro(); // This is used for testing purposes. [-1]
+    initializeHeterogeneous(); // This is used for testing purposes. [-2]
 
     std::cout << "starting simulations...\n";
 
@@ -173,16 +174,10 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
              }
          }
         recruitImmuneCells_cancerBirthDeath(tstep);
-        std::cout << "After recruitImmuneCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         runCells(tstep, tstep*steps);
-        std::cout << "After runCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
-        std::cout << "There are " << cell_list.size() << " cells prior to mutation" << std::endl;
         mutateCells();
-        std::cout << "After mutateCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         removeDeadCells(); // loops through, removes the dead cells
-        std::cout << "After removeDeadCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         shuffleCells(); // shuffles the cells in the list
-        std::cout << "After shuffleCells RNG has been invoked " << rng.times_invoked << " times..." << std::endl;
         updateCell_list(); // loops through, updates the runtimeindex
         tumorSize(); // loops through twice, calculates the tumor center, calculates the furthest distance from the center to a cancer cell.
         steps += 1;
@@ -192,7 +187,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
         model_time = steps;
 
         recordPopulation(steps); // saves the count of each cell to a file.
-         record_drug((steps * tstep)/24, tx); // saves the drug concentration
+        record_drug((steps * tstep)/24, tx); // saves the drug concentration
         if (fmod(steps * tstep, 1) == 0) { // change the y value depending on how frequently you want the stuff to be saved.
             save(tstep, steps*tstep);
         }

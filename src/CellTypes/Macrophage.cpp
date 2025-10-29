@@ -17,6 +17,7 @@ Macrophage::Macrophage(std::array<double, 2> loc, std::vector<std::vector<double
     influenceRadius = cellParams[9][3];
     migrationBias = cellParams[10][3];
     rmax = 1.5*radius*2;
+    location_history.push_back(x);
 }
 
 void Macrophage::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)

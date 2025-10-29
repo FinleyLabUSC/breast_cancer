@@ -286,18 +286,24 @@ class Lymphoid final : public RS_Cell
 {
     public:
     Lymphoid(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
+    void inherit(std::vector<double> properties) override;
+    std::vector<double> inheritanceProperties() override;
+    std::array<double, 3> proliferate(double dt, RNG& master_rng) override;
 };
 
 class Myeloid final : public RS_Cell
 {
     public:
     Myeloid(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
 class Stromal final : public RS_Cell
 {
     public:
     Stromal(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
 #endif //BREAST_CANCER_RS_CELL_H

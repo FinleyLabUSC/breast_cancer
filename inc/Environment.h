@@ -106,6 +106,9 @@ private:
     std::vector<int> m2TS;
     std::vector<int> nkTS;
     std::vector<int> mdscTS;
+    std::vector<int> myeloidTS;
+    std::vector<int> lymphoidTS;
+    std::vector<int> stromalTS;
     std::vector<double> radiusTS;
     std::vector<double> anti_pd1_TS;
     std::vector<double> anti_ctla4_TS;

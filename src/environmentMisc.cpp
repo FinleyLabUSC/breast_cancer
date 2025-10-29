@@ -7,6 +7,7 @@
 
 #include "RS_Cell.h"
 
+// TODO: Change initializeCells to accept inputs with generalized types
 void Environment::initializeCellsFromFile(std::string filePathway) {
     RNG initialize_from_file_rng(722); // Use this rng for the initialization. Then the starting point will be exactly the same for all replicates of a condition.
     std::fstream file;
@@ -115,8 +116,8 @@ void Environment::initializeHeterogeneous()
         ++idx;
     }
 
-    // Iterate over non-cancer cell types
-    for (int i = 1; i < 6; i++)
+    // Iterate over non-cancer cell types except stromal
+    for (int i = 1; i < 8; i++)
     {
         // Make 10 of each other cell type
         for (int j = 0; j < 10; j++)
@@ -130,7 +131,24 @@ void Environment::initializeHeterogeneous()
             cell_list.back()->runtime_index = cell_list.size() - 1;
             ++idx;
         }
+    }
 
+    // Place a ring of stromal cells in the area around the tumor
+    for (int i = 1; i < 100; i++)
+    {
+        double x = rng.uniform(-150,150);
+        double y = rng.uniform(-150,150);
+
+        // Reject placements that are within the square
+        if ((x > 100 || x < -100) && (y > 100 || y < -100))
+        {
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, 8);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            ++idx;
+        }
     }
 
     tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
@@ -387,6 +405,21 @@ void Environment::addCell(std::array<double, 2> loc, std::vector<std::vector<dou
         std::shared_ptr<MDSC> newMDSC = std::make_shared<MDSC>(loc, cellParams, cellType);
         cell_list.push_back(newMDSC);
         break;
+    }
+    case 6: // generalized myeloid
+    {
+        std::shared_ptr<Myeloid> newMyeloid = std::make_shared<Myeloid>(loc, cellParams, cellType);
+        cell_list.push_back(newMyeloid);
+    }
+    case 7: // generalized lymphoid
+    {
+        std::shared_ptr<Lymphoid> newLymphoid = std::make_shared<Lymphoid>(loc, cellParams, cellType);
+        cell_list.push_back(newLymphoid);
+    }
+    case 8: // generalized stromal
+    {
+        std::shared_ptr<Stromal> newStromal = std::make_shared<Stromal>(loc, cellParams, cellType);
+        cell_list.push_back(newStromal);
     }
     default:
         throw std::runtime_error("Cannot create an unknown cell type!");

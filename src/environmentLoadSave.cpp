@@ -113,12 +113,12 @@ void Environment::recordPopulation(double timestamp) {
         const char *command = str.c_str();
         std::system(command);
         myfile.open(saveDir + "/populations_TS.csv", std::ios_base::app);
-        myfile << "Hr" << "," << "m0" << "," << "m1" << "," << "m2" << "," << "c" << "," << "cd4_th" << "," << "cd4_treg" << "," << "cd8" << "," << "nk"<< "," << "mdsc" << ","  << "radius" << std::endl;
-        myfile << timestamp << "," << m0TS.back() << "," << m1TS.back() << "," << m2TS.back() << "," <<  cancerTS.back() << "," << cd4_th_TS.back() << "," << cd4_treg_TS.back() << "," << cd8TS.back() << "," << nkTS.back() << "," << mdscTS.back() << ","  << radiusTS.back() << std::endl;
+        myfile << "Hr" << "," << "m0" << "," << "m1" << "," << "m2" << "," << "c" << "," << "cd4_th" << "," << "cd4_treg" << "," << "cd8" << "," << "nk"<< "," << "mdsc" << ","  << "myeloid" << "," << "lymphoid" << "," << "stromal" << "," << "radius" << std::endl;
+        myfile << timestamp << "," << m0TS.back() << "," << m1TS.back() << "," << m2TS.back() << "," <<  cancerTS.back() << "," << cd4_th_TS.back() << "," << cd4_treg_TS.back() << "," << cd8TS.back() << "," << nkTS.back() << "," << mdscTS.back() << "," << myeloidTS.back() << "," << lymphoidTS.back() << "," << stromalTS.back() << ","<< radiusTS.back() << std::endl;
     }
 
     myfile.open(saveDir + "/populations_TS.csv", std::ios_base::app);
-    myfile << timestamp << "," << m0TS.back() << "," << m1TS.back() << "," << m2TS.back() << "," <<  cancerTS.back() << "," << cd4_th_TS.back() << "," << cd4_treg_TS.back() << "," << cd8TS.back() << "," << nkTS.back() << "," << mdscTS.back() << ","  << radiusTS.back() << std::endl;
+    myfile << timestamp << "," << m0TS.back() << "," << m1TS.back() << "," << m2TS.back() << "," <<  cancerTS.back() << "," << cd4_th_TS.back() << "," << cd4_treg_TS.back() << "," << cd8TS.back() << "," << nkTS.back() << "," << mdscTS.back() << "," << myeloidTS.back() << "," << lymphoidTS.back() << "," << stromalTS.back() << "," << radiusTS.back() << std::endl;
 
     myfile.close();
 }
