@@ -16,6 +16,7 @@ CD4::CD4(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     influenceRadius = cellParams[8][1];
     migrationBias = cellParams[9][1];
     rmax = 1.5*radius*2;
+    location_history.push_back(x);
 }
 
 
