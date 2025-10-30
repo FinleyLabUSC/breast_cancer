@@ -140,7 +140,7 @@ void Environment::initializeHeterogeneous()
         double y = rng.uniform(-150,150);
 
         // Reject placements that are within the square
-        if ((x > 100 || x < -100) && (y > 100 || y < -100))
+        if ((x > 100 || x < -100) || (y > 100 || y < -100))
         {
             std::array<double, 2> loc = {x, y};
 
@@ -148,6 +148,8 @@ void Environment::initializeHeterogeneous()
             addCell(loc, cellParams, 8);
             cell_list.back()->runtime_index = cell_list.size() - 1;
             ++idx;
+        } else {
+        std::cout << "Rejected location: (" << x << ", " << y << ") on iteration" << i << std::endl;
         }
     }
 
@@ -410,16 +412,19 @@ void Environment::addCell(std::array<double, 2> loc, std::vector<std::vector<dou
     {
         std::shared_ptr<Myeloid> newMyeloid = std::make_shared<Myeloid>(loc, cellParams, cellType);
         cell_list.push_back(newMyeloid);
+        break;
     }
     case 7: // generalized lymphoid
     {
         std::shared_ptr<Lymphoid> newLymphoid = std::make_shared<Lymphoid>(loc, cellParams, cellType);
         cell_list.push_back(newLymphoid);
+        break;
     }
     case 8: // generalized stromal
     {
         std::shared_ptr<Stromal> newStromal = std::make_shared<Stromal>(loc, cellParams, cellType);
         cell_list.push_back(newStromal);
+        break;
     }
     default:
         throw std::runtime_error("Cannot create an unknown cell type!");
