@@ -73,7 +73,11 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
 {
     // The default behavior here is to perform a biased random walk toward the nearest cancer cell
     // Suppressed cells cannot move as well
-    if (state == -1 || immuneSynapseFormed || state == 7 || state == 9) {return; }
+    if (state == -1 || immuneSynapseFormed || state == 7 || state == 9)
+    {
+        location_history.push_back(x); // still save the location history for plotting purposes
+        return;
+    }
 
     // Define the random unit vector
     double temp_x = master_rng.normal(0,1,temporary_rng);
