@@ -112,7 +112,8 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // migrate first
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
-                unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,4);
+                // TODO: CRITICAL ERROR FIX THIS RNG GENERATION
+                unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
                 cell_list[i]->migrate_NN(dt, rng, temporary_rng);
             }
@@ -144,7 +145,8 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // resolve forces
        #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i){
-                unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,5);
+                // TODO: CRITICAL ERROR FIX THIS RNG GENERATION
+                unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,5);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
 
                 cell_list[i]->resolveForces(dt, rng, temporary_rng);
