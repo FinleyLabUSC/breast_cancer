@@ -64,7 +64,11 @@ std::array<double, 3> Cancer::proliferate(double dt, RNG& master_rng)
 void Cancer::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
 {
     // If the cancer cell is dead or immune synapsed it can't move
-    if (state == -1 || immuneSynapseFormed) {return; }
+    if (state == -1 || immuneSynapseFormed) 
+    {
+        location_history.push_back(x); // still save the location history for plotting purposes
+        return; 
+    }
     // do random migration
     double temp_x = master_rng.normal(0,1,temporary_rng);
     double temp_y = master_rng.normal(0,1,temporary_rng);
