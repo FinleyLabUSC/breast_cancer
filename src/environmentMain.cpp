@@ -128,9 +128,9 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     // TODO: Change this so that we can select a method using negative numbers
     // Whichever line is uncommented is how the model will be initialized.
     // The argument passed here is a pseudonym for whichever metastasis is used to initialize the model. The "construction" of the string metLabel is done above.
-    // initializeCellsFromFile(metLabel); [0 or greater]
+    initializeCellsFromFile(metLabel); // [0 or greater]
     // initializeInVitro(); // This is used for testing purposes. [-1]
-    initializeHeterogeneous(); // This is used for testing purposes. [-2]
+    // initializeHeterogeneous(); // This is used for testing purposes. [-2]
 
     std::cout << "starting simulations...\n";
 
