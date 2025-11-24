@@ -14,8 +14,8 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
     file.open(filePathway);
 
     // Check whether the file exists
-    std::vector<int> numCells = {0,0,0,0,0,0,0,0,0,0,0};
-    std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5};
+    std::vector<int> numCells = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5,6,7,8};
 
     if (file.is_open()) {
         std::cout<<"\033[32mModel input file opened successfully.\033[0m"<<std::endl;
