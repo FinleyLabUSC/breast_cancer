@@ -59,6 +59,8 @@ std::vector<double> Macrophage::directInteractionProperties(int interactingState
 
 void Macrophage::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng)
 {
+    // NO DIFFERENTIATION WHEN FINDING SPATIAL EQUILIBRIUM
+    
     // All macrophage types can differentiate from one to another
     double posInfluence = 1 - (1 - influences[4])*(1 - influences[6])*(1 - influences[8]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[3])*(1 - influences[5])*(1 - influences[10]);
@@ -73,7 +75,9 @@ void Macrophage::differentiate(double dt, RNG& master_rng, std::mt19937& tempora
     for(int i=0; i<3; ++i){
         if(rnd > probs[i]){choice++;}
     }
-    state = choice;
+    
+    // state = choice; // state will not update!
+    
     if(state == 1){ // M1 macrophages don't express PDL1
         pdl1_expression_level = 0;
     } else if(state == 2){ // M2 macrophages do

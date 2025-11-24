@@ -174,8 +174,8 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 for (int j = 0; j < cell_list.size(); ++j) {
                     if (i!=j && (!cell_list[i]->immuneSynapseFormed || !cell_list[j]->immuneSynapseFormed)){
                         if ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0 && cell_list[i]->calcDistance(cell_list[j]->x) <= cell_list[i]->radius + cell_list[j]->radius) {
-                        cell_list[i]->immuneSynapseFormed = true; // immune cells
-                        cell_list[j]->immuneSynapseFormed = true; // cancer
+                        cell_list[i]->immuneSynapseFormed = false; // immune cells -- IMMUNE SYNAPSE DISABLED
+                        cell_list[j]->immuneSynapseFormed = false; // cancer -- IMMUNE SYNAPSE DISABLED
                         }
                     }
                 }

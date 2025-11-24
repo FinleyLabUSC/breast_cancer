@@ -56,8 +56,8 @@ std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
     {
         return {0,0,0}; // cannot proliferate because suppressed or dead!
     }
-
-    return prob_proliferate(dt, master_rng);
+        return {0,0,0}; // NO PROLIFERATION WHEN FINDING EQUILIBRIUM
+        // return prob_proliferate(dt, master_rng);
 }
 
 void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)

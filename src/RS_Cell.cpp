@@ -396,14 +396,15 @@ void RS_Cell::set_cellAge(size_t step_count) {
 void RS_Cell::age(double dt, size_t step_count,  RNG& master_rng) {
     /*
      * cells die based on a probability equal to 1/lifespan
+     * CELLS DO NOT DIE WHEN DETERMINING SPATIAL EQUILIBRIUM
      */
     double rand = master_rng.uniform(0,1);
     if(rand < deathProb){
         if (state == 3) {
-            death_type = 0;
+            // death_type = 0;
         }
 
-        state = -1;
+        // state = -1;
     }
 }
 

@@ -19,7 +19,7 @@ Cancer::Cancer(std::array<double, 2> loc, std::vector<std::vector<double>>& cell
     divProb = cellParams[5][0];
     deathProb = cellParams[6][0];
     influenceRadius = cellParams[7][0];
-    migrationSpeed = 30; // 30 microns per hour ref 10.1529/biophysj.106.088898. HER2+ breast cancer cells.
+    migrationSpeed = 0; // 30 microns per hour ref 10.1529/biophysj.106.088898. HER2+ breast cancer cells.
     rmax = 1.5*radius*2;
     init_time = init_tstamp;
     cellCyclePos = 0;
@@ -57,8 +57,8 @@ std::array<double, 3> Cancer::proliferate(double dt, RNG& master_rng)
     {
         return {0,0,0}; // cannot proliferate because suppressed or dead!
     }
-
-    return cycle_proliferate(dt, master_rng);
+        return {0,0,0}; // NO PROLIFERATION WHEN FINDING EQUILIBRIUM
+        //return cycle_proliferate(dt, master_rng);
 }
 
 void Cancer::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
