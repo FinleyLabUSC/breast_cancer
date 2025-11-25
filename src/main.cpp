@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
         std::string kp_fac = argv[6];
         int tx = std::stoi(argv[7]);
         int met = std::stoi(argv[8]);
-        double binding_rate_pd1_drug = 0.1;
+        double binding_rate_pd1_drug = 0.139; // [https://www.google.com/url?q=https://pmc.ncbi.nlm.nih.gov/articles/PMC7058304/&sa=D&source=docs&ust=1764113705187992&usg=AOvVaw2PNsv0BjiS0gmSkBEBEXiT]
         int repNum = std::stoi(argv[3]);
         double cd8_prolif = std::stod(argv[9]);
         double cd8_death = std::stod(argv[10]);

@@ -130,7 +130,7 @@ std::vector<double> Cancer::directInteractionProperties(int interactingState, si
 
 void Cancer::mutate(RNG& master_rng)
 {
-    std::cout << "Entered mutation code  for cell " << unique_cell_ID << std::endl;
+    // std::cout << "Entered mutation code  for cell " << unique_cell_ID << std::endl;
     // The mutation RNG is generated here to match an old version of the code
     // Can be moved later, perhaps
     double sampleMutation = master_rng.uniform(0,1);

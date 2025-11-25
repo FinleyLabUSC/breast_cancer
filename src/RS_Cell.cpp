@@ -140,7 +140,7 @@ void RS_Cell::directInteractions(int interactingState, std::array<double, 2> int
 
 std::vector<double> RS_Cell::directInteractionProperties(int interactingState, size_t step_count)
 {
-    std::cout << "A cell has tried to call directInteractionProperties from RS_Cell!" << std::endl;
+    // std::cout << "A cell has tried to call directInteractionProperties from RS_Cell!" << std::endl;
     return {}; // default return nothing for direct interactions as only some cells can do this
 }
 
@@ -440,7 +440,7 @@ double RS_Cell::sensitivity_to_antiPD1(double anti_pd1_concentration, double bin
     { // anti-PD1 isn't effective when the CD8 T cell is severely suppressed. "Severe" here is relative killProb < 0.25, relative migration < 0.25 and relative death > 4
         return 0;
     }
-    return anti_pd1_concentration / (anti_pd1_concentration + binding_rate_pd1_drug);
+    return anti_pd1_concentration / (anti_pd1_concentration + 1/binding_rate_pd1_drug); // Use KD instead of KA in this equation
 }
 
 double RS_Cell::sensitivity_to_antiCTLA4() {

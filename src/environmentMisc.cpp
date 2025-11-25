@@ -18,7 +18,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
     std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5,6,7,8};
 
     if (file.is_open()) {
-        std::cout<<"\033[32mModel input file opened successfully.\033[0m"<<std::endl;
+        std::cout<<"Model input file opened successfully."<<std::endl;
         std::string line, value;
 
         // Read in each line
@@ -54,7 +54,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         << " | m1: " << std::setw(10) << numCells[1] << " | m2: " << std::setw(10) << numCells[2]  <<  " | nk: " << std::setw(10) << numCells[8] << " | mdsc: " << std::setw(10) << numCells[10] << std::endl;
 
 
-        std::cout<<"\033[32mModel initialized from mIHC file!\033[0m"<<std::endl;
+        std::cout<<"Model initialized from mIHC file!"<<std::endl;
         file.close(); // Close the input file
 
         tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
@@ -65,7 +65,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         count_cancer_immune_contacts(-1.0);
         std::cout<<"Model initialized. Populations recorded. "<<std::endl;
     } else {
-        std::cout<<"\033[31mCouldn't open mIHC file: "<< filePathway << ". Check file pathway or file name!\033[0m"<<std::endl;
+        std::cout<<"Couldn't open mIHC file: "<< filePathway << ". Check file pathway or file name!"<<std::endl;
     }
 }
 
