@@ -109,7 +109,7 @@ void Cancer::contact_die(int killer_state, std::array<double, 2> otherX, double 
         default:
             throw std::runtime_error("Contact killing behavior undefined for cell state " + std::to_string(killer_state) + ".");
         }
-        double rnd = master_rng.uniform(0, 1, temporary_rng);
+        double rnd = 10000; // master_rng.uniform(0, 1, temporary_rng); arb. high rnd so no killing ever occurs
         if (rnd < kill_prob)
         {
             next_state = -1;
@@ -130,7 +130,7 @@ std::vector<double> Cancer::directInteractionProperties(int interactingState, si
 
 void Cancer::mutate(RNG& master_rng)
 {
-    std::cout << "Entered mutation code  for cell " << unique_cell_ID << std::endl;
+    // std::cout << "Entered mutation code  for cell " << unique_cell_ID << std::endl;
     // The mutation RNG is generated here to match an old version of the code
     // Can be moved later, perhaps
     double sampleMutation = master_rng.uniform(0,1);

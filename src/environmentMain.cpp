@@ -44,7 +44,7 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
     maxRecCytoConc = recParams[5];
     recruitmentDelay = recParams[6];
 
-    simulationDuration = envParams[1];
+    simulationDuration = 5; // Hardcode simulation duration for now
     necroticGrowth = envParams[2];
     necroticForce = envParams[3];
     necroticLimit = envParams[4];

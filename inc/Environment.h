@@ -147,7 +147,7 @@ private:
 
     double binding_rate_pd1_drug;
 
-    double mean_cancer_cell_cycle_length = 30;
+    double mean_cancer_cell_cycle_length = 5000;
     double std_cancer_cell_cycle_length = 2;
 
     int num_cancer_deaths =0;

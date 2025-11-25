@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
         if (run_location == "CARC") {
             onLocal = false;
             saveFolderPath = "./" + saveFolder;
-            str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
+            str = "conda run -n bc_env_new python3 staticParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
         }
 
         const char *command = str.c_str();

@@ -140,7 +140,7 @@ void RS_Cell::directInteractions(int interactingState, std::array<double, 2> int
 
 std::vector<double> RS_Cell::directInteractionProperties(int interactingState, size_t step_count)
 {
-    std::cout << "A cell has tried to call directInteractionProperties from RS_Cell!" << std::endl;
+    // std::cout << "A cell has tried to call directInteractionProperties from RS_Cell!" << std::endl;
     return {}; // default return nothing for direct interactions as only some cells can do this
 }
 
