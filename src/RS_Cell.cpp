@@ -462,20 +462,21 @@ void RS_Cell::resetImmuneSynapse() {
 
 void RS_Cell::printLocations(std::string saveDir) {
 
-    std::ofstream myFile;
-    std::string day_dir = saveDir + "/location_history/";
-    std::string str = "mkdir -p " + day_dir;
-    const char *command = str.c_str();
-    std::system(command);
+    // Disabling this function to reduce disk clutter
+    // std::ofstream myFile;
+    // std::string day_dir = saveDir + "/location_history/";
+    // std::string str = "mkdir -p " + day_dir;
+    // const char *command = str.c_str();
+    // std::system(command);
 
-    myFile.open(day_dir+ std::to_string(unique_cell_ID)+".csv");
+    // myFile.open(day_dir+ std::to_string(unique_cell_ID)+".csv");
 
-    for (auto & pos : location_history) {
-        myFile << pos[0] << "," << pos[1] << std::endl;
-    }
+    // for (auto & pos : location_history) {
+    //     myFile << pos[0] << "," << pos[1] << std::endl;
+    // }
 
 
-    myFile.close();
+    // myFile.close();
 }
 
 double RS_Cell::calcDistance(std::array<double, 2> otherX) {
