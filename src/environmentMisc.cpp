@@ -100,11 +100,11 @@ void Environment::initializeInVitro() {
 
 void Environment::initializeHeterogeneous()
 {
-    // Make 100 cancer cells
+    // Make 450 cancer cells
     int idx = 0;
-    for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-100,100);
-        double y = rng.uniform(-100,100);
+    for (int i = 0; i < 450; i++) {
+        double x = rng.uniform(-200,200);
+        double y = rng.uniform(-200,200);
         std::array<double, 2> loc = {x, y};
 
         // Create cell
@@ -119,8 +119,8 @@ void Environment::initializeHeterogeneous()
     // Iterate over non-cancer cell types except stromal
     for (int i = 1; i < 8; i++)
     {
-        // Make 10 of each other cell type
-        for (int j = 0; j < 10; j++)
+        // Make 20 of each other cell type
+        for (int j = 0; j < 20; j++)
         {
             double x = rng.uniform(-100,100);
             double y = rng.uniform(-100,100);
@@ -134,13 +134,14 @@ void Environment::initializeHeterogeneous()
     }
 
     // Place a ring of stromal cells in the area around the tumor
-    for (int i = 1; i < 100; i++)
+    // Attempting to place 500 will on average yield 286
+    for (int i = 1; i < 500; i++)
     {
-        double x = rng.uniform(-150,150);
-        double y = rng.uniform(-150,150);
+        double x = rng.uniform(-250,250);
+        double y = rng.uniform(-250,250);
 
         // Reject placements that are within the square
-        if ((x > 100 || x < -100) || (y > 100 || y < -100))
+        if ((x > 200 || x < -200) || (y > 200 || y < -200))
         {
             std::array<double, 2> loc = {x, y};
 
