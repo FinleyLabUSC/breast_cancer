@@ -28,6 +28,7 @@ class RS_Cell
     // force functions
     std::array<double, 2> attractiveForce(std::array<double, 2> dx, double otherRadius);
     std::array<double, 2> repulsiveForce(std::array<double, 2> dx, double otherRadius);
+    std::array<double, 2> synapse_springForce(std::array<double, 2> dx, double otherRadius, int &otherType);
     void calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType);
     void resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng);
     void resetForces(RNG& master_rng, std::mt19937& local_gen);
@@ -35,6 +36,7 @@ class RS_Cell
     // neighboring cells
     std::array<double, 2> determine_grid();
     void determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state);
+    void determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int& otherType, unsigned long otherUID);
 
     // overlap functions
     void calculateOverlap(std::array<double, 2> otherX, double otherRadius);
@@ -100,7 +102,10 @@ class RS_Cell
     double radius;
     bool compressed;
     double currentOverlap;
-    std::vector<int> neighbors;
+    std::vector<int> neighbors; // Vector to store CellIDs of neighbors
+    std::vector<unsigned long> synapses; // Vector to store CellIDs of synapses
+    std::vector<int> synapse_durations; // Vector to store duration of synapses
+    std::vector<int> synapse_types; // Vector to store TYPE of synapse (all Type I right now)
     std::vector<std::array<double, 2>> cancer_neighbors;
 
     // age, division, and lifespan

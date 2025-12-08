@@ -1,4 +1,7 @@
+#include <algorithm>
 #include "../inc/RS_Cell.h"
+
+#include <unordered_set>
 
 long unsigned RS_Cell::cell_counter = 0; // Defines the cell counter obj
 
@@ -310,6 +313,18 @@ std::array<double, 2> RS_Cell::repulsiveForce(std::array<double, 2> dx, double o
     return {F0, F1};
 }
 
+std::array<double, 2> RS_Cell::synapse_springForce(std::array<double, 2> dx, double otherRadius, int &otherType)
+{
+    // TODO: Tune constants to scale
+    int k = 10; // Arbitrary spring force
+    double synapseOverlap = 2; // Arbitrary allowed overlap in microns
+    double dxNorm = calcNorm(dx);
+    std::array<double, 2> dxUnit = {dx[0]/dxNorm, dx[1]/dxNorm};
+    double F0 = -dxUnit[0]*k*(radius + otherRadius - synapseOverlap - dxNorm);
+    double F1 = -dxUnit[1]*k*(radius + otherRadius - synapseOverlap - dxNorm);
+    return {F0, F1};
+}
+
 void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType) {
     /*
      * assume attractive force only between cancer cells
@@ -359,6 +374,22 @@ void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherC
         if (type != 0 && otherCell_state==3) { // if the original cell is immune and the other cell is cancer, add to a different list.
              cancer_neighbors.push_back(otherX);
         }
+    }
+}
+
+void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int &otherType, unsigned long otherUID)
+{
+    // First check to see if the cells are already synapsed, and if so do nothing
+    if (std::find(synapses.begin(), synapses.end(), otherUID) != synapses.end()) {return;}
+
+    // Then calculate if the cells are overlapping
+    double dis = calcDistance(otherX);
+    if (dis < radius + otherRadius)
+    {
+        // Form an immune synapse
+        synapses.push_back(otherUID); // Add the UID of the synapsed cell
+        synapse_durations.push_back(0); // The synapse just formed
+        synapse_types.push_back(1); // All synapses are of type 1 right now
     }
 }
 
