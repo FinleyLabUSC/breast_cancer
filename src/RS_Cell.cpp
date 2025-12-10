@@ -313,16 +313,42 @@ std::array<double, 2> RS_Cell::repulsiveForce(std::array<double, 2> dx, double o
     return {F0, F1};
 }
 
-std::array<double, 2> RS_Cell::synapse_springForce(std::array<double, 2> dx, double otherRadius, int &otherType)
+void RS_Cell::get_current_synapses()
+{
+    // Assigns the synapse property to a vector of UIDs for the current synapses!
+    std::vector<unsigned long> curr_syn;
+    for (auto kv : synapse_list)
+    {
+        curr_syn.push_back(kv.first);
+    }
+    synapses = curr_syn;
+}
+
+
+bool RS_Cell::determine_synapsed(unsigned long otherUID)
+{
+    if (std::find(synapses.begin(), synapses.end(), otherUID) != synapses.end())
+    {
+        return true;
+    }
+    return false;
+}
+
+
+void RS_Cell::add_synapseForce(std::array<double, 2> otherX, double otherRadius, int &otherType)
 {
     // TODO: Tune constants to scale
     int k = 10; // Arbitrary spring force
     double synapseOverlap = 2; // Arbitrary allowed overlap in microns
+
+    std::array<double, 2> dx = {(otherX[0]-x[0]), (otherX[1]-x[1])};
     double dxNorm = calcNorm(dx);
     std::array<double, 2> dxUnit = {dx[0]/dxNorm, dx[1]/dxNorm};
     double F0 = -dxUnit[0]*k*(radius + otherRadius - synapseOverlap - dxNorm);
     double F1 = -dxUnit[1]*k*(radius + otherRadius - synapseOverlap - dxNorm);
-    return {F0, F1};
+
+    currentForces[0] += F0;
+    currentForces[1] += F1;
 }
 
 void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType) {
@@ -379,17 +405,25 @@ void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherC
 
 void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int &otherType, unsigned long otherUID)
 {
-    // First check to see if the cells are already synapsed, and if so do nothing
-    if (std::find(synapses.begin(), synapses.end(), otherUID) != synapses.end()) {return;}
+    // First check to see if the cells are already synapsed, and if so update the synapse
+    if (determine_synapsed(otherUID))
+    {
+        synapse_list[otherUID][0] += 1; // Update duration of the synapse
+        if (synapse_list[otherUID][0] > 200*1) // Later will need to update based on synapse type
+        {
+            synapse_list.erase(otherUID);
+        }
+        immuneSynapseFormed = true; // Confirm synapsed
+        return; // Exit function
+    }
 
-    // Then calculate if the cells are overlapping
+    // If the cells are not already synapsed...
     double dis = calcDistance(otherX);
     if (dis < radius + otherRadius)
     {
         // Form an immune synapse
-        synapses.push_back(otherUID); // Add the UID of the synapsed cell
-        synapse_durations.push_back(0); // The synapse just formed
-        synapse_types.push_back(1); // All synapses are of type 1 right now
+        synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
+        immuneSynapseFormed = true; // Confirm synapsed
     }
 }
 

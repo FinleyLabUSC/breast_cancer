@@ -129,15 +129,19 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 for(auto &c : cell_list[i]->neighbors){
+                    cell_list[i]->get_current_synapses(); // Updates synapse vector
                     cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                    // TODO: (COMPLETE, needs testing) Add immune synapse spring forces here
+                    if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
+                    {
+                        cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                    }
                 }
-                // TODO: Add immune synapse spring forces here here
-                // Probably need to do immune synapses in a different place
             }
 
         // std::cout << "Resolving forces... " << std::endl;
         // resolve forces
-       #pragma omp parallel for schedule(dynamic)
+        #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i){
                 unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,5);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
@@ -162,37 +166,21 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
         // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
-        // TODO: New immune synapses form at this step & synapses of sufficient duration break
-        // TODO: Add method to check synapse duration length
+        // TODO: (COMPLETE, needs testing) New immune synapses form at this step & synapses of sufficient duration break
         #pragma omp parallel for schedule(dynamic)
             for (int i = 0; i < cell_list.size(); ++i) {
-                // Generate unordered set of neighbors UID
-                std::unordered_set<unsigned long> UID_neighbors;
-                for (auto& c: cell_list[i]->neighbors)
-{
-                    UID_neighbors.insert(cell_list[c]->unique_cell_ID);
-                }
-                // TODO: Update synapses based on this information...
-                // Loop over cells to determine synapses
-                // TODO: change this from looping over cell list to looping over JUST NEIGHBORS
-                for (int j = 0; j < cell_list.size(); ++j) {
-                    // Cancer --> CD8 or NK cell
-                    if (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4))
+                cell_list[i]->get_current_synapses(); // Updates synapse vector
+                cell_list[i]->immuneSynapseFormed = false; // Default assume no immune synapsed prior to neighbor eval
+                // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
+                for (auto &j : cell_list[i]->neighbors)
+                {
+                    if (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4) || (cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0)
                     {
                         cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID);
                     }
-                    // CD8 or NK cell --> Cancer
-                    {
-                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID);
-                    }
-                    // if (i!=j && (!cell_list[i]->immuneSynapseFormed || !cell_list[j]->immuneSynapseFormed)){
-                    //     if ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0 && cell_list[i]->calcDistance(cell_list[j]->x) <= cell_list[i]->radius + cell_list[j]->radius) {
-                    //     cell_list[i]->immuneSynapseFormed = true; // immune cells
-                    //     cell_list[j]->immuneSynapseFormed = true; // cancer
                 }
             }
     }
-
 
         // calculate overlaps and proliferation states
         #pragma omp parallel for
