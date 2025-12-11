@@ -128,20 +128,35 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     // We switch on the met label
     switch (met)
     {
-    case -1:
-        {
-            initializeHeterogeneous();
-            break;
-        }
-    case -2:
-        {
-            initializeInVitro();
-            break;
-        }
-    default:
-        {
-            initializeCellsFromFile(metLabel);
-        }
+        case -1:
+            {
+                initializeHeterogeneous();
+                break;
+            }
+        case -2:
+            {
+                initializeInVitro();
+                break;
+            }
+        case -3:
+            {
+                initializeM1DiffTest();
+                break;
+            }
+        case -4:
+            {
+                initializeM2DiffTest();
+                break;
+            }
+        case -5:
+            {
+                initializeThDiffTest();
+                break;
+            }
+        default:
+            {
+                initializeCellsFromFile(metLabel);
+            }
     }
     // Whichever line is uncommented is how the model will be initialized.
     // The argument passed here is a pseudonym for whichever metastasis is used to initialize the model. The "construction" of the string metLabel is done above.

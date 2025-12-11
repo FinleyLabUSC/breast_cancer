@@ -73,10 +73,16 @@ private:
     void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
 
+    // Initialization functions
     void initializeCells();
     void initializeTesting();
     void initializeInVitro();
     void initializeHeterogeneous();
+    void initializeM1DiffTest();
+    void initializeM2DiffTest();
+    void initializeThDiffTest();
+    void report_initialization();
+
     void calculateForces(double tstep, size_t step_count);
 
     void removeDeadCells();

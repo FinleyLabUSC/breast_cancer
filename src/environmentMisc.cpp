@@ -7,7 +7,6 @@
 
 #include "RS_Cell.h"
 
-// TODO: Change initializeCells to accept inputs with generalized types
 void Environment::initializeCellsFromFile(std::string filePathway) {
     RNG initialize_from_file_rng(722); // Use this rng for the initialization. Then the starting point will be exactly the same for all replicates of a condition.
     std::fstream file;
@@ -166,6 +165,104 @@ void Environment::initializeHeterogeneous()
        << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
 }
 
+void Environment::initializeM1DiffTest()
+{
+    // M0 to M1 is promoted by Th, CD8, NK cells
+    // None of these cells need their type manually adjusted
+    int idx = 0;
+    std::array<int, 4> types_to_gen = {1, 2, 3, 4};
+    for (auto type : types_to_gen)
+    {
+        // Make 50 of each cell type
+        for (int j = 0; j < 50; j++)
+        {
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, type);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            ++idx;
+        }
+
+        report_initialization();
+    }
+}
+
+void Environment::initializeM2DiffTest()
+{
+    // M0 to M2 is promoted by cancer, Treg, and MDSC (also M2)
+    // None of these cells need their type manually adjusted
+    int idx = 0;
+    std::array<int, 4> types_to_gen = {0, 1, 2, 5};
+    for (auto type : types_to_gen)
+    {
+        // Make 40 of each cell type
+        for (int j = 0; j < 40; j++)
+        {
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, type);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            // Convert Th into Treg
+            if (type == 2)
+            {
+                cell_list.back()->state = 5;
+            }
+            ++idx;
+        }
+
+        report_initialization();
+    }
+}
+
+void Environment::initializeThDiffTest()
+{
+    // Th to Treg is promoted by M2, cancer, and MDSC
+    // None of these cells need their type manually adjusted
+    int idx = 0;
+    std::array<int, 4> types_to_gen = {0, 1, 2, 5};
+    for (auto type : types_to_gen)
+    {
+        // Make 40 of each cell type
+        for (int j = 0; j < 40; j++)
+        {
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, type);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            // Convert M0 into M2 (keep Th)
+            if (type == 1)
+            {
+                cell_list.back()->state = 2;
+            }
+            ++idx;
+        }
+
+        report_initialization();
+    }
+}
+
+void Environment::report_initialization()
+{
+    tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    save(0, 0);
+    countPops_updateTimeSeries();
+    recordPopulation(0.0);
+    count_cancer_immune_contacts(-1.0);
+    std::cout<<"Model initialized. Populations recorded. "<<std::endl;
+
+    std::cout << "Time: 0 "  << " | cancer: " << std::setw(10) << cancerTS.back()
+       << " | cd8: " << std::setw(10) << cd8TS.back() << " | cd4: " << std::setw(10) << cd4_th_TS.back() << " | treg: " << std::setw(10) << cd4_treg_TS.back()  << " | m0: " << std::setw(10) << m0TS.back()
+       << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
+}
 
 void Environment::initializeTesting() {
     // A line of cells
