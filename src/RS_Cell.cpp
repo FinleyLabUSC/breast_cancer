@@ -77,7 +77,7 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
     // The default behavior here is to perform a biased random walk toward the nearest cancer cell
     // Suppressed cells cannot move as well
     if (state == -1 || immuneSynapseFormed || state == 7 || state == 9)
-    {
+    {   
         location_history.push_back(x); // still save the location history for plotting purposes
         return;
     }
@@ -374,11 +374,10 @@ void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, 
 void RS_Cell::resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
 
     // Only resolve forces on cells that have not formed immune synapses.
-    if (!immuneSynapseFormed) {
-        // resolving the forces between cells.
-        x[0] += (dt/damping)*currentForces[0];
-        x[1] += (dt/damping)*currentForces[1];
-    }
+    // TODO: ALL CELLS CAN MOVE NOW!
+    // resolving the forces between cells.
+    x[0] += (dt/damping)*currentForces[0];
+    x[1] += (dt/damping)*currentForces[1];
     resetForces(master_rng,temporary_rng);
 }
 
@@ -413,7 +412,8 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
         {
             synapse_list.erase(otherUID);
         }
-        immuneSynapseFormed = true; // Confirm synapsed
+        immuneSynapseFormed = true; // Confirm synapsed -- should be wrapped in else...
+        // std::cout << "Synapse confirmed" << std::endl;
         return; // Exit function
     }
 
@@ -424,6 +424,7 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
         // Form an immune synapse
         synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
         immuneSynapseFormed = true; // Confirm synapsed
+        // std::cout << "Synapse formed" << std::endl;
     }
 }
 

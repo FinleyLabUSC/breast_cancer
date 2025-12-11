@@ -130,11 +130,14 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             for(int i=0; i<cell_list.size(); ++i){
                 for(auto &c : cell_list[i]->neighbors){
                     cell_list[i]->get_current_synapses(); // Updates synapse vector
-                    cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
-                    // TODO: (COMPLETE, needs testing) Add immune synapse spring forces here
-                    if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
+                    if (i != c)
                     {
-                        cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                        cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                        // TODO: (COMPLETE, needs testing) Add immune synapse spring forces here
+                        if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
+                        {
+                            cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                        }
                     }
                 }
             }
@@ -174,7 +177,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
                 for (auto &j : cell_list[i]->neighbors)
                 {
-                    if (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4) || (cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0)
+                    if (i != j && (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4) || (cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0))
                     {
                         cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID);
                     }
