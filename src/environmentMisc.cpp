@@ -209,7 +209,7 @@ void Environment::initializeM2DiffTest()
     // M0 to M2 is promoted by cancer, Treg, and MDSC (also M2)
     // None of these cells need their type manually adjusted
     int idx = 0;
-    std::array<int, 4> types_to_gen = {0, 1, 2, 5};
+    std::array<int, 4> types_to_gen = {1, 2, 5};
     for (auto type : types_to_gen)
     {
         // Make 40 of each cell type
@@ -230,6 +230,21 @@ void Environment::initializeM2DiffTest()
             ++idx;
         }
     }
+    // Add cancer cells after bc they have specific properties
+    for (int j = 0; j < 40; j++)
+    {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        std::array<double, 2> loc = {x, y};
+
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
+        ++idx;
+    }
     report_initialization();
 }
 
@@ -238,7 +253,7 @@ void Environment::initializeThDiffTest()
     // Th to Treg is promoted by M2, cancer, and MDSC
     // None of these cells need their type manually adjusted
     int idx = 0;
-    std::array<int, 4> types_to_gen = {0, 1, 2, 5};
+    std::array<int, 4> types_to_gen = {1, 2, 5};
     for (auto type : types_to_gen)
     {
         // Make 40 of each cell type
@@ -258,6 +273,21 @@ void Environment::initializeThDiffTest()
             }
             ++idx;
         }
+    }
+    // Add cancer cells after bc they have specific properties
+    for (int j = 0; j < 40; j++)
+    {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        std::array<double, 2> loc = {x, y};
+
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
+        ++idx;
     }
     report_initialization();
 }
