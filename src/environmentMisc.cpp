@@ -185,9 +185,23 @@ void Environment::initializeM1DiffTest()
             cell_list.back()->runtime_index = cell_list.size() - 1;
             ++idx;
         }
-
-        report_initialization();
     }
+    // Also add a few cancer cells far away so the simulation doesn't end
+    for (int j = 0; j < 50; j++)
+    {
+        double x = rng.uniform(250,260);
+        double y = rng.uniform(250,260);
+        std::array<double, 2> loc = {x, y};
+
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
+        ++idx;
+    }
+    report_initialization();
 }
 
 void Environment::initializeM2DiffTest()
@@ -215,9 +229,8 @@ void Environment::initializeM2DiffTest()
             }
             ++idx;
         }
-
-        report_initialization();
     }
+    report_initialization();
 }
 
 void Environment::initializeThDiffTest()
@@ -245,9 +258,8 @@ void Environment::initializeThDiffTest()
             }
             ++idx;
         }
-
-        report_initialization();
     }
+    report_initialization();
 }
 
 void Environment::report_initialization()
