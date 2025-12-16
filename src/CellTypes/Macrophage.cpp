@@ -17,6 +17,7 @@ Macrophage::Macrophage(std::array<double, 2> loc, std::vector<std::vector<double
     influenceRadius = cellParams[9][3];
     migrationBias = cellParams[10][3];
     rmax = 1.5*radius*2;
+    location_history.push_back(x);
 }
 
 void Macrophage::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
@@ -72,10 +73,10 @@ void Macrophage::differentiate(double dt, RNG& master_rng, std::mt19937& tempora
     for(int i=0; i<3; ++i){
         if(rnd > probs[i]){choice++;}
     }
-    state = choice;
-    if(state == 1){ // M1 macrophages don't express PDL1
+    next_state = choice;
+    if(next_state == 1){ // M1 macrophages don't express PDL1
         pdl1_expression_level = 0;
-    } else if(state == 2){ // M2 macrophages do
+    } else if(next_state == 2){ // M2 macrophages do
         express_PDL1(dt);
     }
 }

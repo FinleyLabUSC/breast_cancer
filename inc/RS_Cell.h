@@ -3,6 +3,7 @@
 
 #include <array>
 #include <vector>
+#include <unordered_map>
 #include <cmath>
 #include <random>
 #include <string>
@@ -28,6 +29,7 @@ class RS_Cell
     // force functions
     std::array<double, 2> attractiveForce(std::array<double, 2> dx, double otherRadius);
     std::array<double, 2> repulsiveForce(std::array<double, 2> dx, double otherRadius);
+    void add_synapseForce(std::array<double, 2> dx, double otherRadius, int &otherType);
     void calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType);
     void resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng);
     void resetForces(RNG& master_rng, std::mt19937& local_gen);
@@ -35,6 +37,9 @@ class RS_Cell
     // neighboring cells
     std::array<double, 2> determine_grid();
     void determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state);
+    void determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int& otherType, unsigned long otherUID);
+    bool determine_synapsed(unsigned long otherUID);
+    void get_current_synapses();
 
     // overlap functions
     void calculateOverlap(std::array<double, 2> otherX, double otherRadius);
@@ -100,7 +105,9 @@ class RS_Cell
     double radius;
     bool compressed;
     double currentOverlap;
-    std::vector<int> neighbors;
+    std::vector<unsigned long> synapses; // Temp vector used for searching who's synapsed to who
+    std::unordered_map<unsigned long, std::array<int, 2>> synapse_list; // map from UID to <dur, type>
+    std::vector<int> neighbors; // Vector to store CellIDs of neighbors
     std::vector<std::array<double, 2>> cancer_neighbors;
 
     // age, division, and lifespan
@@ -286,18 +293,24 @@ class Lymphoid final : public RS_Cell
 {
     public:
     Lymphoid(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
+    void inherit(std::vector<double> properties) override;
+    std::vector<double> inheritanceProperties() override;
+    std::array<double, 3> proliferate(double dt, RNG& master_rng) override;
 };
 
 class Myeloid final : public RS_Cell
 {
     public:
     Myeloid(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
 class Stromal final : public RS_Cell
 {
     public:
     Stromal(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
+    void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
 };
 
 #endif //BREAST_CANCER_RS_CELL_H

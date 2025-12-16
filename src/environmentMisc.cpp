@@ -13,17 +13,16 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
     file.open(filePathway);
 
     // Check whether the file exists
-    std::vector<int> numCells = {0,0,0,0,0,0,0,0,0,0,0};
-    std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5};
+    std::vector<int> numCells = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    std::vector<int> cell_types = {1,1,1,0,2,2,3,3,4,4,5,6,7,8};
 
     if (file.is_open()) {
-        std::cout<<"\033[32mModel input file opened successfully.\033[0m"<<std::endl;
+        std::cout<<"Model input file opened successfully."<<std::endl;
         std::string line, value;
 
         // Read in each line
         int i = 0;
         while(getline(file,line)) {
-            std::vector<std::string> tempTrajectory;
             std::stringstream ss(line);
             std::vector<std::string> row;
 
@@ -33,9 +32,10 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
             }
 
             // Extract each value from the row vector
-            double x = std::stod(row[0]); // convert the string to a double value
-            double y = std::stod(row[1]);
-            int cell_state = stoi(row[2]); // convert the string to an integer value
+            // In new mIHC files the first element of the row is now the index, which we ignore
+            double x = std::stod(row[1]); // convert the string to a double value
+            double y = std::stod(row[2]);
+            int cell_state = stoi(row[3]); // convert the string to an integer value
 
             if (cell_state!=-10){
                 numCells[cell_state]++;
@@ -53,7 +53,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         << " | m1: " << std::setw(10) << numCells[1] << " | m2: " << std::setw(10) << numCells[2]  <<  " | nk: " << std::setw(10) << numCells[8] << " | mdsc: " << std::setw(10) << numCells[10] << std::endl;
 
 
-        std::cout<<"\033[32mModel initialized from mIHC file!\033[0m"<<std::endl;
+        std::cout<<"Model initialized from mIHC file!"<<std::endl;
         file.close(); // Close the input file
 
         tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
@@ -64,7 +64,7 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
         count_cancer_immune_contacts(-1.0);
         std::cout<<"Model initialized. Populations recorded. "<<std::endl;
     } else {
-        std::cout<<"\033[31mCouldn't open mIHC file: "<< filePathway << ". Check file pathway or file name!\033[0m"<<std::endl;
+        std::cout<<"Couldn't open mIHC file: "<< filePathway << ". Check file pathway or file name!"<<std::endl;
     }
 }
 
@@ -99,11 +99,11 @@ void Environment::initializeInVitro() {
 
 void Environment::initializeHeterogeneous()
 {
-    // Make 100 cancer cells
+    // Make 450 cancer cells
     int idx = 0;
-    for (int i = 0; i < 100; i++) {
-        double x = rng.uniform(-100,100);
-        double y = rng.uniform(-100,100);
+    for (int i = 0; i < 450; i++) {
+        double x = rng.uniform(-200,200);
+        double y = rng.uniform(-200,200);
         std::array<double, 2> loc = {x, y};
 
         // Create cell
@@ -115,11 +115,11 @@ void Environment::initializeHeterogeneous()
         ++idx;
     }
 
-    // Iterate over non-cancer cell types
-    for (int i = 1; i < 6; i++)
+    // Iterate over non-cancer cell types except stromal
+    for (int i = 1; i < 8; i++)
     {
-        // Make 10 of each other cell type
-        for (int j = 0; j < 10; j++)
+        // Make 20 of each other cell type
+        for (int j = 0; j < 20; j++)
         {
             double x = rng.uniform(-100,100);
             double y = rng.uniform(-100,100);
@@ -130,7 +130,27 @@ void Environment::initializeHeterogeneous()
             cell_list.back()->runtime_index = cell_list.size() - 1;
             ++idx;
         }
+    }
 
+    // Place a ring of stromal cells in the area around the tumor
+    // Attempting to place 500 will on average yield 286
+    for (int i = 1; i < 500; i++)
+    {
+        double x = rng.uniform(-250,250);
+        double y = rng.uniform(-250,250);
+
+        // Reject placements that are within the square
+        if ((x > 200 || x < -200) || (y > 200 || y < -200))
+        {
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, 8);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            ++idx;
+        } else {
+        std::cout << "Rejected location: (" << x << ", " << y << ") on iteration" << i << std::endl;
+        }
     }
 
     tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
@@ -145,6 +165,146 @@ void Environment::initializeHeterogeneous()
        << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
 }
 
+void Environment::initializeM1DiffTest()
+{
+    // M0 to M1 is promoted by Th, CD8, NK cells
+    // None of these cells need their type manually adjusted
+    int idx = 0;
+    std::array<int, 4> types_to_gen = {1, 2, 3, 4};
+    for (auto type : types_to_gen)
+    {
+        // Make 50 of each cell type
+        for (int j = 0; j < 50; j++)
+        {
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, type);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            ++idx;
+        }
+    }
+    // Also add a few cancer cells far away so the simulation doesn't end
+    for (int j = 0; j < 50; j++)
+    {
+        double x = rng.uniform(250,260);
+        double y = rng.uniform(250,260);
+        std::array<double, 2> loc = {x, y};
+
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
+        ++idx;
+    }
+    report_initialization();
+}
+
+void Environment::initializeM2DiffTest()
+{
+    // M0 to M2 is promoted by cancer, Treg, and MDSC (also M2)
+    // None of these cells need their type manually adjusted
+    int idx = 0;
+    std::array<int, 4> types_to_gen = {1, 2, 5};
+    for (auto type : types_to_gen)
+    {
+        // Make 40 of each cell type
+        for (int j = 0; j < 40; j++)
+        {
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, type);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            // Convert Th into Treg
+            if (type == 2)
+            {
+                cell_list.back()->state = 5;
+            }
+            ++idx;
+        }
+    }
+    // Add cancer cells after bc they have specific properties
+    for (int j = 0; j < 40; j++)
+    {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        std::array<double, 2> loc = {x, y};
+
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
+        ++idx;
+    }
+    report_initialization();
+}
+
+void Environment::initializeThDiffTest()
+{
+    // Th to Treg is promoted by M2, cancer, and MDSC
+    // None of these cells need their type manually adjusted
+    int idx = 0;
+    std::array<int, 4> types_to_gen = {1, 2, 5};
+    for (auto type : types_to_gen)
+    {
+        // Make 40 of each cell type
+        for (int j = 0; j < 40; j++)
+        {
+            double x = rng.uniform(-100,100);
+            double y = rng.uniform(-100,100);
+            std::array<double, 2> loc = {x, y};
+
+            // Create cell
+            addCell(loc, cellParams, type);
+            cell_list.back()->runtime_index = cell_list.size() - 1;
+            // Convert M0 into M2 (keep Th)
+            if (type == 1)
+            {
+                cell_list.back()->state = 2;
+            }
+            ++idx;
+        }
+    }
+    // Add cancer cells after bc they have specific properties
+    for (int j = 0; j < 40; j++)
+    {
+        double x = rng.uniform(-100,100);
+        double y = rng.uniform(-100,100);
+        std::array<double, 2> loc = {x, y};
+
+        // Create cell
+        std::shared_ptr<Cancer> newCancer = std::make_shared<Cancer>(loc, cellParams, 0);
+        newCancer->cellCycleLength = rng.normal(mean_cancer_cell_cycle_length,std_cancer_cell_cycle_length);
+        newCancer->cellCyclePos = rng.uniform(0,newCancer->cellCycleLength);
+        newCancer->runtime_index = cell_list.size();
+        cell_list.push_back(newCancer);
+        ++idx;
+    }
+    report_initialization();
+}
+
+void Environment::report_initialization()
+{
+    tumorSize(); // Always has to be called prior to countPops_updateTimeSeries. This calculates tumorRadius, the other fnx saves tumorRadius.
+    save(0, 0);
+    countPops_updateTimeSeries();
+    recordPopulation(0.0);
+    count_cancer_immune_contacts(-1.0);
+    std::cout<<"Model initialized. Populations recorded. "<<std::endl;
+
+    std::cout << "Time: 0 "  << " | cancer: " << std::setw(10) << cancerTS.back()
+       << " | cd8: " << std::setw(10) << cd8TS.back() << " | cd4: " << std::setw(10) << cd4_th_TS.back() << " | treg: " << std::setw(10) << cd4_treg_TS.back()  << " | m0: " << std::setw(10) << m0TS.back()
+       << " | m1: " << std::setw(10) << m1TS.back() << " | m2: " << std::setw(10) << m2TS.back()  <<  " | nk: " << std::setw(10) << nkTS.back() << " | mdsc: " << std::setw(10) << mdscTS.back() << std::endl;
+}
 
 void Environment::initializeTesting() {
     // A line of cells
@@ -386,6 +546,24 @@ void Environment::addCell(std::array<double, 2> loc, std::vector<std::vector<dou
     {
         std::shared_ptr<MDSC> newMDSC = std::make_shared<MDSC>(loc, cellParams, cellType);
         cell_list.push_back(newMDSC);
+        break;
+    }
+    case 6: // generalized myeloid
+    {
+        std::shared_ptr<Myeloid> newMyeloid = std::make_shared<Myeloid>(loc, cellParams, cellType);
+        cell_list.push_back(newMyeloid);
+        break;
+    }
+    case 7: // generalized lymphoid
+    {
+        std::shared_ptr<Lymphoid> newLymphoid = std::make_shared<Lymphoid>(loc, cellParams, cellType);
+        cell_list.push_back(newLymphoid);
+        break;
+    }
+    case 8: // generalized stromal
+    {
+        std::shared_ptr<Stromal> newStromal = std::make_shared<Stromal>(loc, cellParams, cellType);
+        cell_list.push_back(newStromal);
         break;
     }
     default:

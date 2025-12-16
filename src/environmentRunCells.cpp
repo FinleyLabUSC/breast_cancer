@@ -6,10 +6,6 @@
 
 
 void Environment::neighborInfluenceInteractions(double tstep, size_t step_count) {
-
-    // explicitly stating how many threads are permitted in OpenMP
-    omp_set_num_threads(16);
-
     /*
      * FIRST LOOP
      * - determine neighbors
@@ -102,9 +98,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
 
     int Nsteps = static_cast<int>(tstep/dt);
 
-    // explicitly stating how many threads are permitted in OpenMP
-    omp_set_num_threads(16);
-
     // iterate through Nsteps, calculating and resolving forces between neighbors
     // also includes migration
     for(int q=0; q<Nsteps; ++q) {
@@ -112,7 +105,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // migrate first
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
-                unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,4);
+                unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
                 cell_list[i]->migrate_NN(dt, rng, temporary_rng);
             }
@@ -136,15 +129,24 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 for(auto &c : cell_list[i]->neighbors){
-                    cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                    cell_list[i]->get_current_synapses(); // Updates synapse vector
+                    if (i != c)
+                    {
+                        cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                        // TODO: (COMPLETE, needs testing) Add immune synapse spring forces here
+                        if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
+                        {
+                            cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                        }
+                    }
                 }
             }
 
         // std::cout << "Resolving forces... " << std::endl;
         // resolve forces
-       #pragma omp parallel for schedule(dynamic)
+        #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i){
-                unsigned int seed_for_temp_rng = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,5);
+                unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,5);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
 
                 cell_list[i]->resolveForces(dt, rng, temporary_rng);
@@ -167,19 +169,21 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
         // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
+        // TODO: (COMPLETE, needs testing) New immune synapses form at this step & synapses of sufficient duration break
         #pragma omp parallel for schedule(dynamic)
             for (int i = 0; i < cell_list.size(); ++i) {
-                for (int j = 0; j < cell_list.size(); ++j) {
-                    if (i!=j && (!cell_list[i]->immuneSynapseFormed || !cell_list[j]->immuneSynapseFormed)){
-                        if ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0 && cell_list[i]->calcDistance(cell_list[j]->x) <= cell_list[i]->radius + cell_list[j]->radius) {
-                        cell_list[i]->immuneSynapseFormed = true; // immune cells
-                        cell_list[j]->immuneSynapseFormed = true; // cancer
-                        }
+                cell_list[i]->get_current_synapses(); // Updates synapse vector
+                cell_list[i]->immuneSynapseFormed = false; // Default assume no immune synapsed prior to neighbor eval
+                // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
+                for (auto &j : cell_list[i]->neighbors)
+                {
+                    if (i != j && (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4) || (cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0))
+                    {
+                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID);
                     }
                 }
             }
     }
-
 
         // calculate overlaps and proliferation states
         #pragma omp parallel for

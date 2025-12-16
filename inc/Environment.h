@@ -19,7 +19,7 @@
 class Environment{
 
 public:
-    Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec,int base_seed);
+    Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec, int base_seed);
     //destructor needed
     void simulate(double tstep, int tx, int met, double binding_rate_pd1_drug, bool onLocal);
 
@@ -73,10 +73,16 @@ private:
     void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
 
+    // Initialization functions
     void initializeCells();
     void initializeTesting();
     void initializeInVitro();
     void initializeHeterogeneous();
+    void initializeM1DiffTest();
+    void initializeM2DiffTest();
+    void initializeThDiffTest();
+    void report_initialization();
+
     void calculateForces(double tstep, size_t step_count);
 
     void removeDeadCells();
@@ -106,6 +112,9 @@ private:
     std::vector<int> m2TS;
     std::vector<int> nkTS;
     std::vector<int> mdscTS;
+    std::vector<int> myeloidTS;
+    std::vector<int> lymphoidTS;
+    std::vector<int> stromalTS;
     std::vector<double> radiusTS;
     std::vector<double> anti_pd1_TS;
     std::vector<double> anti_ctla4_TS;

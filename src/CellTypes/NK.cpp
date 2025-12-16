@@ -22,6 +22,7 @@ NK::NK(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, 
     deathScale = cellParams[12][4];
     migScale = cellParams[13][4];
     rmax = 1.5*radius*2;
+    location_history.push_back(x);
 }
 
 void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)

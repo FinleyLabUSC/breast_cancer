@@ -16,6 +16,7 @@ CD4::CD4(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     influenceRadius = cellParams[8][1];
     migrationBias = cellParams[9][1];
     rmax = 1.5*radius*2;
+    location_history.push_back(x);
 }
 
 
@@ -64,7 +65,7 @@ void CD4::differentiate(double dt, RNG& master_rng, std::mt19937& temporary_rng)
     // negInfuence is M2 + alive cancer + MDSC
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[3])*(1 - influences[10]);
     if(rnd < kTr*negInfluence){
-        state = 5;
+        next_state = 5;
         express_PDL1(dt); // Tregs express PDL1
     }
 }
