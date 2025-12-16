@@ -206,9 +206,11 @@ void RS_Cell::pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, 
             double rnd = master_rng.uniform(0, 1, temporary_rng);
             if (rnd < percent_bound)
             {
-                next_killProb = next_killProb * percent_bound * inhibitory_effect_of_binding_PD1_PDL1;
-                next_migrationSpeed = next_migrationSpeed * percent_bound * inhibitory_effect_of_binding_PD1_PDL1;
-                next_death_prob = next_death_prob * (1+percent_bound) * inhibitory_effect_of_binding_PD1_PDL1;
+                // When the inhibitory effect is 0. & PD1 is saturated, killProb & migSpeed halve each step
+                // When the inhibitory effect is 0.5 & PD1 is saturated, deathProb increases by 1.5 each step
+                next_killProb = next_killProb * (1 - percent_bound * inhibitory_effect_of_binding_PD1_PDL1);
+                next_migrationSpeed = next_migrationSpeed * (1 - percent_bound * inhibitory_effect_of_binding_PD1_PDL1);
+                next_death_prob = next_death_prob * (1 + percent_bound * inhibitory_effect_of_binding_PD1_PDL1);
             }
         }
     }
