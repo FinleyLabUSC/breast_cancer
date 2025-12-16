@@ -73,10 +73,10 @@ void Macrophage::differentiate(double dt, RNG& master_rng, std::mt19937& tempora
     for(int i=0; i<3; ++i){
         if(rnd > probs[i]){choice++;}
     }
-    state = choice;
-    if(state == 1){ // M1 macrophages don't express PDL1
+    next_state = choice;
+    if(next_state == 1){ // M1 macrophages don't express PDL1
         pdl1_expression_level = 0;
-    } else if(state == 2){ // M2 macrophages do
+    } else if(next_state == 2){ // M2 macrophages do
         express_PDL1(dt);
     }
 }

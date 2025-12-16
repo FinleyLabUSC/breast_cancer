@@ -58,54 +58,54 @@
 
 
 int main(int argc, char **argv) {
-        std::string run_location = argv[1];
-        std::string folder = argv[2];
-        std::string replicate_number = argv[3];
-        std::string pST = argv[4];
-        std::string dp_fac = argv[5];
-        std::string kp_fac = argv[6];
-        int tx = std::stoi(argv[7]);
-        int met = std::stoi(argv[8]);
-        double binding_rate_pd1_drug = 0.139; // [https://www.google.com/url?q=https://pmc.ncbi.nlm.nih.gov/articles/PMC7058304/&sa=D&source=docs&ust=1764113705187992&usg=AOvVaw2PNsv0BjiS0gmSkBEBEXiT]
-        int repNum = std::stoi(argv[3]);
-        double cd8_prolif = std::stod(argv[9]);
-        double cd8_death = std::stod(argv[10]);
-        double cd8_rec = std::stod(argv[11]);
+    std::string run_location = argv[1];
+    std::string folder = argv[2];
+    std::string replicate_number = argv[3];
+    std::string pST = argv[4];
+    std::string dp_fac = argv[5];
+    std::string kp_fac = argv[6];
+    int tx = std::stoi(argv[7]);
+    int met = std::stoi(argv[8]);
+    double binding_rate_pd1_drug = 0.1;
+    int repNum = std::stoi(argv[3]);
+    double cd8_prolif = std::stod(argv[9]);
+    double cd8_death = std::stod(argv[10]);
+    double cd8_rec = std::stod(argv[11]);
 
-        // These labels correspond to the type of treatment administered according to the value of tx. If tx = 1, then the simulation uses anti-PD1.
-        std::vector<std::string> txLabels = {"control","pd1","ctla4","ici_combo"};
-        std::vector<std::string> parameter_levels = {"low","high"};
+    // These labels correspond to the type of treatment administered according to the value of tx. If tx = 1, then the simulation uses anti-PD1.
+    std::vector<std::string> txLabels = {"control","pd1","ctla4","ici_combo"};
+    std::vector<std::string> parameter_levels = {"low","high"};
 
-        int prolif_id = (cd8_prolif==0.08) ? 0 : 1;
-        int death_id = (cd8_death==0.005) ? 0 : 1;
-        int rec_id = (cd8_rec==0.25) ? 0 : 1;
+    int prolif_id = (cd8_prolif==0.08) ? 0 : 1;
+    int death_id = (cd8_death==0.005) ? 0 : 1;
+    int rec_id = (cd8_rec==0.25) ? 0 : 1;
 
-        // By default the code is set up for running on the local machine. This only changes if run_location == CARC
-        bool onLocal = true;
-        // For testing purposes using simple saveFolder name
-        std::string saveFolder = folder ; // + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
-        // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
-        std::string saveFolderPath = "../../" + saveFolder;
-        std::string str  = "python genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac; // don't need to run in conda
+    // By default the code is set up for running on the local machine. This only changes if run_location == CARC
+    bool onLocal = true;
+    // For testing purposes using simple saveFolder name
+    std::string saveFolder = folder ; // + "/force_check/" + "/met_" + std::to_string(met) +"/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+    // std::string saveFolder = folder + "/met_" + std::to_string(met) + "/" + txLabels[tx] +"/cd8_prolif_" + parameter_levels[prolif_id] + "/cd8_death_" +parameter_levels[death_id] + "/cd8_rec" + parameter_levels[rec_id]; // update to also have the three parameters im sweeping over
+    std::string saveFolderPath = "../../" + saveFolder;
+    std::string str  = "python genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac; // don't need to run in conda
 
-        if (run_location == "CARC") {
-            onLocal = false;
-            saveFolderPath = "./" + saveFolder;
-            str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
-        }
+    if (run_location == "CARC") {
+        onLocal = false;
+        saveFolderPath = "./" + saveFolder;
+        str = "conda run -n bc_env_new python3 genParams.py "+ saveFolderPath+" "+replicate_number + " "+ pST + " " + dp_fac + " " + kp_fac;
+    }
 
-        const char *command = str.c_str();
-        std::system(command);
+    const char *command = str.c_str();
+    std::system(command);
 
-        auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
 
-        Environment model(saveFolderPath, replicate_number,cd8_prolif,cd8_death,cd8_rec,repNum); //can replace with a directory representing any other phenotype state
+    Environment model(saveFolderPath, replicate_number,cd8_prolif,cd8_death,cd8_rec,repNum); //can replace with a directory representing any other phenotype state
 
-        model.simulate(1,tx,met,binding_rate_pd1_drug,onLocal);
+    model.simulate(1,tx,met,binding_rate_pd1_drug,onLocal);
 
-        auto stop = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> ms_double = stop - start;
-        std::cout << "Duration: " << ms_double.count() << std::endl;
+    auto stop = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = stop - start;
+    std::cout << "Duration: " << ms_double.count() << std::endl;
 
     return 0;
 }

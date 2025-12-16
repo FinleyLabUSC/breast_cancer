@@ -1,4 +1,7 @@
+#include <algorithm>
 #include "../inc/RS_Cell.h"
+
+#include <unordered_set>
 
 long unsigned RS_Cell::cell_counter = 0; // Defines the cell counter obj
 
@@ -74,7 +77,7 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
     // The default behavior here is to perform a biased random walk toward the nearest cancer cell
     // Suppressed cells cannot move as well
     if (state == -1 || immuneSynapseFormed || state == 7 || state == 9)
-    {
+    {   
         location_history.push_back(x); // still save the location history for plotting purposes
         return;
     }
@@ -310,6 +313,44 @@ std::array<double, 2> RS_Cell::repulsiveForce(std::array<double, 2> dx, double o
     return {F0, F1};
 }
 
+void RS_Cell::get_current_synapses()
+{
+    // Assigns the synapse property to a vector of UIDs for the current synapses!
+    std::vector<unsigned long> curr_syn;
+    for (auto kv : synapse_list)
+    {
+        curr_syn.push_back(kv.first);
+    }
+    synapses = curr_syn;
+}
+
+
+bool RS_Cell::determine_synapsed(unsigned long otherUID)
+{
+    if (std::find(synapses.begin(), synapses.end(), otherUID) != synapses.end())
+    {
+        return true;
+    }
+    return false;
+}
+
+
+void RS_Cell::add_synapseForce(std::array<double, 2> otherX, double otherRadius, int &otherType)
+{
+    // TODO: Tune constants to scale
+    int k = 10; // Arbitrary spring force
+    double synapseOverlap = 2; // Arbitrary allowed overlap in microns
+
+    std::array<double, 2> dx = {(otherX[0]-x[0]), (otherX[1]-x[1])};
+    double dxNorm = calcNorm(dx);
+    std::array<double, 2> dxUnit = {dx[0]/dxNorm, dx[1]/dxNorm};
+    double F0 = -dxUnit[0]*k*(radius + otherRadius - synapseOverlap - dxNorm);
+    double F1 = -dxUnit[1]*k*(radius + otherRadius - synapseOverlap - dxNorm);
+
+    currentForces[0] += F0;
+    currentForces[1] += F1;
+}
+
 void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType) {
     /*
      * assume attractive force only between cancer cells
@@ -333,11 +374,10 @@ void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, 
 void RS_Cell::resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
 
     // Only resolve forces on cells that have not formed immune synapses.
-    if (!immuneSynapseFormed) {
-        // resolving the forces between cells.
-        x[0] += (dt/damping)*currentForces[0];
-        x[1] += (dt/damping)*currentForces[1];
-    }
+    // TODO: ALL CELLS CAN MOVE NOW!
+    // resolving the forces between cells.
+    x[0] += (dt/damping)*currentForces[0];
+    x[1] += (dt/damping)*currentForces[1];
     resetForces(master_rng,temporary_rng);
 }
 
@@ -359,6 +399,32 @@ void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherC
         if (type != 0 && otherCell_state==3) { // if the original cell is immune and the other cell is cancer, add to a different list.
              cancer_neighbors.push_back(otherX);
         }
+    }
+}
+
+void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int &otherType, unsigned long otherUID)
+{
+    // First check to see if the cells are already synapsed, and if so update the synapse
+    if (determine_synapsed(otherUID))
+    {
+        synapse_list[otherUID][0] += 1; // Update duration of the synapse
+        if (synapse_list[otherUID][0] > 200*1) // Later will need to update based on synapse type
+        {
+            synapse_list.erase(otherUID);
+        }
+        immuneSynapseFormed = true; // Confirm synapsed -- should be wrapped in else...
+        // std::cout << "Synapse confirmed" << std::endl;
+        return; // Exit function
+    }
+
+    // If the cells are not already synapsed...
+    double dis = calcDistance(otherX);
+    if (dis < radius + otherRadius)
+    {
+        // Form an immune synapse
+        synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
+        immuneSynapseFormed = true; // Confirm synapsed
+        // std::cout << "Synapse formed" << std::endl;
     }
 }
 
@@ -462,20 +528,21 @@ void RS_Cell::resetImmuneSynapse() {
 
 void RS_Cell::printLocations(std::string saveDir) {
 
-    std::ofstream myFile;
-    std::string day_dir = saveDir + "/location_history/";
-    std::string str = "mkdir -p " + day_dir;
-    const char *command = str.c_str();
-    std::system(command);
+    // Disabling this function to reduce disk clutter
+    // std::ofstream myFile;
+    // std::string day_dir = saveDir + "/location_history/";
+    // std::string str = "mkdir -p " + day_dir;
+    // const char *command = str.c_str();
+    // std::system(command);
 
-    myFile.open(day_dir+ std::to_string(unique_cell_ID)+".csv");
+    // myFile.open(day_dir+ std::to_string(unique_cell_ID)+".csv");
 
-    for (auto & pos : location_history) {
-        myFile << pos[0] << "," << pos[1] << std::endl;
-    }
+    // for (auto & pos : location_history) {
+    //     myFile << pos[0] << "," << pos[1] << std::endl;
+    // }
 
 
-    myFile.close();
+    // myFile.close();
 }
 
 double RS_Cell::calcDistance(std::array<double, 2> otherX) {

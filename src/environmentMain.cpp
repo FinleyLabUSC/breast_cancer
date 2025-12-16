@@ -125,10 +125,42 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
         metLabel = "./mihc/in_silico_" + std::to_string(met) + ".csv";
     }
 
-    // TODO: Change this so that we can select a method using negative numbers
+    // We switch on the met label
+    switch (met)
+    {
+        case -1:
+            {
+                initializeHeterogeneous();
+                break;
+            }
+        case -2:
+            {
+                initializeInVitro();
+                break;
+            }
+        case -3:
+            {
+                initializeM1DiffTest();
+                break;
+            }
+        case -4:
+            {
+                initializeM2DiffTest();
+                break;
+            }
+        case -5:
+            {
+                initializeThDiffTest();
+                break;
+            }
+        default:
+            {
+                initializeCellsFromFile(metLabel);
+            }
+    }
     // Whichever line is uncommented is how the model will be initialized.
     // The argument passed here is a pseudonym for whichever metastasis is used to initialize the model. The "construction" of the string metLabel is done above.
-    initializeCellsFromFile(metLabel); // [0 or greater]
+    // initializeCellsFromFile(metLabel); // [0 or greater]
     // initializeInVitro(); // This is used for testing purposes. [-1]
     // initializeHeterogeneous(); // This is used for testing purposes. [-2]
 

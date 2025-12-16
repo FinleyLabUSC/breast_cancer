@@ -3,6 +3,7 @@
 
 #include <array>
 #include <vector>
+#include <unordered_map>
 #include <cmath>
 #include <random>
 #include <string>
@@ -28,6 +29,7 @@ class RS_Cell
     // force functions
     std::array<double, 2> attractiveForce(std::array<double, 2> dx, double otherRadius);
     std::array<double, 2> repulsiveForce(std::array<double, 2> dx, double otherRadius);
+    void add_synapseForce(std::array<double, 2> dx, double otherRadius, int &otherType);
     void calculateForces(std::array<double, 2> otherX, double otherRadius, int &otherType);
     void resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng);
     void resetForces(RNG& master_rng, std::mt19937& local_gen);
@@ -35,6 +37,9 @@ class RS_Cell
     // neighboring cells
     std::array<double, 2> determine_grid();
     void determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state);
+    void determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int& otherType, unsigned long otherUID);
+    bool determine_synapsed(unsigned long otherUID);
+    void get_current_synapses();
 
     // overlap functions
     void calculateOverlap(std::array<double, 2> otherX, double otherRadius);
@@ -100,7 +105,9 @@ class RS_Cell
     double radius;
     bool compressed;
     double currentOverlap;
-    std::vector<int> neighbors;
+    std::vector<unsigned long> synapses; // Temp vector used for searching who's synapsed to who
+    std::unordered_map<unsigned long, std::array<int, 2>> synapse_list; // map from UID to <dur, type>
+    std::vector<int> neighbors; // Vector to store CellIDs of neighbors
     std::vector<std::array<double, 2>> cancer_neighbors;
 
     // age, division, and lifespan
