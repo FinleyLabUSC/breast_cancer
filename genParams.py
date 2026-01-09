@@ -22,6 +22,7 @@ kp = float(sys.argv[5])
 
 print("starting simulations")
 
+# Migration biases & differentiation
 tcellMigBias = 0.2
 cd4Diff = 0.3
 macMigBias = 0.1
@@ -29,16 +30,21 @@ mdscMigBias = 0.1
 nkMigBias = 0.125
 macM1 = 0.4 # This needs to be fine tuned, but the data from ERT shows more than double M1 than M2
 macM2 = 0.2 # This needs to be fine tuned, but the data from ERT shows more than double M1 than M2
-cd8RecRate = 0.1# 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
-cd4RecRate = 0.1# 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
-macRecRate = 0.1 # 0.00125 # these are the percentages of mature myeloid cells from non-tx tumors provided by ERT
-nkRecRate = 0.1 # 0.00044 # these are the percentages of NK cells from non-tx tumors provided by ERT
-mdscRecRate = 0.1 # 0.00469 # these are the percentages of MDSCs from non-tx tumors provided by ERT
+
+# Recruitment rates
+cd8RecRate = 0.306 # 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
+cd4RecRate = 0.0848 # 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
+macRecRate = 0.297 # 0.00125 # these are the percentages of mature myeloid cells from non-tx tumors provided by ERT
+nkRecRate = 0.0117 # 0.00044 # these are the percentages of NK cells from non-tx tumors provided by ERT
+mdscRecRate = 0.396 # 0.00469 # these are the percentages of MDSCs from non-tx tumors provided by ERT
+
+# Unnecessary; keeping for now
 recDelay = 0.00 # In the Tangella 2024 paper, they had a delay of 3 days. But because this mdoel is initialized from tumor images, we neglect that delay.
 necroticGrowth = 0 #params[12] # You can very easily remove any mention of the necrotic growth & limit.
 necrosisLimit = 940.3
 nkKillProb = 0.1 # This has been arbitrarily chosen.
 
+# Drug information
 anti_pd1_Dose = 1.5
 anti_ctla4_dose = 0.6667 # based on conversion from mg to nM of the experimental schedules from R-T group. See documentation
 
@@ -79,12 +85,12 @@ cellParams[4, 2] = 10.0  # diameter (um)
 cellParams[5, 2] = 1/(24.0*14.0) # 1/lifespan (hours) https://pmc.ncbi.nlm.nih.gov/articles/PMC4489929/
 cellParams[6, 2] = 360.0  # migration speed um/hr |
 cellParams[7, 2] = 0.1 # killProb
-cellParams[8, 2] = 2.0  # infScale -> arbitrarily set
+cellParams[8, 2] = 1 / 0.957  # infScale; indirect effect on killProb
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
-cellParams[11, 2] = 0.25 # only for testing #0.053  # proliferation prob
+cellParams[11, 2] = 1 / 4.5 # 4.5 hr cell cycle length
 cellParams[12, 2] = 2.0 # arbitrary death scale
-cellParams[13, 2] = 2.0 # arbitrary migrate scale
+cellParams[13, 2] = 1 / 0.979 # migScale; indirect effect on velocity
 
 # macrophage params
 cellParams[0, 3] = m  # mu

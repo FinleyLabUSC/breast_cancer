@@ -28,6 +28,10 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     death_prob_base = deathProb;
     rmax = 1.5*radius*2;
     init_time = init_tstamp;
+    killProb_mult = 0.957;
+    cellCycle_mult = 0.982;
+    deathProb_mult = 1 / 0.997;
+    migSpeed_mult = 0.979;
 }
 
 
@@ -88,11 +92,11 @@ void CD8::update_indirectProperties(size_t step_count)
 {
     double posInfluence = 1 - (1 - influences[1])*(1 - influences[4]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
-    double scale = posInfluence - negInfluence;
+    double scale = negInfluence - posInfluence; // If neg influence > pos influence, want + scale value
 
     // TODO: reconsider how these properties are updated
-    next_killProb = next_killProb*pow(infScale, scale);
-    next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
+    next_killProb = next_killProb*pow(killProb_mult, scale);
+    next_migrationSpeed = next_migrationSpeed*pow(migSpeed_mult, scale);
 }
 
 void CD8::inherit(std::vector<double> properties)
@@ -119,6 +123,8 @@ void CD8::proliferationState(double anti_ctla4_concentration)
     double anti_ctla4_effect = Hill_function(anti_ctla4_concentration,anti_CTLA4_IC50,anti_CTLA4_hill_coeff) * sensitivity_to_antiCTLA4();
     double scale_anti_CTLA4_effect = (divProb > divProb_base) ? 1.1 : 1;
     double effective_antiCTLA4_effect = (anti_ctla4_effect * scale_anti_CTLA4_effect < 1) ? anti_ctla4_effect * scale_anti_CTLA4_effect : 1;
-    double ctla_scale = posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) - negInfluence;
-    divProb = ctla_scale * divProb;
+
+    // Neg influence first so that the divProb decreases if ctla_scale is positive; the same logic as prev.
+    double ctla_scale = negInfluence - posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) ; // TODO: Check this eqn.
+    divProb = divProb * (1 - ctla_scale * (1 - cellCycle_mult));
 }

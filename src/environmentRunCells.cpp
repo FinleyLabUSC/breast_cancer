@@ -133,7 +133,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                     if (i != c)
                     {
                         cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
-                        // TODO: (COMPLETE, needs testing) Add immune synapse spring forces here
                         if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
                         {
                             cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
@@ -169,7 +168,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
         // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
-        // TODO: (COMPLETE, needs testing) New immune synapses form at this step & synapses of sufficient duration break
         #pragma omp parallel for schedule(dynamic)
             for (int i = 0; i < cell_list.size(); ++i) {
                 cell_list[i]->get_current_synapses(); // Updates synapse vector

@@ -179,6 +179,12 @@ class RS_Cell
     double next_migrationSpeed;
     double next_death_prob;
 
+    // PD1-PDL1 exhaustion parameters
+    double killProb_mult;
+    double deathProb_mult;
+    double cellCycle_mult;
+    double migSpeed_mult;
+
     // anti CTTLA-4 parameters
     double anti_CTLA4_IC50 = 5; // 5 nM ref: https://bpsbioscience.com/ctla4-neutralizing-antibody-71212
     double anti_CTLA4_hill_coeff = 1; // steepness of sigmoid

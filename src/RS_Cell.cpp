@@ -202,16 +202,15 @@ void RS_Cell::pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, 
         double distance = calcDistance(otherX);
         if (distance <= radius+otherRadius)
         {
+            // We assume the effect of PD1-PDL1 binding is linear w.r.t. the maximum level of PD1 that can be expressed
+            // We assume that if cells are in direct contact, this binding event always occurs and exhaustion will take place
             double percent_bound = std::min(otherPDL1, pd1_available) / pd1_expression_level;
-            double rnd = master_rng.uniform(0, 1, temporary_rng);
-            if (rnd < percent_bound)
-            {
-                // When the inhibitory effect is 0. & PD1 is saturated, killProb & migSpeed halve each step
-                // When the inhibitory effect is 0.5 & PD1 is saturated, deathProb increases by 1.5 each step
-                next_killProb = next_killProb * (1 - percent_bound * inhibitory_effect_of_binding_PD1_PDL1);
-                next_migrationSpeed = next_migrationSpeed * (1 - percent_bound * inhibitory_effect_of_binding_PD1_PDL1);
-                next_death_prob = next_death_prob * (1 + percent_bound * inhibitory_effect_of_binding_PD1_PDL1);
-            }
+            double effect_size = (percent_bound * pd1_expression_level) / max_pd1_level;
+            // killProb & migSpeed decrease, so the effect size scales the difference between 1 & the multiplier, which is less than 1
+            next_killProb = next_killProb * (1 - effect_size * (1 - killProb_mult));
+            next_migrationSpeed = next_migrationSpeed * (1 - effect_size * (1 - migSpeed_mult));
+            // deathProb increases, so the effect size scales the differenc between the multiplier, which is more than 1, and 1
+            next_death_prob = next_death_prob * (1 + effect_size * (deathProb_mult - 1));
         }
     }
 }
@@ -329,6 +328,7 @@ void RS_Cell::get_current_synapses()
 
 bool RS_Cell::determine_synapsed(unsigned long otherUID)
 {
+    // This determines if two cells are synapsed together
     if (std::find(synapses.begin(), synapses.end(), otherUID) != synapses.end())
     {
         return true;
@@ -420,13 +420,17 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
     }
 
     // If the cells are not already synapsed...
-    double dis = calcDistance(otherX);
-    if (dis < radius + otherRadius)
+    // TODO: (needs check) Limit the # of synapses the cell can form to two, so if the len of the synapse list is > 2, then skip this
+    if (synapse_list.size() < 2)
     {
-        // Form an immune synapse
-        synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
-        immuneSynapseFormed = true; // Confirm synapsed
-        // std::cout << "Synapse formed" << std::endl;
+        double dis = calcDistance(otherX);
+        if (dis < radius + otherRadius)
+        {
+            // Form an immune synapse
+            synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
+            immuneSynapseFormed = true; // Confirm synapsed
+            // std::cout << "Synapse formed" << std::endl;
+        }
     }
 }
 
