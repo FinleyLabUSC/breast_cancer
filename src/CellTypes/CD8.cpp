@@ -53,6 +53,9 @@ void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double
     migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base); // Low migration speed
     divProb = master_rng.uniform(0, 0.25 * divProb_base); // Low division probability
     killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
+
+    // Sample cell cycle position
+    cellCyclePos = master_rng.uniform(0, 1/divProb);
 }
 
 std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
@@ -62,7 +65,7 @@ std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
         return {0,0,0}; // cannot proliferate because suppressed or dead!
     }
 
-    // TODO: Turn this into a cycle proliferate step
+    // TODO: Turn this into a cycle proliferate step (CHECK)
     return cycle_proliferate(dt, master_rng);
 }
 
@@ -96,7 +99,6 @@ void CD8::update_indirectProperties(size_t step_count)
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
     double scale = negInfluence - posInfluence; // If neg influence > pos influence, want + scale value
 
-    // TODO: reconsider how these properties are updated
     next_killProb = next_killProb*pow(killProb_mult, scale);
     next_migrationSpeed = next_migrationSpeed*pow(migSpeed_mult, scale);
 }
@@ -134,7 +136,7 @@ void CD8::proliferationState(double anti_ctla4_concentration)
         canProlif = false;
     }
 
-    // TODO: Update for cycle proliferate
+    // TODO: Update for cycle proliferate (CHECK)
     if (state == -1){return;} // Dead cells cannot proliferate
     cellCyclePos++; // always advance the cell cycle
     cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
