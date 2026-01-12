@@ -105,7 +105,6 @@ cellParams[8, 3] = macM2  # kM2
 cellParams[9, 3] = 40.0  # influence distance
 cellParams[10, 3] = macMigBias  # migration bias
 
-
 # nk params
 cellParams[0, 4] = m  # mu
 cellParams[1, 4] = k  # kc
@@ -122,7 +121,6 @@ cellParams[11, 4] = 0.0031 # proliferation probability: Lutz_2011_JImmunol
 cellParams[12, 4] = 2.0 # arbitrary
 cellParams[13, 4] = 2.0 # arbitrary
 
-
 # mdsc params
 cellParams[0, 5] = m  # mu
 cellParams[1, 5] = k  # kc
@@ -133,7 +131,6 @@ cellParams[5, 5] = 1/(24.0*2.0)  # lifespan (days) https://pmc.ncbi.nlm.nih.gov/
 cellParams[6, 5] = 600.0 # migration speed um/hr (assumed to be the same as other cells)
 cellParams[7, 5] = 40  # influenceDistance (assumed to be same as cancer cells, can change)
 cellParams[8, 5] = mdscMigBias #
-
 
 recParams = np.zeros((7, 1))
 recParams[0] = cd8RecRate # cd8RecRate

@@ -32,6 +32,7 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     cellCycle_mult = 0.982;
     deathProb_mult = 1 / 0.997;
     migSpeed_mult = 0.979;
+    cellCyclePos = 0;
 }
 
 
@@ -61,7 +62,8 @@ std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
         return {0,0,0}; // cannot proliferate because suppressed or dead!
     }
 
-    return prob_proliferate(dt, master_rng);
+    // TODO: Turn this into a cycle proliferate step
+    return cycle_proliferate(dt, master_rng);
 }
 
 void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
@@ -115,9 +117,7 @@ std::vector<double> CD8::inheritanceProperties()
 
 void CD8::proliferationState(double anti_ctla4_concentration)
 {
-    canProlif = !compressed; // CD8 proliferation is only stopped if the cell is compressed
-
-    // scale divProb based on influences & CTLA
+    // First update properties
     double posInfluence = 1 - (1 - influences[4])*(1 - influences[8]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[10]);
     double anti_ctla4_effect = Hill_function(anti_ctla4_concentration,anti_CTLA4_IC50,anti_CTLA4_hill_coeff) * sensitivity_to_antiCTLA4();
@@ -127,4 +127,23 @@ void CD8::proliferationState(double anti_ctla4_concentration)
     // Neg influence first so that the divProb decreases if ctla_scale is positive; the same logic as prev.
     double ctla_scale = negInfluence - posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) ; // TODO: Check this eqn.
     divProb = divProb * (1 - ctla_scale * (1 - cellCycle_mult));
+
+    // Now determine if can proliferate
+    if (compressed)
+    {
+        canProlif = false;
+    }
+
+    // TODO: Update for cycle proliferate
+    if (state == -1){return;} // Dead cells cannot proliferate
+    cellCyclePos++; // always advance the cell cycle
+    cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength)
+    {
+        canProlif = true;
+    }
+    else
+    {
+        canProlif = false;
+    }
 }
