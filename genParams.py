@@ -88,7 +88,7 @@ cellParams[7, 2] = 0.1 # killProb
 cellParams[8, 2] = 1 / 0.957  # infScale; indirect effect on killProb
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
-cellParams[11, 2] = 1 / 4.5 # 4.5 hr cell cycle length
+cellParams[11, 2] = 1 / 1000 # 4.5 hr cell cycle length # Making very very long for now -- 1000 hr
 cellParams[12, 2] = 2.0 # arbitrary death scale
 cellParams[13, 2] = 1 / 0.979 # migScale; indirect effect on velocity
 

@@ -205,7 +205,7 @@ void RS_Cell::pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, 
             // We assume the effect of PD1-PDL1 binding is linear w.r.t. the maximum level of PD1 that can be expressed
             // We assume that if cells are in direct contact, this binding event always occurs and exhaustion will take place
             double percent_bound = std::min(otherPDL1, pd1_available) / pd1_expression_level;
-            double effect_size = (percent_bound * pd1_expression_level) / max_pd1_level;
+            double effect_size = (percent_bound * pd1_expression_level) / (max_pd1_level / 2); // Assume the avg. pd1 expr. in exp. is 1/2 max
             // killProb & migSpeed decrease, so the effect size scales the difference between 1 & the multiplier, which is less than 1
             next_killProb = next_killProb * (1 - effect_size * (1 - killProb_mult));
             next_migrationSpeed = next_migrationSpeed * (1 - effect_size * (1 - migSpeed_mult));

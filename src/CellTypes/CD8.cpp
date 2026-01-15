@@ -142,7 +142,7 @@ void CD8::proliferationState(double anti_ctla4_concentration)
     cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
     if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength)
     {
-        canProlif = true;
+        canProlif = false; // manually preventing prolif for now
     }
     else
     {

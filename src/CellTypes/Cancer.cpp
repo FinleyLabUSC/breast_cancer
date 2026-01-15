@@ -174,7 +174,7 @@ void Cancer::proliferationState(double anti_ctla4_concentration)
     if (!immuneSynapseFormed) {
         cellCyclePos++; // advance cell cycle regardless of compression, but not if synapsed
     }
-    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && !immuneSynapseFormed) // prolif check regardless of compression, but not if synapsed
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength) // prolif check regardless of compression; allow prolif even if synapsed
     {
         canProlif = true;
     }
