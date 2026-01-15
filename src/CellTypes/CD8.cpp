@@ -75,7 +75,7 @@ void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng,
     update_indirectProperties(step_count);
 }
 
-void CD8::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void CD8::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
     {

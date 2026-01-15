@@ -52,9 +52,10 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
 
         for(auto &c : cell_list[i]->neighbors){
             cell_list[i]->directInteractions(cell_list[c]->state,
-                                            cell_list[c]->x,
-                                            cell_list[c]->directInteractionProperties(cell_list[i]->state, step_count),
-                                            tstep, rng, temporary_rng2);
+                                             cell_list[c]->unique_cell_ID,
+                                             cell_list[c]->x,
+                                             cell_list[c]->directInteractionProperties(cell_list[i]->state, step_count),
+                                             tstep, rng, temporary_rng2);
         }
     }
 

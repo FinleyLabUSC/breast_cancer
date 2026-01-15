@@ -136,7 +136,7 @@ void RS_Cell::indirectInteractions(double tstep, size_t step_count, RNG& master_
     // indirectInteractions must be specified by cell type
 }
 
-void RS_Cell::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void RS_Cell::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     // directInteractions must be specified by cell type
 }

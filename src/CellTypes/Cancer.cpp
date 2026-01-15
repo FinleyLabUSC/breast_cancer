@@ -1,5 +1,6 @@
 #include "../inc/RS_Cell.h"
 #include <iostream>
+#include <algorithm>
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
@@ -87,11 +88,22 @@ void Cancer::indirectInteractions(double tstep, size_t step_count, RNG& master_r
     express_PDL1(tstep);
 }
 
-void Cancer::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void Cancer::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     // Specify that cancer cells can only interact w/ CD8 or NK
-    if (interactingState != 6 && interactingState != 8){return;}
-    contact_die(interactingState, interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+    if (interactingState != 6 && interactingState != 8)
+    {
+        return;
+    }
+    // TODO: check if the cells are synapsed before allowing for contact death
+    // Perform synapse-retreival code on other synapse list
+    std::vector<unsigned long> curr_syn;
+    for (auto kv : other_synapse_list){curr_syn.push_back(kv.first);}
+    // If this cancer cell is in the other synapse list, then allow it to possibly die
+    if (std::find(curr_syn.begin(), curr_syn.end(), unique_cell_ID) != curr_syn.end())
+    {
+        contact_die(interactingState, interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+    }
 }
 
 void Cancer::contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::mt19937& temporary_rng)
