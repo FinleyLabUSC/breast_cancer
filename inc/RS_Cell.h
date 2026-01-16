@@ -263,6 +263,7 @@ class CD8 final : public RS_Cell
     void inherit(std::vector<double> properties) override;
     std::vector<double> inheritanceProperties() override;
     void proliferationState(double anti_ctla4_concentration) override;
+    bool antigen_contact;
 };
 
 class Macrophage final : public RS_Cell

@@ -376,9 +376,6 @@ void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, 
 }
 
 void RS_Cell::resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
-
-    // Only resolve forces on cells that have not formed immune synapses.
-    // TODO: ALL CELLS CAN MOVE NOW!
     // resolving the forces between cells.
     x[0] += (dt/damping)*currentForces[0];
     x[1] += (dt/damping)*currentForces[1];
@@ -422,7 +419,6 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
     }
 
     // If the cells are not already synapsed...
-    // TODO: (needs check) Limit the # of synapses the cell can form to two, so if the len of the synapse list is > 2, then skip this
     if (synapse_list.size() < 2)
     {
         double dis = calcDistance(otherX);

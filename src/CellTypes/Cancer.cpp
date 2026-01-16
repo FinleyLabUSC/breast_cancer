@@ -95,7 +95,6 @@ void Cancer::directInteractions(int interactingState, std::unordered_map<unsigne
     {
         return;
     }
-    // TODO: check if the cells are synapsed before allowing for contact death
     // Perform synapse-retreival code on other synapse list
     std::vector<unsigned long> curr_syn;
     for (auto kv : other_synapse_list){curr_syn.push_back(kv.first);}

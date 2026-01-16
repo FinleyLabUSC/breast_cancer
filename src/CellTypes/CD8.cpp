@@ -33,6 +33,7 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     deathProb_mult = 1 / 0.997;
     migSpeed_mult = 0.979;
     cellCyclePos = 0;
+    antigen_contact = false;
 }
 
 
@@ -56,6 +57,9 @@ void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double
 
     // Sample cell cycle position
     cellCyclePos = master_rng.uniform(0, 1/divProb);
+
+    // Assume that all cells present in the TME have made contact w/ an APC
+    antigen_contact = true;
 }
 
 std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
@@ -65,7 +69,6 @@ std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
         return {0,0,0}; // cannot proliferate because suppressed or dead!
     }
 
-    // TODO: Turn this into a cycle proliferate step (CHECK)
     return cycle_proliferate(dt, master_rng);
 }
 
@@ -80,6 +83,15 @@ void CD8::directInteractions(int interactingState, std::unordered_map<unsigned l
     if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
     {
         pdl1_inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+    }
+    if (interactingState == 3 || interactingState == 1)
+    {
+        // Antigens are presented by cancer cells and M1 macrophages; this occurs if the cells overlap
+        double distance = calcDistance(interactingX);
+        if (distance <= radius+interactionProperties[0])
+        {
+            antigen_contact = true;
+        }
     }
 }
 
@@ -136,13 +148,12 @@ void CD8::proliferationState(double anti_ctla4_concentration)
         canProlif = false;
     }
 
-    // TODO: Update for cycle proliferate (CHECK)
     if (state == -1){return;} // Dead cells cannot proliferate
     cellCyclePos++; // always advance the cell cycle
     cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
-    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength)
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && antigen_contact == true)
     {
-        canProlif = false; // manually preventing prolif for now
+        canProlif = true; // manually preventing prolif for now
     }
     else
     {
