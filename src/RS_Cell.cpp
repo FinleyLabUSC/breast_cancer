@@ -258,8 +258,7 @@ std::array<double, 3> RS_Cell::cycle_proliferate(double dt, RNG& master_rng)
 {
     // These cells set canProlif to false under normal conditions
     // When they reach the end of their clock, they divide
-    // First we need to reset their cell cycle
-    cellCyclePos = 0;
+
     std::array<double, 2> dx = {master_rng.normal(0, 1), master_rng.normal(0, 1)};
     double norm = calcNorm(dx);
     return{

@@ -251,8 +251,10 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
                     count_cancer_prolif++;
                 }
 
-                if (cell_list[i]->type ==3) {
-                    // increase count if CD8+ cell proliferated. Testing purposes.
+                if (cell_list[i]->type == 3) {
+                    // reset the CD8+ cell's cellCyclePos
+                    cell_list[i]->cellCyclePos = 0;
+                    cell_list[i]->canProlif = false;
                     count_num_cd8_proliferation++;
                 }
 

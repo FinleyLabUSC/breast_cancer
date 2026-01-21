@@ -142,18 +142,22 @@ void CD8::proliferationState(double anti_ctla4_concentration)
     double ctla_scale = negInfluence - posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) ; // TODO: Check this eqn.
     divProb = divProb * (1 - ctla_scale * (1 - cellCycle_mult));
 
-    // Now determine if can proliferate
+    // Now determine if the cell can proliferate
     if (compressed)
     {
         canProlif = false;
     }
 
     if (state == -1){return;} // Dead cells cannot proliferate
-    cellCyclePos++; // always advance the cell cycle
+    if (antigen_contact == true)
+    {
+        cellCyclePos++; // Advance cell cycle only once antigen contact has been made
+    }
     cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
+    std::cout << "For a CD8+ cell we have cell cycle length equal to: " << cellCycleLength << std::endl;
     if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && antigen_contact == true)
     {
-        canProlif = true; // manually preventing prolif for now
+        canProlif = true;
     }
     else
     {
