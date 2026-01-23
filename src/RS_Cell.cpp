@@ -209,6 +209,7 @@ void RS_Cell::pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, 
             // killProb & migSpeed decrease, so the effect size scales the difference between 1 & the multiplier, which is less than 1
             next_killProb = next_killProb * (1 - effect_size * (1 - killProb_mult));
             next_migrationSpeed = next_migrationSpeed * (1 - effect_size * (1 - migSpeed_mult));
+            divProb = divProb * (1 - effect_size * (1 - cellCycle_mult));
             // deathProb increases, so the effect size scales the differenc between the multiplier, which is more than 1, and 1
             next_death_prob = next_death_prob * (1 + effect_size * (deathProb_mult - 1));
         }

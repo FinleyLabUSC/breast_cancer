@@ -32,7 +32,7 @@ macM1 = 0.4 # This needs to be fine tuned, but the data from ERT shows more than
 macM2 = 0.2 # This needs to be fine tuned, but the data from ERT shows more than double M1 than M2
 
 # Recruitment rates
-cd8RecRate = 0.306 # 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
+cd8RecRate = 0.0274 # 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
 cd4RecRate = 0.0848 # 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
 macRecRate = 0.297 # 0.00125 # these are the percentages of mature myeloid cells from non-tx tumors provided by ERT
 nkRecRate = 0.0117 # 0.00044 # these are the percentages of NK cells from non-tx tumors provided by ERT

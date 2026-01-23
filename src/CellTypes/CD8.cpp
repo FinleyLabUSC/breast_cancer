@@ -154,7 +154,7 @@ void CD8::proliferationState(double anti_ctla4_concentration)
         cellCyclePos++; // Advance cell cycle only once antigen contact has been made
     }
     cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
-    std::cout << "For a CD8+ cell we have cell cycle length equal to: " << cellCycleLength << std::endl;
+    // std::cout << "For a CD8+ cell we have cell cycle length = " << cellCycleLength << " from divProb = " << divProb << " & divProb_base = " << divProb_base << std::endl;
     if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && antigen_contact == true)
     {
         canProlif = true;

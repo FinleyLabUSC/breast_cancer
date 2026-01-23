@@ -49,8 +49,13 @@ void Macrophage::indirectInteractions(double tstep, size_t step_count, RNG& mast
 
 std::vector<double> Macrophage::directInteractionProperties(int interactingState, size_t step_count)
 {
-    // Only M2 macrophages interact w/ CD8s and NKs
+    // M2 macrophages interact w/ CD8s and NKs via PDL1-PD1 suppression
     if (state == 2 && (interactingState == 6 || interactingState == 8))
+    {
+        return {radius, pdl1_expression_level};
+    }
+    // M1 macrophages interact w/ CD8s to present antigens
+    else if (state == 1 && interactingState == 6)
     {
         return {radius, pdl1_expression_level};
     }
