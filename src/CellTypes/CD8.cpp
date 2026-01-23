@@ -30,8 +30,9 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     init_time = init_tstamp;
     killProb_mult = 0.957;
     cellCycle_mult = 0.982;
-    deathProb_mult = 1 / 0.997;
+    deathProb_mult = 1 / 0.9897; // Originally deduced to be 0.997
     migSpeed_mult = 0.979;
+    migBias_mult = 0.979;
     cellCyclePos = 0;
     antigen_contact = false;
 }
@@ -113,6 +114,7 @@ void CD8::update_indirectProperties(size_t step_count)
 
     next_killProb = next_killProb*pow(killProb_mult, scale);
     next_migrationSpeed = next_migrationSpeed*pow(migSpeed_mult, scale);
+    next_migrationBias = next_migrationBias*pow(migBias_mult, scale);
 }
 
 void CD8::inherit(std::vector<double> properties)

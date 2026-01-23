@@ -26,6 +26,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         cell_list[i]->next_killProb = cell_list[i]->killProb;
         cell_list[i]->next_migrationSpeed = cell_list[i]->migrationSpeed;
         cell_list[i]->next_death_prob = cell_list[i]->deathProb;
+        cell_list[i]->next_migrationBias = cell_list[i]->migrationBias;
 
         // reset neighborhood and influence
         cell_list[i]->neighbors.clear();
@@ -82,6 +83,9 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         }
         if (cell_list[i]->deathProb != cell_list[i]->next_death_prob) {
             cell_list[i]->deathProb = cell_list[i]->next_death_prob;
+        }
+        if (cell_list[i]->migrationBias != cell_list[i]->next_migrationBias) {
+            cell_list[i]->migrationBias = cell_list[i]->next_migrationBias;
         }
     }
 }
