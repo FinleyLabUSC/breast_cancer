@@ -34,7 +34,8 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     migSpeed_mult = 0.979;
     migBias_mult = 0.979;
     cellCyclePos = 0;
-    antigen_contact = false;
+    antigen_contact = 0;
+    max_antigen_time = 4; // # of hrs between antigen contacts allowed for proliferation
 }
 
 
@@ -91,7 +92,7 @@ void CD8::directInteractions(int interactingState, std::unordered_map<unsigned l
         double distance = calcDistance(interactingX);
         if (distance <= radius+interactionProperties[0])
         {
-            antigen_contact = true;
+            antigen_contact = max_antigen_time; // Reset counter
         }
     }
 }
@@ -131,33 +132,43 @@ std::vector<double> CD8::inheritanceProperties()
     return {pd1_expression_level, killProb, migrationSpeed, divProb, deathProb};
 }
 
-void CD8::proliferationState(double anti_ctla4_concentration)
+void CD8::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
-    // First update properties
+    // Determine effect of neighbor influences on division
     double posInfluence = 1 - (1 - influences[4])*(1 - influences[8]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[10]);
     double anti_ctla4_effect = Hill_function(anti_ctla4_concentration,anti_CTLA4_IC50,anti_CTLA4_hill_coeff) * sensitivity_to_antiCTLA4();
     double scale_anti_CTLA4_effect = (divProb > divProb_base) ? 1.1 : 1;
     double effective_antiCTLA4_effect = (anti_ctla4_effect * scale_anti_CTLA4_effect < 1) ? anti_ctla4_effect * scale_anti_CTLA4_effect : 1;
-
     // Neg influence first so that the divProb decreases if ctla_scale is positive; the same logic as prev.
     double ctla_scale = negInfluence - posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) ; // TODO: Check this eqn.
     divProb = divProb * (1 - ctla_scale * (1 - cellCycle_mult));
 
-    // Now determine if the cell can proliferate
-    if (compressed)
+    // Cells cannot proliferate if compressed or dead; also will skip cellCyclePos advancement but decrement antigen contact
+    if (compressed || state == -1)
     {
         canProlif = false;
+        antigen_contact--;
+        return;
     }
 
-    if (state == -1){return;} // Dead cells cannot proliferate
-    if (antigen_contact == true)
+    // Only advance cell cycle if in antigen contact window; decrement antigen contact after
+    if (antigen_contact > 0)
     {
-        cellCyclePos++; // Advance cell cycle only once antigen contact has been made
+        // If there are too many cancer neighbors, assume the env. is hypoxic & interrupts cell cycle progression
+        if (double rng = master_rng.uniform(0, 1); rng > 0.5*influences[3])
+        {
+            cellCyclePos++;
+        }
+        // Always decrement the antigen contact
+        antigen_contact--;
     }
-    cellCycleLength = 1/divProb; // Always grab cellCycleLength from the changing divProb
-    // std::cout << "For a CD8+ cell we have cell cycle length = " << cellCycleLength << " from divProb = " << divProb << " & divProb_base = " << divProb_base << std::endl;
-    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && antigen_contact == true)
+
+    // Grab cellCycleLength from the changing divProb
+    cellCycleLength = 1/divProb;
+
+    // Check if cell cycle length has been exceeded & if we're still in antigen contact window
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && antigen_contact > 0)
     {
         canProlif = true;
     }

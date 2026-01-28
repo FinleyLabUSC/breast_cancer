@@ -179,7 +179,7 @@ std::vector<double> Cancer::inheritanceProperties()
     return {pdl1_expression_level, cellCycleLength};
 }
 
-void Cancer::proliferationState(double anti_ctla4_concentration)
+void Cancer::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
     if (state == -1){return;} // Dead cells cannot proliferate
     if (!immuneSynapseFormed) {

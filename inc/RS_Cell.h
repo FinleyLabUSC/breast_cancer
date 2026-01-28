@@ -49,7 +49,7 @@ class RS_Cell
     // proliferation and aging
     virtual std::array<double, 3> proliferate(double dt, RNG& master_rng);
     virtual void mutate(RNG& master_rng);
-    virtual void proliferationState(double anti_ctla4_concentration);
+    virtual void proliferationState(double anti_ctla4_concentration, RNG& master_rng);
     virtual void inherit(std::vector<double> properties);
     virtual std::vector<double> inheritanceProperties();
     void age(double dt, size_t step_count, RNG& master_rng);
@@ -239,7 +239,7 @@ class Cancer final : public RS_Cell
     void mutate(RNG& master_rng) override;
     void inherit(std::vector<double> properties) override;
     std::vector<double> inheritanceProperties() override;
-    void proliferationState(double anti_ctla4_concentration) override;
+    void proliferationState(double anti_ctla4_concentration, RNG& master_rng) override;
 };
 
 class CD4 final : public RS_Cell
@@ -264,8 +264,9 @@ class CD8 final : public RS_Cell
     void update_indirectProperties(size_t step_count) override;
     void inherit(std::vector<double> properties) override;
     std::vector<double> inheritanceProperties() override;
-    void proliferationState(double anti_ctla4_concentration) override;
-    bool antigen_contact;
+    void proliferationState(double anti_ctla4_concentration, RNG& master_rng) override;
+    int antigen_contact;
+    int max_antigen_time;
 };
 
 class Macrophage final : public RS_Cell
