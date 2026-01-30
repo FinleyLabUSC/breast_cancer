@@ -241,7 +241,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
         if (cell_list[i]->state != -1) {
             cell_list[i]->set_cellAge(step_count); // this function figures out the age of the cell.
             cell_list[i]->age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
-            cell_list[i]->proliferationState(anti_ctla4_TS.back());
+            cell_list[i]->proliferationState(anti_ctla4_TS.back(), rng);
             std::array<double, 3> newLoc = cell_list[i]->proliferate(tstep, rng);
 
             if(newLoc[2] == 1){

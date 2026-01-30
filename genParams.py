@@ -16,9 +16,11 @@ fld = sys.argv[1]
 sim = int(sys.argv[2])
 # mcParams = np.loadtxt(fld+'/params.csv', delimiter=',')
 # params = mcParams[sim, :]
-pST = int(sys.argv[3]) #phenotype state transition 
-dp = float(sys.argv[4])
-kp = float(sys.argv[5])
+
+# Inputs for exploring CD8 changes
+cd8_CCL = float(sys.argv[3]) # CD8 cell cycle length
+time_between_antigen = float(sys.argv[4]) # Max time between antigen presentations
+hypoxia_strength = float(sys.argv[5]) # Strength of hypoxic effect
 
 print("starting simulations")
 
@@ -88,9 +90,9 @@ cellParams[7, 2] = 0.1 # killProb
 cellParams[8, 2] = 1 / 0.957  # infScale; indirect effect on killProb
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
-cellParams[11, 2] = 1 / 4.5 # 4.5 hr cell cycle length # Making very very long for now -- 1000 hr
-cellParams[12, 2] = 2.0 # arbitrary death scale
-cellParams[13, 2] = 1 / 0.979 # migScale; indirect effect on velocity
+cellParams[11, 2] = 1 / cd8_CCL # Default should be 4.5 hr cell cycle length 
+cellParams[12, 2] = time_between_antigen # Max time between antigen presentations for CD8 prolif
+cellParams[13, 2] = hypoxia_strength # prev. migScale = 1 / 0.979
 
 # macrophage params
 cellParams[0, 3] = m  # mu

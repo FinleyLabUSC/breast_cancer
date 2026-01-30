@@ -267,6 +267,7 @@ class CD8 final : public RS_Cell
     void proliferationState(double anti_ctla4_concentration, RNG& master_rng) override;
     int antigen_contact;
     int max_antigen_time;
+    float hypoxia_strength;
 };
 
 class Macrophage final : public RS_Cell

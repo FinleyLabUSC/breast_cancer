@@ -232,7 +232,7 @@ std::array<double, 3> RS_Cell::proliferate(double dt, RNG& master_rng)
     return {0, 0, 0}; // Default return that the cell does not proliferate
 }
 
-void RS_Cell::proliferationState(double anti_ctla4_concentration)
+void RS_Cell::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
     // If the cell does not have its own canProlif logic then it cannot proliferate at all
     canProlif = false;

@@ -19,8 +19,8 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     migrationBias = cellParams[10][2];
     divProb_base = cellParams[11][2];
     divProb = divProb_base;
-    deathScale = cellParams[12][2];
-    migScale = cellParams[13][2];
+    // deathScale = cellParams[12][2];
+    // migScale = cellParams[13][2];
     migration_speed_base =migrationSpeed;
     kill_prob_base = baseKillProb;
     killProb = baseKillProb;
@@ -32,10 +32,11 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     cellCycle_mult = 0.982;
     deathProb_mult = 1 / 0.9897; // Originally deduced to be 0.997
     migSpeed_mult = 0.979;
-    migBias_mult = 0.979;
+    migBias_mult = 0.958; // Faster decay in bias than speed
     cellCyclePos = 0;
     antigen_contact = 0;
-    max_antigen_time = 4; // # of hrs between antigen contacts allowed for proliferation
+    max_antigen_time = cellParams[12][2]; // # of hrs between antigen contacts allowed for proliferation
+    hypoxia_strength = cellParams[13][2];
 }
 
 
@@ -156,7 +157,7 @@ void CD8::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
     if (antigen_contact > 0)
     {
         // If there are too many cancer neighbors, assume the env. is hypoxic & interrupts cell cycle progression
-        if (double rng = master_rng.uniform(0, 1); rng > 0.5*influences[3])
+        if (double rng = master_rng.uniform(0, 1); rng > hypoxia_strength*influences[3])
         {
             cellCyclePos++;
         }
