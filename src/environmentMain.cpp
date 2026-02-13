@@ -30,7 +30,7 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
     // If you're sweeping over different parameters change the corresponding elements of cellParams and recParams, and the arguments which pass to main().
     // cellParams[11][2] = cd8_prolif;
     // cellParams[5][2] = cd8_death;
-    // recParams[0] = cd8_rec;
+    recParams[0] = cd8_rec;
 
     immuneCellRecRates.reserve(5);
 

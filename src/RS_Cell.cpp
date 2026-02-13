@@ -395,7 +395,7 @@ void RS_Cell::resetForces(RNG& master_rng, std::mt19937& temporary_rng) {
 void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state) {
     double dis = calcDistance(otherX);
 
-    if (dis <= 10*rmax) { // check distance between the cells. if they're within the required distance,
+    if (dis <= 10*rmax) { // check distance between the cells. if they're within the required distance, (prev. was 10*rmax, set here to 100 microns)
         neighbors.push_back(otherCell_runtime_index); // add runtime_index to neighbors
 
         if (type != 0 && otherCell_state==3) { // if the original cell is immune and the other cell is cancer, add to a different list.
