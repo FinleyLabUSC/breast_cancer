@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 Environment::Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec, int base_seed) :
-    rng(base_seed), cell_grid(100, 100), cancer_grid(100, 100, 3)
+    rng(base_seed), cell_grid(100, 100), cancer_grid(100, 300, 3)
 {
     /*
      * initialize a simulation environment
