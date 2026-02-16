@@ -57,7 +57,7 @@ class RS_Cell
     std::array<double, 3> prob_proliferate(double dt, RNG& master_rng); // Proliferate with a probability
 
     // movement
-    virtual void migrate_NN(double dt,RNG& master_rng, std::mt19937& temporary_rng);
+    virtual void migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng, std::mt19937& temporary_rng);
 
     // cell-cell interactions
     virtual void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug);
@@ -230,7 +230,7 @@ class Cancer final : public RS_Cell
     Cancer(std::array<double, 2> loc, std::vector<std::vector<double>> &cellParams, int cellType, size_t init_tstamp=0);
     void initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng) override;
     std::array<double, 3> proliferate(double dt, RNG& master_rng) override;
-    void migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng) override;
+    void migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng, std::mt19937& temporary_rng) override;
     void indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug) override;
     void directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng) override;
     void contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::

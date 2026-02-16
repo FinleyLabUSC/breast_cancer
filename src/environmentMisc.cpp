@@ -68,7 +68,6 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
     }
 }
 
-
 void Environment::initializeInVitro() {
     int idx = 0;
     for (int i = 0; i < 100; i++) {
@@ -438,10 +437,10 @@ void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size
     }
 }
 
-/** This function generates and returns a random location within the square defined by the tumorRadius + recDist size.
- * The location is used for placing immune cells randomly within the domain.
- */
 std::array<double, 2> Environment::generate_random_location_for_immune_recruitment() {
+    /** This function generates and returns a random location within the square defined by the tumorRadius + recDist size.
+     * The location is used for placing immune cells randomly within the domain.
+     */
     double recDist = 200;
     double x = tumorCenter[0] + rng.uniform(-1*tumorRadius-recDist, tumorRadius+recDist);
     double y = tumorCenter[1] + rng.uniform(-1*tumorRadius-recDist, tumorRadius+recDist);
@@ -500,11 +499,10 @@ double Environment::calculateDiffusibles(std::array<double, 2> x) {
     return d;
 }
 
-/**
- * Shuffles the cells in the cell_list so that there are no spatial artifacts.
- */
 void Environment::shuffleCells() {
-
+    /**
+     * Shuffles the cells in the cell_list so that there are no spatial artifacts.
+     */
     std::shuffle(cell_list.begin(), cell_list.end(), rng.getGenerator());
 }
 

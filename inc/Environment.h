@@ -14,6 +14,7 @@
 #include <vector>
 #include <filesystem>
 #include <array>
+#include "CellGrid.h"
 
 
 class Environment{
@@ -25,7 +26,6 @@ public:
 
     void shuffleCells();
     void addCell(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, int cellType);
-    void generateNums();
 
     // Delete these safely, I don't think they're used.
     std::vector<double> cancer_CellCycle_CDF;
@@ -34,10 +34,6 @@ public:
 
     std::vector<double> anti_pd1_treatment_schedule;
     std::vector<double> anti_ctl4_treatment_schedule;
-
-    double effect_of_anti_CTLA4();
-
-    double sampleNormal();
 
     int model_time;
     void initializeCellsFromFile(std::string filePathway);
@@ -70,7 +66,6 @@ private:
 
     void record_cancerdeath(double model_time, int count_age_deaths, int count_cd8_contact_deaths, int count_nk_contact_deaths);
     void record_immuneCount(double tstep, int contact_cancer_count, int contact_immune_count);
-    void record_effect(int cellID, double posInfluence, double drug_effect, double ctla4_effect, double scale, double divProb);
     void loadParams();
 
     // Initialization functions
@@ -90,11 +85,6 @@ private:
 
     void countPops_updateTimeSeries();
     void printStep(double time);
-
-    void neighboringCancerCells(RS_Cell otherCell);
-    std::array<std::vector<RS_Cell>,12> createSubLists();
-
-    double nearestNeighborRadius(int state1, int state2);
 
     std::vector<int> count_immune_contacts;
     double dt;
@@ -144,15 +134,11 @@ private:
     int day;
 
     // treatment related parameters
-
     double anti_pd1_decay_rate;
     double anti_ctla4_decay_rate;
-
     double dose_anti_pd1;
     double dose_anti_ctla4;
-
     double binding_rate_pd1_drug;
-
     double mean_cancer_cell_cycle_length = 30;
     double std_cancer_cell_cycle_length = 2;
 
@@ -160,6 +146,12 @@ private:
     int num_cancer_births =0;
 
     RNG rng;
+
+    // cell grids
+    double grid_width = 100; // microns
+    CellGrid cell_grid;
+    Restricted_CellGrid cancer_grid;
+    void update_grids(bool do_cancer);
 
 };
 

@@ -19,8 +19,11 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
      * - differentiate
      */
 
-#pragma omp parallel for schedule(dynamic)
-    for(int i=0; i<cell_list.size(); ++i){
+    // First, we must clear & reassemble the cell grids
+    update_grids(true);
+
+    #pragma omp parallel for schedule(dynamic)
+    for (int i=0; i<cell_list.size(); ++i){
         // reset the "next_" members, so that they're synchronized to the correct values for the current time step.
         cell_list[i]->next_state = cell_list[i]->state;
         cell_list[i]->next_killProb = cell_list[i]->killProb;
@@ -33,20 +36,25 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         cell_list[i]->cancer_neighbors.clear();
         cell_list[i]->clearInfluence();
 
-        for(int j = 0; j < cell_list.size(); ++j){
-            // assume that a cell cannot influence itself
-            if(cell_list[i]->unique_cell_ID != cell_list[j]->unique_cell_ID){
-                cell_list[i]->determine_neighboringCells(cell_list[j]->x,cell_list[j]->runtime_index,cell_list[j]->state);
-                cell_list[i]->addInfluence(cell_list[j]->x, cell_list[j]->influenceRadius, cell_list[j]->state);
+        // TODO: [CHECK] Replace determine neighbors & add influence
+        for (int j = 0; j < cell_list.size(); ++j){
+            // Get neighbors from the cell grid
+            cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
+
+            // Iterate over neighbors & add influence
+            for (auto &c : cell_list[i]->neighbors)
+            {
+                cell_list[i]->addInfluence(cell_list[c]->x, cell_list[c]->influenceRadius, cell_list[c]->state);
             }
         }
 
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
-        cell_list[i]->indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
+        cell_list[i]->indirectInteractions(tstep, step_count,rng,temporary_rng1,
+            anti_pd1_TS.back(),binding_rate_pd1_drug);
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
         unsigned int seed_for_temp_rng2 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,2);
         std::mt19937 temporary_rng2(seed_for_temp_rng2);
@@ -60,7 +68,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
         unsigned int seed_for_temp_rng3 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,3);
         std::mt19937 temporary_rng3(seed_for_temp_rng3);
@@ -108,25 +116,23 @@ void Environment::calculateForces(double tstep, size_t step_count) {
     for(int q=0; q<Nsteps; ++q) {
         // std::cout << "This is step " << q+1 << " of " << Nsteps << " for hour " << step_count << std::endl;
         // migrate first
+        // TODO: [CHECK] replace the migrate_NN code w/ ability to explicitly get NN
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
+                auto nn_loc = cancer_grid.get_NN(cell_list[i]->x);
                 unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
-                cell_list[i]->migrate_NN(dt, rng, temporary_rng);
+                cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
             }
 
         // std::cout << "Updating neighbors... " << std::endl;
-        // update the neighborlists
+        // update the grids, then update neighborlists (don't update cancer grid until last step)
+        // TODO: [CHECK] update grids & replace neighbors search
+        update_grids(false);
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
-                cell_list[i]->cancer_neighbors.clear();
-                for(int j = 0; j < cell_list.size(); ++j){
-                    // assume that a cell cannot influence itself
-                    if(cell_list[i]->unique_cell_ID != cell_list[j]->unique_cell_ID){
-                        cell_list[i]->determine_neighboringCells(cell_list[j]->x,cell_list[j]->runtime_index,cell_list[j]->state);
-                    }
-                }
+                cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
 
         // std::cout << "Calculating forces... " << std::endl;
@@ -158,16 +164,12 @@ void Environment::calculateForces(double tstep, size_t step_count) {
 
         // std::cout << "Updating neighbors... " << std::endl;
         // update the neighborlists
+        // TODO: [CHECK] update grids & then recalculate neighbors on grid
+        update_grids(true);
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
-                cell_list[i]->cancer_neighbors.clear();
-                for(int j = 0; j < cell_list.size(); ++j){
-                    // assume that a cell cannot influence itself
-                    if(cell_list[i]->unique_cell_ID != cell_list[j]->unique_cell_ID){
-                        cell_list[i]->determine_neighboringCells(cell_list[j]->x,cell_list[j]->runtime_index,cell_list[j]->state);
-                    }
-                }
+                cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
 
         // std::cout << "Forming immune synapses... " << std::endl;
@@ -240,7 +242,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
     for(int i=0; i<numCells; ++i){
         if (cell_list[i]->state != -1) {
             cell_list[i]->set_cellAge(step_count); // this function figures out the age of the cell.
-            cell_list[i]->age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
+            cell_list[i]->age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached its lifespan
             cell_list[i]->proliferationState(anti_ctla4_TS.back(), rng);
             std::array<double, 3> newLoc = cell_list[i]->proliferate(tstep, rng);
 

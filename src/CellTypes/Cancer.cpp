@@ -62,7 +62,7 @@ std::array<double, 3> Cancer::proliferate(double dt, RNG& master_rng)
     return cycle_proliferate(dt, master_rng);
 }
 
-void Cancer::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+void Cancer::migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng, std::mt19937& temporary_rng)
 {
     // If the cancer cell is dead or immune synapsed it can't move
     if (state == -1 || immuneSynapseFormed) 
