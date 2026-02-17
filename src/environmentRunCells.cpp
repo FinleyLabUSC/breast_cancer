@@ -3,6 +3,7 @@
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 #include <unordered_set>
+#include <chrono>
 
 
 void Environment::neighborInfluenceInteractions(double tstep, size_t step_count) {
@@ -19,7 +20,8 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
      * - differentiate
      */
 
-#pragma omp parallel for schedule(dynamic)
+    auto t1 = std::chrono::high_resolution_clock::now();
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
         // reset the "next_" members, so that they're synchronized to the correct values for the current time step.
         cell_list[i]->next_state = cell_list[i]->state;
@@ -40,13 +42,17 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
                 cell_list[i]->addInfluence(cell_list[j]->x, cell_list[j]->influenceRadius, cell_list[j]->state);
             }
         }
+        
 
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
         cell_list[i]->indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
     }
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Neighbors + influence (all cells) took " << ms_double.count() << " ms" << std::endl;
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
         unsigned int seed_for_temp_rng2 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,2);
         std::mt19937 temporary_rng2(seed_for_temp_rng2);
