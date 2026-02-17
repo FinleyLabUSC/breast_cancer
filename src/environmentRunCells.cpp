@@ -3,6 +3,7 @@
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 #include <unordered_set>
+#include <chrono>
 
 
 void Environment::neighborInfluenceInteractions(double tstep, size_t step_count) {
@@ -36,7 +37,8 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         cell_list[i]->cancer_neighbors.clear();
         cell_list[i]->clearInfluence();
 
-        // TODO: [CHECK] Replace determine neighbors & add influence
+        // TODO: [CHECK] Replace determine neighbors & add 
+        auto t1 = std::chrono::high_resolution_clock::now();
         for (int j = 0; j < cell_list.size(); ++j){
             // Get neighbors from the cell grid
             cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
@@ -47,6 +49,9 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
                 cell_list[i]->addInfluence(cell_list[c]->x, cell_list[c]->influenceRadius, cell_list[c]->state);
             }
         }
+        auto t2 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+        std::cout << "Neighbors + influence took " << ms_double.count() << " ms" << std::endl;
 
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
@@ -117,6 +122,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "This is step " << q+1 << " of " << Nsteps << " for hour " << step_count << std::endl;
         // migrate first
         // TODO: [CHECK] replace the migrate_NN code w/ ability to explicitly get NN
+        auto t1 = std::chrono::high_resolution_clock::now();
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
                 auto nn_loc = cancer_grid.get_NN(cell_list[i]->x);
@@ -124,16 +130,23 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 std::mt19937 temporary_rng(seed_for_temp_rng);
                 cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
             }
+        auto t2 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+        std::cout << "NN migration took " << ms_double.count() << " ms" << std::endl;
 
         // std::cout << "Updating neighbors... " << std::endl;
         // update the grids, then update neighborlists (don't update cancer grid until last step)
         // TODO: [CHECK] update grids & replace neighbors search
+        t1 = std::chrono::high_resolution_clock::now();
         update_grids(false);
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
                 cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
+        t2 = std::chrono::high_resolution_clock::now();
+        ms_double = t2 - t1;
+        std::cout << "Neighbors (single grid) took " << ms_double.count() << " ms" << std::endl;
 
         // std::cout << "Calculating forces... " << std::endl;
         // calc forces
@@ -165,12 +178,16 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "Updating neighbors... " << std::endl;
         // update the neighborlists
         // TODO: [CHECK] update grids & then recalculate neighbors on grid
+        t1 = std::chrono::high_resolution_clock::now();
         update_grids(true);
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
                 cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
+        t2 = std::chrono::high_resolution_clock::now();
+        ms_double = t2 - t1;
+        std::cout << "Neighbors (both grids) took " << ms_double.count() << " ms" << std::endl;
 
         // std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.

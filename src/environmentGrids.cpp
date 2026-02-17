@@ -65,8 +65,8 @@ void Restricted_CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cel
     // update_grid() assumes that the grid has ALREADY been cleared
     for (int i = 0; i < cell_list.size();++i)
     {
-        // Check celltype status
-        if (cell_list[i]->type != filter_type){continue;}
+        // Check cell STATE status
+        if (cell_list[i]->state != filter_type){continue;}
 
         // Get bin location
         auto loc = cell_list[i]->x;
