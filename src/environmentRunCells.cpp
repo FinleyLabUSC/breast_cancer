@@ -59,7 +59,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
     }
     t2 = std::chrono::high_resolution_clock::now();
     ms_double = t2 - t1;
-    std::cout << "Neighbors, & influence (all cells) took " << ms_double.count() << " ms" << std::endl;
+    std::cout << "Neighbors & influence (all cells) took " << ms_double.count() << " ms" << std::endl;
 
     #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
@@ -181,7 +181,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // update the neighborlists
         // TODO: [CHECK] update grids & then recalculate neighbors on grid
         // t1 = std::chrono::high_resolution_clock::now();
-        // update_grids(true);
+        update_grids(true);
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();

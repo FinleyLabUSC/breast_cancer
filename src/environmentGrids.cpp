@@ -7,6 +7,7 @@ CellGrid::CellGrid(double width, double max_dist)
 {
     grid_width = width; // Width of bins
     max_d = max_dist; // Max distance for neighbors / influences
+    cell_grid.reserve(16); // Begin with 16 buckets (~1600 microns of x-distance)
 }
 
 void CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cell_list)
@@ -23,9 +24,12 @@ void CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cell_list)
         if (cell_grid.find(x_bin) == cell_grid.end())
         {
             // If the x-row doesn't exist, make it & allocate the y-bin to it (no y-bins exist yet)
-            std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> temp_map;
+            // begin w/ 16 buckets (~1600 microns of y-distance)
+            std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> temp_map(16);
             auto new_shared_ptr(cell_list[i]);
-            std::vector temp_vect = {new_shared_ptr};
+            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
+            temp_vect.reserve(512); // Generous limit on # cells per grid-square based on NK radius
+            temp_vect.push_back(new_shared_ptr);
             temp_map[y_bin] = temp_vect;
             cell_grid[x_bin] = temp_map;
             continue; // The shared_ptr has been allocated, so we can skip
@@ -37,7 +41,9 @@ void CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cell_list)
         {
             // If the y-bin doesn't exist, make it & allocate the shared_ptr to it
             auto new_shared_ptr(cell_list[i]);
-            std::vector temp_vect = {new_shared_ptr};
+            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
+            temp_vect.reserve(512);
+            temp_vect.push_back(new_shared_ptr);
             cell_grid[x_bin][y_bin] = temp_vect;
             continue; // The shared_ptr has been allocated, so we can skip
         }
@@ -58,6 +64,7 @@ Restricted_CellGrid::Restricted_CellGrid(double width, double max_dist, int type
 {
     filter_type = type; // Celltype to keep
     grid_width = width; // Width of bins
+    cell_grid.reserve(16); // Begin with 16 buckets (~1600 microns of x-distance)
 }
 
 void Restricted_CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cell_list)
@@ -77,9 +84,12 @@ void Restricted_CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cel
         if (cell_grid.find(x_bin) == cell_grid.end())
         {
             // If the x-row doesn't exist, make it & allocate the y-bin to it (no y-bins exist yet)
-            std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> temp_map;
+            // begin w/ 16 buckets (~1600 microns of y-distance)
+            std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> temp_map(16);
             auto new_shared_ptr(cell_list[i]);
-            std::vector temp_vect = {new_shared_ptr};
+            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
+            temp_vect.reserve(512);
+            temp_vect.push_back(new_shared_ptr);
             temp_map[y_bin] = temp_vect;
             cell_grid[x_bin] = temp_map;
             continue; // The shared_ptr has been allocated, so we can skip
@@ -91,7 +101,9 @@ void Restricted_CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cel
         {
             // If the y-bin doesn't exist, make it & allocate the shared_ptr to it
             auto new_shared_ptr(cell_list[i]);
-            std::vector temp_vect = {new_shared_ptr};
+            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
+            temp_vect.reserve(512);
+            temp_vect.push_back(new_shared_ptr);
             cell_grid[x_bin][y_bin] = temp_vect;
             continue; // The shared_ptr has been allocated, so we can skip
         }
@@ -183,6 +195,9 @@ void Environment::update_grids(bool do_cancer)
 {
     cell_grid.clear_grid();
     cell_grid.update_grid(cell_list);
-    cancer_grid.clear_grid();
-    cancer_grid.update_grid(cell_list);
+    if (do_cancer)
+    {
+        cancer_grid.clear_grid();
+        cancer_grid.update_grid(cell_list);
+    }
 }
