@@ -16,7 +16,6 @@
 #include <array>
 #include "CellGrid.h"
 
-
 class Environment{
 
 public:
@@ -150,8 +149,7 @@ private:
     // cell grids
     double grid_width = 100; // microns
     CellGrid cell_grid;
-    Restricted_CellGrid cancer_grid;
-    void update_grids(bool do_cancer);
+    void update_grids();
 
 };
 

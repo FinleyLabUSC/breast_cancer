@@ -1,5 +1,4 @@
 #include <omp.h>
-
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 #include <unordered_set>
@@ -22,7 +21,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
 
     // First, we must clear & reassemble the cell grids
     auto t1 = std::chrono::high_resolution_clock::now();
-    update_grids(true);
+    update_grids();
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = t2 - t1;
     std::cout << "Grid update (both) took " << ms_double.count() << " ms" << std::endl;
@@ -127,7 +126,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // auto t1 = std::chrono::high_resolution_clock::now();
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
-                auto nn_loc = cancer_grid.get_NN(cell_list[i]->x);
+                auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
                 unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
                 cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
@@ -140,7 +139,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // update the grids, then update neighborlists (don't update cancer grid until last step)
         // TODO: [CHECK] update grids & replace neighbors search
         // t1 = std::chrono::high_resolution_clock::now();
-        update_grids(false);
+        update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
@@ -181,7 +180,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // update the neighborlists
         // TODO: [CHECK] update grids & then recalculate neighbors on grid
         // t1 = std::chrono::high_resolution_clock::now();
-        update_grids(true);
+        update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();

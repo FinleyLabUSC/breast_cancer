@@ -3,146 +3,48 @@
 #include "../inc/Environment.h"
 #include "../inc/CellGrid.h"
 
+// A data structure for quick access to cells in the neighborhood of other cells
 CellGrid::CellGrid(double width, double max_dist)
 {
     grid_width = width; // Width of bins
     max_d = max_dist; // Max distance for neighbors / influences
-    cell_grid.reserve(16); // Begin with 16 buckets (~1600 microns of x-distance)
+
+    // We assume there won't be more than 256 grid cells to begin (16*16)
+    cell_grid.reserve(256);
+    cancer_locs.reserve(256);
 }
 
+// Given a list of shared pointers to cells, update the state of the grid
 void CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cell_list)
 {
     // update_grid() assumes that the grid has ALREADY been cleared
-    for (int i = 0; i < cell_list.size();++i)
+    for (int i = 0; i < cell_list.size(); ++i)
     {
-        // Get bin location
+        // Get bin location & bin key (from Szudzik elegant pairing function)
         auto loc = cell_list[i]->x;
         int x_bin = std::floor(loc[0] / grid_width);
         int y_bin = std::floor(loc[1] / grid_width);
+        int key = get_szudzik(x_bin, y_bin);
 
-        // First see if the x-row exists
-        if (cell_grid.find(x_bin) == cell_grid.end())
-        {
-            // If the x-row doesn't exist, make it & allocate the y-bin to it (no y-bins exist yet)
-            // begin w/ 16 buckets (~1600 microns of y-distance)
-            std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> temp_map(16);
-            auto new_shared_ptr(cell_list[i]);
-            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
-            temp_vect.reserve(512); // Generous limit on # cells per grid-square based on NK radius
-            temp_vect.push_back(new_shared_ptr);
-            temp_map[y_bin] = temp_vect;
-            cell_grid[x_bin] = temp_map;
-            continue; // The shared_ptr has been allocated, so we can skip
-        }
+        // If x is cancer, add it to cancer_locs; this will prevent multi-inserts
+        cancer_locs.insert(key);
 
-        // The x-row exists, check to see if the y-bin exists
-        std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> x_row = cell_grid[x_bin];
-        if (x_row.find(y_bin) == x_row.end())
-        {
-            // If the y-bin doesn't exist, make it & allocate the shared_ptr to it
-            auto new_shared_ptr(cell_list[i]);
-            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
-            temp_vect.reserve(512);
-            temp_vect.push_back(new_shared_ptr);
-            cell_grid[x_bin][y_bin] = temp_vect;
-            continue; // The shared_ptr has been allocated, so we can skip
-        }
-
-        // The x-row AND the y-bin exists, so we just need to extend the vector
         auto new_shared_ptr(cell_list[i]);
-        cell_grid[x_bin][y_bin].push_back(new_shared_ptr);
-    }
-}
-
-void CellGrid::clear_grid()
-{
-    cell_grid.clear();
-}
-
-Restricted_CellGrid::Restricted_CellGrid(double width, double max_dist, int type) :
-    CellGrid(width, max_dist)
-{
-    filter_type = type; // Celltype to keep
-    grid_width = width; // Width of bins
-    cell_grid.reserve(16); // Begin with 16 buckets (~1600 microns of x-distance)
-}
-
-void Restricted_CellGrid::update_grid(std::vector<std::shared_ptr<RS_Cell>>& cell_list)
-{
-    // update_grid() assumes that the grid has ALREADY been cleared
-    for (int i = 0; i < cell_list.size();++i)
-    {
-        // Check cell STATE status
-        if (cell_list[i]->state != filter_type){continue;}
-
-        // Get bin location
-        auto loc = cell_list[i]->x;
-        int x_bin = std::floor(loc[0] / grid_width);
-        int y_bin = std::floor(loc[1] / grid_width);
-
-        // First see if the x-row exists
-        if (cell_grid.find(x_bin) == cell_grid.end())
-        {
-            // If the x-row doesn't exist, make it & allocate the y-bin to it (no y-bins exist yet)
-            // begin w/ 16 buckets (~1600 microns of y-distance)
-            std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> temp_map(16);
-            auto new_shared_ptr(cell_list[i]);
-            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
-            temp_vect.reserve(512);
-            temp_vect.push_back(new_shared_ptr);
-            temp_map[y_bin] = temp_vect;
-            cell_grid[x_bin] = temp_map;
+        if (cell_grid.find(key) == cell_grid.end())
+        {   // The bin does not exist
+            std::vector<std::shared_ptr<RS_Cell>> temp_vec;
+            temp_vec.reserve(512); // Generous limit on # cells per grid-square based on NK radius
+            temp_vec.push_back(new_shared_ptr);
+            cell_grid[key] = temp_vec;
             continue; // The shared_ptr has been allocated, so we can skip
         }
 
-        // The x-row exists, check to see if the y-bin exists
-        std::unordered_map<int, std::vector<std::shared_ptr<RS_Cell>>> x_row = cell_grid[x_bin];
-        if (x_row.find(y_bin) == x_row.end())
-        {
-            // If the y-bin doesn't exist, make it & allocate the shared_ptr to it
-            auto new_shared_ptr(cell_list[i]);
-            std::vector<std::shared_ptr<RS_Cell>> temp_vect;
-            temp_vect.reserve(512);
-            temp_vect.push_back(new_shared_ptr);
-            cell_grid[x_bin][y_bin] = temp_vect;
-            continue; // The shared_ptr has been allocated, so we can skip
-        }
-
-        // The x-row AND the y-bin exists, so we just need to extend the vector
-        auto new_shared_ptr(cell_list[i]);
-        cell_grid[x_bin][y_bin].push_back(new_shared_ptr);
+        // The bin exists
+        cell_grid[key].push_back(new_shared_ptr);
     }
 }
 
-std::vector<int> CellGrid::get_neighbors(std::array<double, 2> loc, int runtime_idx)
-{
-    std::vector<int> neighbors; // place to store neighbors
-    int x_bin = std::floor(loc[0] / grid_width); // x_bin
-    int y_bin = std::floor(loc[1] / grid_width); // y_bin
-
-    // Iterate over the 3x3 grid around this bin; check to make sure bins exist
-    for (int i = x_bin - 1; i <= x_bin + 1; ++i)
-    {
-        if (cell_grid.find(i) == cell_grid.end()){continue;}
-        for (int j = y_bin - 1; j <= y_bin + 1; ++j)
-        {
-            if (cell_grid[i].find(j) == cell_grid[i].end()){continue;}
-            for (auto cell : cell_grid[i][j])
-            {   // check distance between cells
-                std::array<double, 2> this_loc = cell->x;
-                double dx = this_loc[0] - loc[0];
-                double dy = this_loc[1] - loc[1];
-                if (dx*dx + dy*dy <= max_d*max_d && cell->runtime_index != runtime_idx)
-                {   // push back the current runtime_index if it's not the cell's
-                    neighbors.push_back(cell->runtime_index);
-                }
-            }
-        }
-    }
-
-    return neighbors;
-}
-
+// Get the nearest neighbor of ANY cell type, given the grid's max distance
 std::array<double, 2> CellGrid::get_NN(std::array<double, 2> loc)
 {
     int x_bin = std::floor(loc[0] / grid_width);
@@ -151,8 +53,9 @@ std::array<double, 2> CellGrid::get_NN(std::array<double, 2> loc)
     bool found_neighbor = false;
     double curr_nn_dsq = 100000; // squared distance to current NN
     std::array<double, 2> nn_loc = {0,0};
-    int max_ring = std::round(max_d/grid_width);
+    int max_ring = std::ceil(max_d/grid_width);
 
+    // This loops searches increasing rings up to the max_ring
     for (int r = 1; r <= max_ring; ++r)
     {   // This loop will search the (2r+1)x(2r+1) grid around the central box
         for (int i = -r; i <= r; ++i)
@@ -160,11 +63,10 @@ std::array<double, 2> CellGrid::get_NN(std::array<double, 2> loc)
             if (cell_grid.find(x_bin + i) == cell_grid.end()){continue;}
             for (int j = -r; j <= r; ++j)
             {
-                // If r != 1, then we only want to search the outer ring
-                if (r != 1 && (j != r) && (i != r)){continue;}
-                // If r == 1 or (j or i == r) (e.g., we are on the outer ring), proceed
-                if (cell_grid[x_bin + i].find(y_bin + j) == cell_grid[x_bin + i].end()){continue;}
-                for (auto cell : cell_grid[x_bin + i][y_bin + j])
+                if (r != 1 && (j != r) && (i != r)){continue;} // If r != 1, then we only want to search the outer ring
+                int key = get_szudzik(x_bin + i, y_bin + j); // Generate the access key
+                if (cell_grid.find(key) == cell_grid.end()){continue;} // Skip if the bin doesn't exist
+                for (auto cell : cell_grid[key])
                 {   // check distance between cells
                     std::array<double, 2> this_loc = cell->x;
                     double dx = this_loc[0] - loc[0];
@@ -190,14 +92,104 @@ std::array<double, 2> CellGrid::get_NN(std::array<double, 2> loc)
     return loc;
 }
 
+// Get the nearest neighbor of a SPECIFIC cell type, within a certain max distance
+std::array<double, 2> CellGrid::get_filter_NN(std::array<double, 2> loc, double max_dist, int state)
+{
+    // Location for neighbors search
+    int x_bin = std::floor(loc[0] / grid_width);
+    int y_bin = std::floor(loc[1] / grid_width);
+
+    bool found_neighbor = false;
+    double curr_nn_dsq = 100000; // squared distance to current NN
+    std::array<double, 2> nn_loc = {0,0};
+    int max_ring = std::ceil(max_dist/grid_width); // use max_dist instead of max_d
+
+    // This loops searches increasing rings up to the max_ring
+    for (int r = 1; r <= max_ring; ++r)
+    {   // This loop will search the (2r+1)x(2r+1) grid around the central box
+        for (int i = -r; i <= r; ++i)
+        {
+            if (cell_grid.find(x_bin + i) == cell_grid.end()){continue;}
+            for (int j = -r; j <= r; ++j)
+            {
+                if (r != 1 && (j != r) && (i != r)){continue;} // If r != 1, then we only want to search the outer ring
+                int key = get_szudzik(x_bin + i, y_bin + j); // Generate the access key
+                if (cell_grid.find(key) == cell_grid.end()){continue;} // Skip if the bin doesn't exist
+                for (auto cell : cell_grid[key])
+                {
+                    if (cell->state != state) {continue;} // skip if cell isn't in the right state
+
+                    // check distance between cells
+                    std::array<double, 2> this_loc = cell->x;
+                    double dx = this_loc[0] - loc[0];
+                    double dy = this_loc[1] - loc[1];
+                    if (dx*dx + dy*dy <= curr_nn_dsq)
+                    {
+                        nn_loc = cell->x; // store current location
+                        curr_nn_dsq = dx*dx + dy*dy; // store squared distance
+                        found_neighbor = true; // set flag to true
+                    }
+                }
+            }
+        }
+
+        // Every time a loop terminates, we need to check if the NN has been found & is closer than max_d
+        // BUT, the nn must be within r*grid_width radius, or we need to search the next ring
+        if (found_neighbor == true && curr_nn_dsq <= r*grid_width*r*grid_width && curr_nn_dsq <= max_dist*max_dist)
+        {
+            return nn_loc;
+        }
+    }
+    // In the case where there is no NN within the correct distance, return the cell's location
+    return loc;
+}
+
+// Gets all cell neighbors within a max_d specified by the grid (usually 100 microns)
+std::vector<int> CellGrid::get_neighbors(std::array<double, 2> loc, int runtime_idx)
+{
+    std::vector<int> neighbors; // place to store neighbors
+    int x_bin = std::floor(loc[0] / grid_width); // x_bin
+    int y_bin = std::floor(loc[1] / grid_width); // y_bin
+
+    // Iterate over the 3x3 grid around this bin; check to make sure bins exist
+    for (int i = x_bin - 1; i <= x_bin + 1; ++i)
+    {
+        for (int j = y_bin - 1; j <= y_bin + 1; ++j)
+        {
+            int key = get_szudzik(i, j);
+            if (cell_grid.find(key) == cell_grid.end()){continue;}
+            for (auto cell : cell_grid[key])
+            {   // check distance between cells
+                std::array<double, 2> this_loc = cell->x;
+                double dx = this_loc[0] - loc[0];
+                double dy = this_loc[1] - loc[1];
+                if (dx*dx + dy*dy <= max_d*max_d && cell->runtime_index != runtime_idx)
+                {   // push back the current runtime_index if it's not the cell's
+                    neighbors.push_back(cell->runtime_index);
+                }
+            }
+        }
+    }
+
+    return neighbors;
+}
+
+int CellGrid::get_szudzik(int x, int y)
+{
+    // Create unique int from two ints:
+    x = (x < 0) ? -2*x - 1 : 2*x; // Map x_bin to +Z
+    y = (y < 0) ? -2*y - 1 : 2*y; // Map y_bin to +Z
+    return (x >= y) ? x*x+x+y : y*y+x; // Szudzik elegant pairing function
+}
+
+void CellGrid::clear_grid()
+{
+    cell_grid.clear();
+}
+
 // Clear and reassemble the cell_grid and cancer_grid
-void Environment::update_grids(bool do_cancer)
+void Environment::update_grids()
 {
     cell_grid.clear_grid();
     cell_grid.update_grid(cell_list);
-    if (do_cancer)
-    {
-        cancer_grid.clear_grid();
-        cancer_grid.update_grid(cell_list);
-    }
 }

@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 Environment::Environment(std::string folder, std::string set, double cd8_prolif, double cd8_death, double cd8_rec, int base_seed) :
-    rng(base_seed), cell_grid(100, 100), cancer_grid(100, 300, 3)
+    rng(base_seed), cell_grid(100, 100)
 {
     /*
      * initialize a simulation environment
@@ -166,7 +166,6 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
 
     // Initialize the cell grids after initialization has taken place...
     cell_grid.update_grid(cell_list);
-    cancer_grid.update_grid(cell_list);
 
     // Enter the simulation loop
     std::cout << "starting simulations...\n";
