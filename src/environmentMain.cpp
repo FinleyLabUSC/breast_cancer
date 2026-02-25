@@ -220,7 +220,12 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
             }
         }
 
+        auto t3 = std::chrono::high_resolution_clock::now();
         recruitImmuneCells_cancerBirthDeath(tstep);
+        auto t4 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> rectime = t4 - t3;
+        std::cout << "Recruitment step took " << rectime.count() << " ms" << std::endl;
+
         runCells(tstep, tstep * steps);
         mutateCells();
         removeDeadCells(); // loops through, removes the dead cells

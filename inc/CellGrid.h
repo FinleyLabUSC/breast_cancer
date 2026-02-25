@@ -23,7 +23,7 @@ public:
     std::array<double, 2> get_NN(std::array<double, 2> loc);
     std::array<double, 2> get_filter_NN(std::array<double, 2> loc, double max_dist, int state);
     std::vector<int> get_neighbors(std::array<double, 2> loc, int runtime_idx);
-    int get_szudzik(int x, int y);
+    static int get_szudzik(int x, int y);
 };
 
 

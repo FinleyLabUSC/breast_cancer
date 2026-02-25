@@ -398,16 +398,35 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
 
     for(int i=0; i<immuneCellRecRates.size(); ++i){ // From genParams.py: [0] cd8, [1] macrophages, [2] cd4, [3] nk, [4] mdsc
 
+        // TODO: [CHECK] adjusted recruitment to only occur when within 100 microns of cancer cell
         double recRate = immuneCellRecRates[i] * static_cast<double>(births_deaths[i]);
         immuneCells2rec[i] += tstep*recRate;
         while(immuneCells2rec[i] >= 1){
-            std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
 
-            // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
-            addCell(recLoc, cellParams, immuneCellRecTypes[i]);
-            cell_list.back()->runtime_index = cell_list.size()-1;
+            std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment(); // Get location
 
-            immuneCells2rec[i] -= 1;
+            // If the recruitment location is not within 100 microns of a cancer cell, do not recruit
+            int x_bin = std::floor(recLoc[0] / grid_width);
+            int y_bin = std::floor(recLoc[1] / grid_width);
+            int key = CellGrid::get_szudzik(x_bin, y_bin);
+
+            if (cell_grid.cell_grid.find(key) == cell_grid.cell_grid.end()){continue;}
+            for (auto& cell : cell_grid.cell_grid[key])
+            {
+                if (cell->state != 3){continue;} // Check if cancer
+                double dx = recLoc[0] - cell->x[0];
+                double dy = recLoc[1] - cell->x[1];
+
+                if (dx*dx + dy*dy >= 100*100){continue;} // Check if close enough
+
+                // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+                addCell(recLoc, cellParams, immuneCellRecTypes[i]);
+                cell_list.back()->runtime_index = cell_list.size()-1;
+
+                // Decrement # of immune cells to recruit
+                immuneCells2rec[i] -= 1;
+            }
+
         }
     }
     num_cancer_births = 0;
