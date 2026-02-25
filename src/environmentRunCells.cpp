@@ -117,13 +117,13 @@ void Environment::calculateForces(double tstep, size_t step_count) {
 
     int Nsteps = static_cast<int>(tstep/dt);
 
+    auto t1 = std::chrono::high_resolution_clock::now(); // Get start time for loop
     // iterate through Nsteps, calculating and resolving forces between neighbors
     // also includes migration
     for(int q=0; q<Nsteps; ++q) {
         // std::cout << "This is step " << q+1 << " of " << Nsteps << " for hour " << step_count << std::endl;
         // migrate first
         // TODO: [CHECK] replace the migrate_NN code w/ ability to explicitly get NN
-        // auto t1 = std::chrono::high_resolution_clock::now();
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
                 auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
@@ -131,23 +131,16 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 std::mt19937 temporary_rng(seed_for_temp_rng);
                 cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
             }
-        // auto t2 = std::chrono::high_resolution_clock::now();
-        // std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-        // std::cout << "NN migration took " << ms_double.count() << " ms" << std::endl;
-
+            
         // std::cout << "Updating neighbors... " << std::endl;
         // update the grids, then update neighborlists (don't update cancer grid until last step)
         // TODO: [CHECK] update grids & replace neighbors search
-        // t1 = std::chrono::high_resolution_clock::now();
         update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
                 cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
-        // t2 = std::chrono::high_resolution_clock::now();
-        // ms_double = t2 - t1;
-        // std::cout << "Neighbors (single grid) took " << ms_double.count() << " ms" << std::endl;
 
         // std::cout << "Calculating forces... " << std::endl;
         // calc forces
@@ -179,16 +172,12 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "Updating neighbors... " << std::endl;
         // update the neighborlists
         // TODO: [CHECK] update grids & then recalculate neighbors on grid
-        // t1 = std::chrono::high_resolution_clock::now();
         update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
                 cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
-        // t2 = std::chrono::high_resolution_clock::now();
-        // ms_double = t2 - t1;
-        // std::cout << "Neighbors (both grids) took " << ms_double.count() << " ms" << std::endl;
 
         // std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
@@ -216,6 +205,10 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             }
             cell_list[i]->isCompressed();
         }
+        
+    auto t2 = std::chrono::high_resolution_clock::now(); // Get end time for loop 
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Small steps (200) took " << ms_double.count() << " ms" << std::endl;
 
     count_cancer_immune_contacts(step_count); // Records the number of cancer cells in contact with CD8/NK cells, and the number of CD8/NK cells in contact with cancer cells.
 }

@@ -60,7 +60,6 @@ std::array<double, 2> CellGrid::get_NN(std::array<double, 2> loc)
     {   // This loop will search the (2r+1)x(2r+1) grid around the central box
         for (int i = -r; i <= r; ++i)
         {
-            if (cell_grid.find(x_bin + i) == cell_grid.end()){continue;}
             for (int j = -r; j <= r; ++j)
             {
                 if (r != 1 && (j != r) && (i != r)){continue;} // If r != 1, then we only want to search the outer ring
@@ -109,7 +108,6 @@ std::array<double, 2> CellGrid::get_filter_NN(std::array<double, 2> loc, double 
     {   // This loop will search the (2r+1)x(2r+1) grid around the central box
         for (int i = -r; i <= r; ++i)
         {
-            if (cell_grid.find(x_bin + i) == cell_grid.end()){continue;}
             for (int j = -r; j <= r; ++j)
             {
                 if (r != 1 && (j != r) && (i != r)){continue;} // If r != 1, then we only want to search the outer ring
@@ -177,9 +175,9 @@ std::vector<int> CellGrid::get_neighbors(std::array<double, 2> loc, int runtime_
 int CellGrid::get_szudzik(int x, int y)
 {
     // Create unique int from two ints:
-    x = (x < 0) ? -2*x - 1 : 2*x; // Map x_bin to +Z
-    y = (y < 0) ? -2*y - 1 : 2*y; // Map y_bin to +Z
-    return (x >= y) ? x*x+x+y : y*y+x; // Szudzik elegant pairing function
+    int new_x = (x < 0) ? -2*x - 1 : 2*x; // Map x_bin to +Z
+    int new_y = (y < 0) ? -2*y - 1 : 2*y; // Map y_bin to +Z
+    return (new_x >= new_y) ? new_x*new_x+new_x+new_y : new_y*new_y+new_x; // Szudzik elegant pairing function
 }
 
 void CellGrid::clear_grid()

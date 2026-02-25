@@ -4,6 +4,7 @@
 #include "../inc/RS_Cell.h"
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
+#include <chrono>
 
 namespace fs = std::filesystem;
 
@@ -173,6 +174,7 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
     {
         // Report RNG count (DEBUG)
         std::cout << "Before the start of step " << steps << "the RNG has been invoked " << rng.times_invoked << "times." << std::endl;
+        auto ti = std::chrono::high_resolution_clock::now();
 
         // Administer drugs if necessary
         if (!anti_pd1_on)
@@ -246,6 +248,10 @@ void Environment::simulate(double tstep, int tx, int met, double bind_rate_pd1_d
             save(tstep, steps * tstep);
             break;
         }
+        
+        auto tf = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> tot = tf - ti;
+        std::cout << "Simulation step took " << tot.count() << " ms" << std::endl;
     }
 
     for (auto& cell : cell_list)
