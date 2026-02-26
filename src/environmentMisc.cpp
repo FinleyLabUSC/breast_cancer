@@ -417,14 +417,17 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
                 double dx = recLoc[0] - cell->x[0];
                 double dy = recLoc[1] - cell->x[1];
 
-                if (dx*dx + dy*dy >= 100*100){continue;} // Check if close enough
-
-                // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
-                addCell(recLoc, cellParams, immuneCellRecTypes[i]);
-                cell_list.back()->runtime_index = cell_list.size()-1;
-
-                // Decrement # of immune cells to recruit
-                immuneCells2rec[i] -= 1;
+                // Check if close enough
+                if (dx*dx + dy*dy <= 100*100)
+                {
+                    // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+                    addCell(recLoc, cellParams, immuneCellRecTypes[i]);
+                    cell_list.back()->runtime_index = cell_list.size()-1;
+    
+                    immuneCells2rec[i] -= 1; // Decrement # of immune cells to recruit
+                    break; // Break the for loop
+                } 
+  
             }
 
         }

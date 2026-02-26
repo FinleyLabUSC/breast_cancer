@@ -87,9 +87,9 @@ void CD8::directInteractions(int interactingState, std::unordered_map<unsigned l
     {
         pdl1_inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
     }
-    if (interactingState == 3 || interactingState == 1)
+    if (interactingState == 3)
     {
-        // Antigens are presented by cancer cells and M1 macrophages; this occurs if the cells overlap
+        // Antigens are presented by cancer cells ONLY (no M1 macrophages); this occurs if the cells overlap
         double distance = calcDistance(interactingX);
         if (distance <= radius+interactionProperties[0])
         {
