@@ -43,7 +43,6 @@ void CD4::indirectInteractions(double tstep, size_t step_count, RNG& master_rng,
     // Only Tregs express PDL1
     if (state == 5)
     {
-        // TODO: Update PDL1 expression function to match declaration
         express_PDL1(tstep);
     }
 }

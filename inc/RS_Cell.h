@@ -37,7 +37,7 @@ class RS_Cell
     // neighboring cells
     std::array<double, 2> determine_grid();
     void determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state);
-    void determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int& otherType, unsigned long otherUID);
+    void determine_immuneSynapses(std::array<double, 2> otherX, double otherRadius, int& otherType, unsigned long otherUID, unsigned long other_nsyn);
     bool determine_synapsed(unsigned long otherUID);
     void get_current_synapses();
 

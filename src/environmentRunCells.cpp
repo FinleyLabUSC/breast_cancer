@@ -41,7 +41,6 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         cell_list[i]->cancer_neighbors.clear();
         cell_list[i]->clearInfluence();
 
-        // TODO: [CHECK] Replace determine neighbors & add 
         // Get neighbors from the cell grid
         cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
 
@@ -123,7 +122,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
     for(int q=0; q<Nsteps; ++q) {
         // std::cout << "This is step " << q+1 << " of " << Nsteps << " for hour " << step_count << std::endl;
         // migrate first
-        // TODO: [CHECK] replace the migrate_NN code w/ ability to explicitly get NN
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
                 auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
@@ -134,7 +132,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             
         // std::cout << "Updating neighbors... " << std::endl;
         // update the grids, then update neighborlists (don't update cancer grid until last step)
-        // TODO: [CHECK] update grids & replace neighbors search
         update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
@@ -170,8 +167,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             }
 
         // std::cout << "Updating neighbors... " << std::endl;
-        // update the neighborlists
-        // TODO: [CHECK] update grids & then recalculate neighbors on grid
+        // update the grids
         update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
@@ -189,9 +185,9 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
                 for (auto &j : cell_list[i]->neighbors)
                 {
-                    if (i != j && (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4) || (cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0))
+                    if (i != j && ((cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4)) || ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0)))
                     {
-                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID);
+                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID, cell_list[j]->synapse_list.size());
                     }
                 }
             }
@@ -212,8 +208,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
 
     count_cancer_immune_contacts(step_count); // Records the number of cancer cells in contact with CD8/NK cells, and the number of CD8/NK cells in contact with cancer cells.
 }
-
-
 
 void Environment::count_cancer_immune_contacts(double step_count) {
     int count_cancer_cells = 0;
@@ -295,8 +289,6 @@ void Environment::runCells(double tstep, size_t step_count) {
     internalCellFunctions(tstep, step_count);
 }
 
-
-
 void Environment::anti_pd1_drug(double tstep, double new_dose) {
     double current_Value = anti_pd1_TS.back() * std::exp(-1*tstep * anti_pd1_decay_rate) + new_dose;
     double temp = (current_Value>0) ? current_Value : 0;
@@ -308,7 +300,6 @@ void Environment::anti_ctla4_drug(double tstep, double new_dose) {
     double temp = (current_drug_Value>0) ? current_drug_Value : 0;
     anti_ctla4_TS.push_back(temp);
 }
-
 
 void Environment::anti_pd1(double tstep) {
     int count_cells_inhibited=0;
@@ -325,9 +316,7 @@ void Environment::anti_pd1(double tstep) {
     }
 }
 
-
 void  Environment::treatment(int tx_flag) {}
-
 
 /**
  * Runs the mutation functions for cells.

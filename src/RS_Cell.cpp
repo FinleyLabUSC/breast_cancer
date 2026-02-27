@@ -392,7 +392,7 @@ void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherC
     }
 }
 
-void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int &otherType, unsigned long otherUID)
+void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, double otherRadius, int &otherType, unsigned long otherUID, unsigned long other_nsyn)
 {
     // First check to see if the cells are already synapsed, and if so update the synapse
     if (determine_synapsed(otherUID))
@@ -407,8 +407,8 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
         return; // Exit function
     }
 
-    // If the cells are not already synapsed...
-    if (synapse_list.size() < 2)
+    // If the cells are not already synapsed, check if EITHER cell has > 2 synapses
+    if (synapse_list.size() < 2 && other_nsyn < 2)
     {
         double dis = calcDistance(otherX);
         if (dis < radius + otherRadius)

@@ -33,7 +33,6 @@ void MDSC::initialize_cell_from_file(int cell_state, int cell_list_length, doubl
 
 void MDSC::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
 {
-    // TODO: Update PDL1 expression function to match declaration
     express_PDL1(tstep);
 }
 
