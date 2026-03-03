@@ -89,7 +89,7 @@ void CD8::directInteractions(int interactingState, std::unordered_map<unsigned l
     }
     if (interactingState == 3 || interactingState == 1)
     {
-        // Antigens are presented by cancer cells and M1 macrophages; this occurs if the cells overlap
+        // Antigens are presented by cancer cells or M1 macrophages; this occurs if the cells overlap
         double distance = calcDistance(interactingX);
         if (distance <= radius+interactionProperties[0])
         {
@@ -147,8 +147,8 @@ void CD8::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 
     // Cells cannot proliferate if compressed or dead; also will skip cellCyclePos advancement but decrement antigen contact
     if (compressed || state == -1)
-    {
-        canProlif = false;
+    {   
+        canProlif = false; 
         antigen_contact--;
         return;
     }

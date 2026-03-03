@@ -1,5 +1,4 @@
 #include <omp.h>
-
 #include "../inc/Environment.h"
 #include "../inc/ModelUtil.h"
 #include <unordered_set>
@@ -20,9 +19,16 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
      * - differentiate
      */
 
+    // First, we must clear & reassemble the cell grids
     auto t1 = std::chrono::high_resolution_clock::now();
+    update_grids();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Grid update (both) took " << ms_double.count() << " ms" << std::endl;
+    
+    t1 = std::chrono::high_resolution_clock::now();
     #pragma omp parallel for schedule(dynamic)
-    for(int i=0; i<cell_list.size(); ++i){
+    for (int i=0; i<cell_list.size(); ++i){
         // reset the "next_" members, so that they're synchronized to the correct values for the current time step.
         cell_list[i]->next_state = cell_list[i]->state;
         cell_list[i]->next_killProb = cell_list[i]->killProb;
@@ -35,22 +41,23 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         cell_list[i]->cancer_neighbors.clear();
         cell_list[i]->clearInfluence();
 
-        for(int j = 0; j < cell_list.size(); ++j){
-            // assume that a cell cannot influence itself
-            if(cell_list[i]->unique_cell_ID != cell_list[j]->unique_cell_ID){
-                cell_list[i]->determine_neighboringCells(cell_list[j]->x,cell_list[j]->runtime_index,cell_list[j]->state);
-                cell_list[i]->addInfluence(cell_list[j]->x, cell_list[j]->influenceRadius, cell_list[j]->state);
-            }
-        }
-        
+        // Get neighbors from the cell grid
+        cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
 
+        // Iterate over neighbors & add influence
+        for (auto &c : cell_list[i]->neighbors)
+        {
+            cell_list[i]->addInfluence(cell_list[c]->x, cell_list[c]->influenceRadius, cell_list[c]->state);
+        }
+            
         unsigned int seed_for_temp_rng1 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,1);
         std::mt19937 temporary_rng1(seed_for_temp_rng1);
-        cell_list[i]->indirectInteractions(tstep, step_count,rng,temporary_rng1,anti_pd1_TS.back(),binding_rate_pd1_drug);
+        cell_list[i]->indirectInteractions(tstep, step_count,rng,temporary_rng1,
+            anti_pd1_TS.back(),binding_rate_pd1_drug);
     }
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    std::cout << "Neighbors + influence (all cells) took " << ms_double.count() << " ms" << std::endl;
+    t2 = std::chrono::high_resolution_clock::now();
+    ms_double = t2 - t1;
+    std::cout << "Neighbors & influence (all cells) took " << ms_double.count() << " ms" << std::endl;
 
     #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
@@ -66,7 +73,7 @@ void Environment::neighborInfluenceInteractions(double tstep, size_t step_count)
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for(int i=0; i<cell_list.size(); ++i){
         unsigned int seed_for_temp_rng3 = rng.get_context_seed(step_count,cell_list[i]->unique_cell_ID,3);
         std::mt19937 temporary_rng3(seed_for_temp_rng3);
@@ -109,6 +116,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
 
     int Nsteps = static_cast<int>(tstep/dt);
 
+    auto t1 = std::chrono::high_resolution_clock::now(); // Get start time for loop
     // iterate through Nsteps, calculating and resolving forces between neighbors
     // also includes migration
     for(int q=0; q<Nsteps; ++q) {
@@ -116,23 +124,19 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // migrate first
         #pragma omp parallel for schedule(dynamic)
             for(int i=0; i<cell_list.size(); ++i) {
+                auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
                 unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
                 std::mt19937 temporary_rng(seed_for_temp_rng);
-                cell_list[i]->migrate_NN(dt, rng, temporary_rng);
+                cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
             }
-
+            
         // std::cout << "Updating neighbors... " << std::endl;
-        // update the neighborlists
+        // update the grids, then update neighborlists (don't update cancer grid until last step)
+        update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
-                cell_list[i]->cancer_neighbors.clear();
-                for(int j = 0; j < cell_list.size(); ++j){
-                    // assume that a cell cannot influence itself
-                    if(cell_list[i]->unique_cell_ID != cell_list[j]->unique_cell_ID){
-                        cell_list[i]->determine_neighboringCells(cell_list[j]->x,cell_list[j]->runtime_index,cell_list[j]->state);
-                    }
-                }
+                cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
 
         // std::cout << "Calculating forces... " << std::endl;
@@ -163,17 +167,12 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             }
 
         // std::cout << "Updating neighbors... " << std::endl;
-        // update the neighborlists
+        // update the grids
+        update_grids();
         #pragma omp parallel for
             for(int i=0; i<cell_list.size(); ++i){
                 cell_list[i]->neighbors.clear();
-                cell_list[i]->cancer_neighbors.clear();
-                for(int j = 0; j < cell_list.size(); ++j){
-                    // assume that a cell cannot influence itself
-                    if(cell_list[i]->unique_cell_ID != cell_list[j]->unique_cell_ID){
-                        cell_list[i]->determine_neighboringCells(cell_list[j]->x,cell_list[j]->runtime_index,cell_list[j]->state);
-                    }
-                }
+                cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
             }
 
         // std::cout << "Forming immune synapses... " << std::endl;
@@ -186,9 +185,9 @@ void Environment::calculateForces(double tstep, size_t step_count) {
                 // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
                 for (auto &j : cell_list[i]->neighbors)
                 {
-                    if (i != j && (cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4) || (cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0))
+                    if (i != j && ((cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4)) || ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0)))
                     {
-                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID);
+                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID, cell_list[j]->synapse_list.size());
                     }
                 }
             }
@@ -202,11 +201,13 @@ void Environment::calculateForces(double tstep, size_t step_count) {
             }
             cell_list[i]->isCompressed();
         }
+        
+    auto t2 = std::chrono::high_resolution_clock::now(); // Get end time for loop 
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::cout << "Small steps (200) took " << ms_double.count() << " ms" << std::endl;
 
     count_cancer_immune_contacts(step_count); // Records the number of cancer cells in contact with CD8/NK cells, and the number of CD8/NK cells in contact with cancer cells.
 }
-
-
 
 void Environment::count_cancer_immune_contacts(double step_count) {
     int count_cancer_cells = 0;
@@ -246,7 +247,7 @@ void Environment::internalCellFunctions(double tstep, size_t step_count) {
     for(int i=0; i<numCells; ++i){
         if (cell_list[i]->state != -1) {
             cell_list[i]->set_cellAge(step_count); // this function figures out the age of the cell.
-            cell_list[i]->age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached it's lifespan
+            cell_list[i]->age(tstep, step_count,rng); // this function figures out if the cell is dying because it's reached its lifespan
             cell_list[i]->proliferationState(anti_ctla4_TS.back(), rng);
             std::array<double, 3> newLoc = cell_list[i]->proliferate(tstep, rng);
 
@@ -288,8 +289,6 @@ void Environment::runCells(double tstep, size_t step_count) {
     internalCellFunctions(tstep, step_count);
 }
 
-
-
 void Environment::anti_pd1_drug(double tstep, double new_dose) {
     double current_Value = anti_pd1_TS.back() * std::exp(-1*tstep * anti_pd1_decay_rate) + new_dose;
     double temp = (current_Value>0) ? current_Value : 0;
@@ -301,7 +300,6 @@ void Environment::anti_ctla4_drug(double tstep, double new_dose) {
     double temp = (current_drug_Value>0) ? current_drug_Value : 0;
     anti_ctla4_TS.push_back(temp);
 }
-
 
 void Environment::anti_pd1(double tstep) {
     int count_cells_inhibited=0;
@@ -318,9 +316,7 @@ void Environment::anti_pd1(double tstep) {
     }
 }
 
-
 void  Environment::treatment(int tx_flag) {}
-
 
 /**
  * Runs the mutation functions for cells.

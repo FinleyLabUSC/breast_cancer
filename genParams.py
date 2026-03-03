@@ -17,10 +17,10 @@ sim = int(sys.argv[2])
 # mcParams = np.loadtxt(fld+'/params.csv', delimiter=',')
 # params = mcParams[sim, :]
 
-# Inputs for exploring CD8 changes
+# Inputs for exploring changes
 cd8_CCL = float(sys.argv[3]) # CD8 cell cycle length
 time_between_antigen = float(sys.argv[4]) # Max time between antigen presentations
-hypoxia_strength = float(sys.argv[5]) # Strength of hypoxic effect
+cancer_ol_mult = float(sys.argv[5]) # How much cancer overlap rel. to baseline (0.25) to allow
 
 print("starting simulations")
 
@@ -60,7 +60,7 @@ cellParams = np.zeros((14, 6))
 cellParams[0, 0] = m  # mu
 cellParams[1, 0] = k  # kc
 cellParams[2, 0] = d  # damping
-cellParams[3, 0] = ol  # overlap
+cellParams[3, 0] = ol*cancer_ol_mult  # overlap
 cellParams[4, 0] = 20.0  # diameter (um)
 cellParams[5, 0] = 1/24.0  # div probability (hours) # No longer used. Just didn't want to remove it.
 cellParams[6, 0] = 1/(24.0*3.5) # death probability (hours)
@@ -92,7 +92,7 @@ cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
 cellParams[11, 2] = 1 / cd8_CCL # Default should be 4.5 hr cell cycle length 
 cellParams[12, 2] = time_between_antigen # Max time between antigen presentations for CD8 prolif
-cellParams[13, 2] = hypoxia_strength # prev. migScale = 1 / 0.979
+cellParams[13, 2] = 0 # prev. migScale = 1 / 0.979
 
 # macrophage params
 cellParams[0, 3] = m  # mu

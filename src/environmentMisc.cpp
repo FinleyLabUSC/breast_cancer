@@ -68,7 +68,6 @@ void Environment::initializeCellsFromFile(std::string filePathway) {
     }
 }
 
-
 void Environment::initializeInVitro() {
     int idx = 0;
     for (int i = 0; i < 100; i++) {
@@ -346,7 +345,6 @@ void Environment::initializeTesting() {
 void Environment::initializeCells() {
     /*
      * places the initial tumor, which is a cluster of pure cancer cells
-     * TODO: Specify these as cancer cells & probably rename the function
      */
 
     double radiiCells = envParams[0];
@@ -399,18 +397,55 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
 
     for(int i=0; i<immuneCellRecRates.size(); ++i){ // From genParams.py: [0] cd8, [1] macrophages, [2] cd4, [3] nk, [4] mdsc
 
+        // TODO: [CHECK] adjusted recruitment to only occur when within 150 microns of cancer cell
         double recRate = immuneCellRecRates[i] * static_cast<double>(births_deaths[i]);
         immuneCells2rec[i] += tstep*recRate;
         while(immuneCells2rec[i] >= 1){
-            std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment();
+            std::array<double, 2> recLoc = generate_random_location_for_immune_recruitment(); // Get random location
+            int x_bin = std::floor(recLoc[0] / grid_width);
+            int y_bin = std::floor(recLoc[1] / grid_width);
+            bool recruited = false; // check if recruited this cyle of the while
+            int check_distance = 150;
 
-            // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
-            addCell(recLoc, cellParams, immuneCellRecTypes[i]);
-            cell_list.back()->runtime_index = cell_list.size()-1;
+            // Loop over the 5x5 grid
+            for (int r = 0; r <= 2; ++r)
+            {
+                for (int j = -r; j <= r; ++j)
+                {
+                    for (int k = -r; k <= r; ++k)
+                    {   // Check bin existence
+                        int key = CellGrid::get_szudzik(x_bin + j, y_bin + k);
+                        if (cell_grid.cell_grid.find(key) == cell_grid.cell_grid.end()){continue;}
 
-            immuneCells2rec[i] -= 1;
+                        // If the bin exists, loop over all cells
+                        for (auto& cell : cell_grid.cell_grid[key])
+                        {
+                            if (cell->state != 3){continue;} // Check if cancer
+                            double dx = recLoc[0] - cell->x[0];
+                            double dy = recLoc[1] - cell->x[1];
+
+                            // Check if close enough
+                            if (dx*dx + dy*dy <= 150*150)
+                            {
+                                // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
+                                addCell(recLoc, cellParams, immuneCellRecTypes[i]);
+                                cell_list.back()->runtime_index = cell_list.size()-1;
+
+                                immuneCells2rec[i] -= 1; // Decrement # of immune cells to recruit
+                                recruited = true;
+                                break; // Break the for loop
+                            }
+                        }
+                        if (recruited) {break;}
+                    }
+                    if (recruited) {break;}
+                }
+                if (recruited) {break;}
+            }
         }
     }
+
+    // Reset cancer births & deaths
     num_cancer_births = 0;
     num_cancer_deaths = 0;
 }
@@ -438,10 +473,10 @@ void Environment::recruitImmuneCells_proportionalTumorBurden(double tstep,  size
     }
 }
 
-/** This function generates and returns a random location within the square defined by the tumorRadius + recDist size.
- * The location is used for placing immune cells randomly within the domain.
- */
 std::array<double, 2> Environment::generate_random_location_for_immune_recruitment() {
+    /** This function generates and returns a random location within the square defined by the tumorRadius + recDist size.
+     * The location is used for placing immune cells randomly within the domain.
+     */
     double recDist = 200;
     double x = tumorCenter[0] + rng.uniform(-1*tumorRadius-recDist, tumorRadius+recDist);
     double y = tumorCenter[1] + rng.uniform(-1*tumorRadius-recDist, tumorRadius+recDist);
@@ -500,11 +535,10 @@ double Environment::calculateDiffusibles(std::array<double, 2> x) {
     return d;
 }
 
-/**
- * Shuffles the cells in the cell_list so that there are no spatial artifacts.
- */
 void Environment::shuffleCells() {
-
+    /**
+     * Shuffles the cells in the cell_list so that there are no spatial artifacts.
+     */
     std::shuffle(cell_list.begin(), cell_list.end(), rng.getGenerator());
 }
 

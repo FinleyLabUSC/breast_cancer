@@ -72,7 +72,7 @@ void RS_Cell::initialize_cell_from_file(int state, int cell_list_length, double 
     throw std::runtime_error("You cannot initialize an RS_Cell object from file.");
 }
 
-void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+void RS_Cell::migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng, std::mt19937& temporary_rng)
 {
     // The default behavior here is to perform a biased random walk toward the nearest cancer cell
     // Suppressed cells cannot move as well
@@ -89,21 +89,9 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
     dx_random = unitVector(dx_random);
     std::array<double, 2> dx_movement = {0,0};
 
-    // Find the nearest cancer cell
-    std::array<double, 2> nearestCancer = {0.0, 0.0};
-    bool nearestCancerFound = false;
-    double min_distance = 100 * rmax;
-    for (auto& otherCell : cancer_neighbors) {
-        double dist = calcDistance(otherCell);
-        if (dist < min_distance) {
-            min_distance = dist;
-            nearestCancer = otherCell;
-            nearestCancerFound = true;
-        }
-    }
-
-    if (nearestCancerFound) {
-        std::array<double,2> targetCellDirection =  {nearestCancer[0] - x[0], nearestCancer[1] - x[1]};
+    // If there is no NN, then the function returns the cell's own location
+    if (nn_loc != x) {
+        std::array<double,2> targetCellDirection =  {nn_loc[0] - x[0], nn_loc[1] - x[1]};
         if (std::isnan(targetCellDirection[0]) || std::isnan(targetCellDirection[1])) {
             throw std::runtime_error("NaN encountered in targetCellDirection");
         }
@@ -404,7 +392,7 @@ void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherC
     }
 }
 
-void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int &otherType, unsigned long otherUID)
+void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, double otherRadius, int &otherType, unsigned long otherUID, unsigned long other_nsyn)
 {
     // First check to see if the cells are already synapsed, and if so update the synapse
     if (determine_synapsed(otherUID))
@@ -419,8 +407,8 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
         return; // Exit function
     }
 
-    // If the cells are not already synapsed...
-    if (synapse_list.size() < 2)
+    // If the cells are not already synapsed, check if EITHER cell has > 2 synapses
+    if (synapse_list.size() < 2 && other_nsyn < 2)
     {
         double dis = calcDistance(otherX);
         if (dis < radius + otherRadius)
