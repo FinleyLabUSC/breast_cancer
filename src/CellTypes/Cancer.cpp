@@ -1,5 +1,6 @@
 #include "../inc/RS_Cell.h"
 #include <iostream>
+#include <algorithm>
 
 // The child cell class is initialized w/ the parent constructor
 // This allows access to specific pre-set variables
@@ -61,7 +62,7 @@ std::array<double, 3> Cancer::proliferate(double dt, RNG& master_rng)
     return cycle_proliferate(dt, master_rng);
 }
 
-void Cancer::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+void Cancer::migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng, std::mt19937& temporary_rng)
 {
     // If the cancer cell is dead or immune synapsed it can't move
     if (state == -1 || immuneSynapseFormed) 
@@ -87,11 +88,21 @@ void Cancer::indirectInteractions(double tstep, size_t step_count, RNG& master_r
     express_PDL1(tstep);
 }
 
-void Cancer::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void Cancer::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     // Specify that cancer cells can only interact w/ CD8 or NK
-    if (interactingState != 6 && interactingState != 8){return;}
-    contact_die(interactingState, interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+    if (interactingState != 6 && interactingState != 8)
+    {
+        return;
+    }
+    // Perform synapse-retreival code on other synapse list
+    std::vector<unsigned long> curr_syn;
+    for (auto kv : other_synapse_list){curr_syn.push_back(kv.first);}
+    // If this cancer cell is in the other synapse list, then allow it to possibly die
+    if (std::find(curr_syn.begin(), curr_syn.end(), unique_cell_ID) != curr_syn.end())
+    {
+        contact_die(interactingState, interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+    }
 }
 
 void Cancer::contact_die(int killer_state, std::array<double, 2> otherX, double otherRadius, double kill_prob, double dt, RNG& master_rng, std::mt19937& temporary_rng)
@@ -168,13 +179,13 @@ std::vector<double> Cancer::inheritanceProperties()
     return {pdl1_expression_level, cellCycleLength};
 }
 
-void Cancer::proliferationState(double anti_ctla4_concentration)
+void Cancer::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
     if (state == -1){return;} // Dead cells cannot proliferate
-    if (!immuneSynapseFormed) {
-        cellCyclePos++; // advance cell cycle regardless of compression, but not if synapsed
+    if (!immuneSynapseFormed && !compressed) {
+        cellCyclePos++; // advance cell cycle unless compressed or synapsed
     }
-    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && !immuneSynapseFormed) // prolif check regardless of compression, but not if synapsed
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && !compressed) // allow prolif even if synapsed
     {
         canProlif = true;
     }

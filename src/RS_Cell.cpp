@@ -72,7 +72,7 @@ void RS_Cell::initialize_cell_from_file(int state, int cell_list_length, double 
     throw std::runtime_error("You cannot initialize an RS_Cell object from file.");
 }
 
-void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng)
+void RS_Cell::migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng, std::mt19937& temporary_rng)
 {
     // The default behavior here is to perform a biased random walk toward the nearest cancer cell
     // Suppressed cells cannot move as well
@@ -89,21 +89,9 @@ void RS_Cell::migrate_NN(double dt, RNG& master_rng, std::mt19937& temporary_rng
     dx_random = unitVector(dx_random);
     std::array<double, 2> dx_movement = {0,0};
 
-    // Find the nearest cancer cell
-    std::array<double, 2> nearestCancer = {0.0, 0.0};
-    bool nearestCancerFound = false;
-    double min_distance = 100 * rmax;
-    for (auto& otherCell : cancer_neighbors) {
-        double dist = calcDistance(otherCell);
-        if (dist < min_distance) {
-            min_distance = dist;
-            nearestCancer = otherCell;
-            nearestCancerFound = true;
-        }
-    }
-
-    if (nearestCancerFound) {
-        std::array<double,2> targetCellDirection =  {nearestCancer[0] - x[0], nearestCancer[1] - x[1]};
+    // If there is no NN, then the function returns the cell's own location
+    if (nn_loc != x) {
+        std::array<double,2> targetCellDirection =  {nn_loc[0] - x[0], nn_loc[1] - x[1]};
         if (std::isnan(targetCellDirection[0]) || std::isnan(targetCellDirection[1])) {
             throw std::runtime_error("NaN encountered in targetCellDirection");
         }
@@ -136,7 +124,7 @@ void RS_Cell::indirectInteractions(double tstep, size_t step_count, RNG& master_
     // indirectInteractions must be specified by cell type
 }
 
-void RS_Cell::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void RS_Cell::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     // directInteractions must be specified by cell type
 }
@@ -202,14 +190,17 @@ void RS_Cell::pdl1_inhibition(std::array<double, 2> otherX, double otherRadius, 
         double distance = calcDistance(otherX);
         if (distance <= radius+otherRadius)
         {
+            // We assume the effect of PD1-PDL1 binding is linear w.r.t. the maximum level of PD1 that can be expressed
+            // We assume that if cells are in direct contact, this binding event always occurs and exhaustion will take place
             double percent_bound = std::min(otherPDL1, pd1_available) / pd1_expression_level;
-            double rnd = master_rng.uniform(0, 1, temporary_rng);
-            if (rnd < percent_bound)
-            {
-                next_killProb = next_killProb * percent_bound * inhibitory_effect_of_binding_PD1_PDL1;
-                next_migrationSpeed = next_migrationSpeed * percent_bound * inhibitory_effect_of_binding_PD1_PDL1;
-                next_death_prob = next_death_prob * (1+percent_bound) * inhibitory_effect_of_binding_PD1_PDL1;
-            }
+            double effect_size = (percent_bound * pd1_expression_level) / (max_pd1_level / 2); // Assume the avg. pd1 expr. in exp. is 1/2 max
+            // killProb & migSpeed decrease, so the effect size scales the difference between 1 & the multiplier, which is less than 1
+            next_killProb = next_killProb * (1 - effect_size * (1 - killProb_mult));
+            next_migrationSpeed = next_migrationSpeed * (1 - effect_size * (1 - migSpeed_mult));
+            next_migrationBias = next_migrationBias * (1 - effect_size * (1 - migBias_mult));
+            divProb = divProb * (1 - effect_size * (1 - cellCycle_mult));
+            // deathProb increases, so the effect size scales the differenc between the multiplier, which is more than 1, and 1
+            next_death_prob = next_death_prob * (1 + effect_size * (deathProb_mult - 1));
         }
     }
 }
@@ -229,7 +220,7 @@ std::array<double, 3> RS_Cell::proliferate(double dt, RNG& master_rng)
     return {0, 0, 0}; // Default return that the cell does not proliferate
 }
 
-void RS_Cell::proliferationState(double anti_ctla4_concentration)
+void RS_Cell::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
     // If the cell does not have its own canProlif logic then it cannot proliferate at all
     canProlif = false;
@@ -257,6 +248,7 @@ std::array<double, 3> RS_Cell::cycle_proliferate(double dt, RNG& master_rng)
 {
     // These cells set canProlif to false under normal conditions
     // When they reach the end of their clock, they divide
+
     std::array<double, 2> dx = {master_rng.normal(0, 1), master_rng.normal(0, 1)};
     double norm = calcNorm(dx);
     return{
@@ -327,6 +319,7 @@ void RS_Cell::get_current_synapses()
 
 bool RS_Cell::determine_synapsed(unsigned long otherUID)
 {
+    // This determines if two cells are synapsed together
     if (std::find(synapses.begin(), synapses.end(), otherUID) != synapses.end())
     {
         return true;
@@ -372,9 +365,6 @@ void RS_Cell::calculateForces(std::array<double, 2> otherX, double otherRadius, 
 }
 
 void RS_Cell::resolveForces(double dt, RNG& master_rng, std::mt19937& temporary_rng) {
-
-    // Only resolve forces on cells that have not formed immune synapses.
-    // TODO: ALL CELLS CAN MOVE NOW!
     // resolving the forces between cells.
     x[0] += (dt/damping)*currentForces[0];
     x[1] += (dt/damping)*currentForces[1];
@@ -393,7 +383,7 @@ void RS_Cell::resetForces(RNG& master_rng, std::mt19937& temporary_rng) {
 void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherCell_runtime_index, int otherCell_state) {
     double dis = calcDistance(otherX);
 
-    if (dis <= 10*rmax) { // check distance between the cells. if they're within the required distance,
+    if (dis <= 10*rmax) { // check distance between the cells. if they're within the required distance, (prev. was 10*rmax, set here to 100 microns)
         neighbors.push_back(otherCell_runtime_index); // add runtime_index to neighbors
 
         if (type != 0 && otherCell_state==3) { // if the original cell is immune and the other cell is cancer, add to a different list.
@@ -402,7 +392,7 @@ void RS_Cell::determine_neighboringCells(std::array<double,2> otherX, int otherC
     }
 }
 
-void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRadius, int &otherType, unsigned long otherUID)
+void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, double otherRadius, int &otherType, unsigned long otherUID, unsigned long other_nsyn)
 {
     // First check to see if the cells are already synapsed, and if so update the synapse
     if (determine_synapsed(otherUID))
@@ -417,14 +407,17 @@ void RS_Cell::determine_immuneSynapses(std::array<double, 2> otherX, int otherRa
         return; // Exit function
     }
 
-    // If the cells are not already synapsed...
-    double dis = calcDistance(otherX);
-    if (dis < radius + otherRadius)
+    // If the cells are not already synapsed, check if EITHER cell has > 2 synapses
+    if (synapse_list.size() < 2 && other_nsyn < 2)
     {
-        // Form an immune synapse
-        synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
-        immuneSynapseFormed = true; // Confirm synapsed
-        // std::cout << "Synapse formed" << std::endl;
+        double dis = calcDistance(otherX);
+        if (dis < radius + otherRadius)
+        {
+            // Form an immune synapse
+            synapse_list[otherUID] = {1, 1}; // Do we need to add ID to synapse_list??
+            immuneSynapseFormed = true; // Confirm synapsed
+            // std::cout << "Synapse formed" << std::endl;
+        }
     }
 }
 

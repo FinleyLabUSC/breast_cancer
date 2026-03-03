@@ -19,8 +19,8 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     migrationBias = cellParams[10][2];
     divProb_base = cellParams[11][2];
     divProb = divProb_base;
-    deathScale = cellParams[12][2];
-    migScale = cellParams[13][2];
+    // deathScale = cellParams[12][2];
+    // migScale = cellParams[13][2];
     migration_speed_base =migrationSpeed;
     kill_prob_base = baseKillProb;
     killProb = baseKillProb;
@@ -28,6 +28,15 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     death_prob_base = deathProb;
     rmax = 1.5*radius*2;
     init_time = init_tstamp;
+    killProb_mult = 0.957;
+    cellCycle_mult = 0.982;
+    deathProb_mult = 1 / 0.9897; // Originally deduced to be 0.997
+    migSpeed_mult = 0.979;
+    migBias_mult = 0.958; // Faster decay in bias than speed
+    cellCyclePos = 0;
+    antigen_contact = 0;
+    max_antigen_time = cellParams[12][2]; // # of hrs between antigen contacts allowed for proliferation
+    hypoxia_strength = cellParams[13][2];
 }
 
 
@@ -48,6 +57,12 @@ void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double
     migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base); // Low migration speed
     divProb = master_rng.uniform(0, 0.25 * divProb_base); // Low division probability
     killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cyctotoxic effect
+
+    // Sample cell cycle position
+    cellCyclePos = master_rng.uniform(0, 1/divProb);
+
+    // Assume that all cells present in the TME have made contact w/ an APC
+    antigen_contact = true;
 }
 
 std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
@@ -57,7 +72,7 @@ std::array<double, 3> CD8::proliferate(double dt, RNG& master_rng)
         return {0,0,0}; // cannot proliferate because suppressed or dead!
     }
 
-    return prob_proliferate(dt, master_rng);
+    return cycle_proliferate(dt, master_rng);
 }
 
 void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
@@ -66,11 +81,20 @@ void CD8::indirectInteractions(double tstep, size_t step_count, RNG& master_rng,
     update_indirectProperties(step_count);
 }
 
-void CD8::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void CD8::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
     {
         pdl1_inhibition(interactingX, interactionProperties[0], interactionProperties[1], tstep, master_gen, temporary_rng);
+    }
+    if (interactingState == 3 || interactingState == 1)
+    {
+        // Antigens are presented by cancer cells or M1 macrophages; this occurs if the cells overlap
+        double distance = calcDistance(interactingX);
+        if (distance <= radius+interactionProperties[0])
+        {
+            antigen_contact = max_antigen_time; // Reset counter
+        }
     }
 }
 
@@ -88,11 +112,11 @@ void CD8::update_indirectProperties(size_t step_count)
 {
     double posInfluence = 1 - (1 - influences[1])*(1 - influences[4]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
-    double scale = posInfluence - negInfluence;
+    double scale = negInfluence - posInfluence; // If neg influence > pos influence, want + scale value
 
-    // TODO: reconsider how these properties are updated
-    next_killProb = next_killProb*pow(infScale, scale);
-    next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
+    next_killProb = next_killProb*pow(killProb_mult, scale);
+    next_migrationSpeed = next_migrationSpeed*pow(migSpeed_mult, scale);
+    next_migrationBias = next_migrationBias*pow(migBias_mult, scale);
 }
 
 void CD8::inherit(std::vector<double> properties)
@@ -109,16 +133,48 @@ std::vector<double> CD8::inheritanceProperties()
     return {pd1_expression_level, killProb, migrationSpeed, divProb, deathProb};
 }
 
-void CD8::proliferationState(double anti_ctla4_concentration)
+void CD8::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
-    canProlif = !compressed; // CD8 proliferation is only stopped if the cell is compressed
-
-    // scale divProb based on influences & CTLA
+    // Determine effect of neighbor influences on division
     double posInfluence = 1 - (1 - influences[4])*(1 - influences[8]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[10]);
     double anti_ctla4_effect = Hill_function(anti_ctla4_concentration,anti_CTLA4_IC50,anti_CTLA4_hill_coeff) * sensitivity_to_antiCTLA4();
     double scale_anti_CTLA4_effect = (divProb > divProb_base) ? 1.1 : 1;
     double effective_antiCTLA4_effect = (anti_ctla4_effect * scale_anti_CTLA4_effect < 1) ? anti_ctla4_effect * scale_anti_CTLA4_effect : 1;
-    double ctla_scale = posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) - negInfluence;
-    divProb = ctla_scale * divProb;
+    // Neg influence first so that the divProb decreases if ctla_scale is positive; the same logic as prev.
+    double ctla_scale = negInfluence - posInfluence * (1 - influences[5]* (1-effective_antiCTLA4_effect)) ; // TODO: Check this eqn.
+    divProb = divProb * (1 - ctla_scale * (1 - cellCycle_mult));
+
+    // Cells cannot proliferate if compressed or dead; also will skip cellCyclePos advancement but decrement antigen contact
+    if (compressed || state == -1)
+    {   
+        canProlif = false; 
+        antigen_contact--;
+        return;
+    }
+
+    // Only advance cell cycle if in antigen contact window; decrement antigen contact after
+    if (antigen_contact > 0)
+    {
+        // If there are too many cancer neighbors, assume the env. is hypoxic & interrupts cell cycle progression
+        if (double rng = master_rng.uniform(0, 1); rng > hypoxia_strength*influences[3])
+        {
+            cellCyclePos++;
+        }
+        // Always decrement the antigen contact
+        antigen_contact--;
+    }
+
+    // Grab cellCycleLength from the changing divProb
+    cellCycleLength = 1/divProb;
+
+    // Check if cell cycle length has been exceeded & if we're still in antigen contact window
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && antigen_contact > 0)
+    {
+        canProlif = true;
+    }
+    else
+    {
+        canProlif = false;
+    }
 }

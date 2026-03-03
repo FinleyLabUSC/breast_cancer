@@ -23,6 +23,11 @@ NK::NK(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, 
     migScale = cellParams[13][4];
     rmax = 1.5*radius*2;
     location_history.push_back(x);
+    killProb_mult = 0.957;
+    cellCycle_mult = 1; // No NK Cell proliferation
+    deathProb_mult = 1 / 0.997;
+    migSpeed_mult = 0.979;
+    migBias_mult = 0.979;
 }
 
 void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
@@ -49,7 +54,7 @@ void NK::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, 
     update_indirectProperties(step_count);
 }
 
-void NK::directInteractions(int interactingState, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
+void NK::directInteractions(int interactingState, std::unordered_map<unsigned long, std::array<int, 2>> other_synapse_list, std::array<double, 2> interactingX, std::vector<double> interactionProperties, double tstep, RNG& master_gen, std::mt19937& temporary_rng)
 {
     if (interactingState == 2 || interactingState == 3 || interactingState == 5 || interactingState == 10)
     {
@@ -71,8 +76,9 @@ void NK::update_indirectProperties(size_t step_count)
 {
     double posInfluence = 1 - (1 - influences[1])*(1 - influences[4]);
     double negInfluence = 1 - (1 - influences[2])*(1 - influences[5])*(1 - influences[10]);
-    double scale = posInfluence - negInfluence;
-    // TODO: reconsider how these properties are updated!
-    next_killProb = next_killProb*pow(infScale, scale);
-    next_migrationSpeed = next_migrationSpeed*pow(migScale, scale);
+    double scale = negInfluence - posInfluence; // If neg influence > pos influence, want + scale value
+
+    next_killProb = next_killProb*pow(killProb_mult, scale);
+    next_migrationSpeed = next_migrationSpeed*pow(migSpeed_mult, scale);
+    next_migrationBias = next_migrationBias*pow(migBias_mult, scale);
 }
