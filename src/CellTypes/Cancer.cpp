@@ -182,10 +182,10 @@ std::vector<double> Cancer::inheritanceProperties()
 void Cancer::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
 {
     if (state == -1){return;} // Dead cells cannot proliferate
-    if (!immuneSynapseFormed) {
-        cellCyclePos++; // advance cell cycle regardless of compression, but not if synapsed
+    if (!immuneSynapseFormed && !compressed) {
+        cellCyclePos++; // advance cell cycle unless compressed or synapsed
     }
-    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength) // prolif check regardless of compression; allow prolif even if synapsed
+    if (cellCycleLength > 0 && static_cast<double>(cellCyclePos) > cellCycleLength && !compressed) // allow prolif even if synapsed
     {
         canProlif = true;
     }
