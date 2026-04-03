@@ -74,13 +74,15 @@ void Cancer::migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rng
     double temp_x = master_rng.normal(0,1,temporary_rng);
     double temp_y = master_rng.normal(0,1,temporary_rng);
     std::array<double, 2> rand_unit_vec = unitVector({temp_x,temp_y});
-    for(int i=0; i<x.size(); ++i){
-        x[i] += dt*migrationSpeed*rand_unit_vec[i];
-        if(std::isnan(x[i])){
+    
+    // Update next_x member, but do not migrate yet
+    for(int i=0; i<next_x.size(); ++i){
+        next_x[i] += dt*migrationSpeed*rand_unit_vec[i];
+        if(std::isnan(next_x[i])){
             throw std::runtime_error("Cancer migration NaN");
         }
     }
-    location_history.push_back(x);
+    location_history.push_back(next_x);
 }
 
 void Cancer::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)

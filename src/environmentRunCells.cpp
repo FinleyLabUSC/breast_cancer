@@ -123,74 +123,80 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // std::cout << "This is step " << q+1 << " of " << Nsteps << " for hour " << step_count << std::endl;
         // migrate first
         #pragma omp parallel for schedule(dynamic)
-            for(int i=0; i<cell_list.size(); ++i) {
-                auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
-                unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
-                std::mt19937 temporary_rng(seed_for_temp_rng);
-                cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
-            }
+        for(int i=0; i<cell_list.size(); ++i) {
+            auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
+            unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
+            std::mt19937 temporary_rng(seed_for_temp_rng);
+            cell_list[i]->migrate_NN(dt, nn_loc, rng, temporary_rng);
+        }
+        
+        #pragma omp parallel for schedule(dynamic)
+        for(int i=0; i<cell_list.size(); ++i) {
+            cell_list[i]->x = cell_list[i]->next_x;
+            // No need to update next_x because it already is the actual location
+        }
             
         // std::cout << "Updating neighbors... " << std::endl;
         // update the grids, then update neighborlists (don't update cancer grid until last step)
         update_grids();
         #pragma omp parallel for
-            for(int i=0; i<cell_list.size(); ++i){
-                cell_list[i]->neighbors.clear();
-                cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
-            }
+        for(int i=0; i<cell_list.size(); ++i){
+            cell_list[i]->neighbors.clear();
+            cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
+        }
 
         // std::cout << "Calculating forces... " << std::endl;
         // calc forces
         #pragma omp parallel for
-            for(int i=0; i<cell_list.size(); ++i){
-                for(auto &c : cell_list[i]->neighbors){
-                    cell_list[i]->get_current_synapses(); // Updates synapse vector
-                    if (i != c)
+        for(int i=0; i<cell_list.size(); ++i){
+            for(auto &c : cell_list[i]->neighbors){
+                cell_list[i]->get_current_synapses(); // Updates synapse vector    
+                if (i != c)
+                {
+                    cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
+                    if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
                     {
-                        cell_list[i]->calculateForces(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
-                        if (cell_list[i]->determine_synapsed(cell_list[c]->unique_cell_ID))
-                        {
-                            cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
-                        }
+                        cell_list[i]->add_synapseForce(cell_list[c]->x, cell_list[c]->radius, cell_list[c]->type);
                     }
                 }
             }
+        }
 
         // std::cout << "Resolving forces... " << std::endl;
         // resolve forces
         #pragma omp parallel for schedule(dynamic)
-            for(int i=0; i<cell_list.size(); ++i){
-                unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,5);
-                std::mt19937 temporary_rng(seed_for_temp_rng);
+        for(int i=0; i<cell_list.size(); ++i){
+            unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,5);
+            std::mt19937 temporary_rng(seed_for_temp_rng);
 
-                cell_list[i]->resolveForces(dt, rng, temporary_rng);
-            }
+            cell_list[i]->resolveForces(dt, rng, temporary_rng);
+        }
 
         // std::cout << "Updating neighbors... " << std::endl;
         // update the grids
         update_grids();
         #pragma omp parallel for
-            for(int i=0; i<cell_list.size(); ++i){
-                cell_list[i]->neighbors.clear();
-                cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
-            }
+        for(int i=0; i<cell_list.size(); ++i){
+            cell_list[i]->neighbors.clear();
+            cell_list[i]->neighbors = cell_grid.get_neighbors(cell_list[i]->x, cell_list[i]->runtime_index);
+        }
 
         // std::cout << "Forming immune synapses... " << std::endl;
         // Determine whether immune synapse has formed: if CD8 or NK is in contact or overlapping with cancer cell.
         // Note: if additional cytotoxic immune cells are added, or existing phenotypes are changed to have cytotoxic effects, change the inner if statement
-        #pragma omp parallel for schedule(dynamic)
-            for (int i = 0; i < cell_list.size(); ++i) {
-                cell_list[i]->get_current_synapses(); // Updates synapse vector
-                cell_list[i]->immuneSynapseFormed = false; // Default assume no immune synapsed prior to neighbor eval
-                // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
-                for (auto &j : cell_list[i]->neighbors)
+        // TODO: This region should not be paralellized because cells can only form two synapses (shuffle @ every intermediate step?)
+        for (int i = 0; i < cell_list.size(); ++i) {
+            cell_list[i]->get_current_synapses(); // Updates synapse vector
+            cell_list[i]->immuneSynapseFormed = false; // Default assume no immune synapsed prior to neighbor eval
+            // Update synapses over neighbors ... we assume it is impossible for a synapsed cell to LEAVE the neighborhood
+            for (auto &j : cell_list[i]->neighbors)
+            {
+                if (i != j && ((cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4)) || ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0)))
                 {
-                    if (i != j && ((cell_list[i]->type == 0 && (cell_list[j]->type == 3 || cell_list[j]->type == 4)) || ((cell_list[i]->type == 3 || cell_list[i]->type == 4) && cell_list[j]->type == 0)))
-                    {
-                        cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID, cell_list[j]->synapse_list.size());
-                    }
+                    cell_list[i]->determine_immuneSynapses(cell_list[j]->x, cell_list[j]->radius, cell_list[j]->type, cell_list[j]->unique_cell_ID, cell_list[j]->synapse_list.size());
                 }
             }
+        }
     }
 
         // calculate overlaps and proliferation states

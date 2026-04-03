@@ -13,7 +13,7 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     deathProb = cellParams[5][2];
     migrationSpeed = cellParams[6][2];
     next_migrationSpeed = migrationSpeed;
-    baseKillProb = cellParams[7][2];
+    baseKillProb = cellParams[7][2]; // USUALLY THIS IS [7][2] CHANGING FOR PARAMSWEEP
     infScale = cellParams[8][2];
     influenceRadius = cellParams[9][2];
     migrationBias = cellParams[10][2];
@@ -21,22 +21,21 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     divProb = divProb_base;
     // deathScale = cellParams[12][2];
     // migScale = cellParams[13][2];
-    migration_speed_base =migrationSpeed;
+    migration_speed_base = migrationSpeed;
     kill_prob_base = baseKillProb;
     killProb = baseKillProb;
     location_history.push_back(x);
     death_prob_base = deathProb;
     rmax = 1.5*radius*2;
     init_time = init_tstamp;
-    killProb_mult = 0.957;
-    cellCycle_mult = 0.982;
+    killProb_mult = cellParams[12][2];
+    cellCycle_mult =cellParams[13][2];
     deathProb_mult = 1 / 0.9897; // Originally deduced to be 0.997
     migSpeed_mult = 0.979;
     migBias_mult = 0.958; // Faster decay in bias than speed
     cellCyclePos = 0;
     antigen_contact = 0;
-    max_antigen_time = cellParams[12][2]; // # of hrs between antigen contacts allowed for proliferation
-    hypoxia_strength = cellParams[13][2];
+    max_antigen_time = 9; // # of hrs between antigen contacts allowed for proliferation
 }
 
 
@@ -157,10 +156,12 @@ void CD8::proliferationState(double anti_ctla4_concentration, RNG& master_rng)
     if (antigen_contact > 0)
     {
         // If there are too many cancer neighbors, assume the env. is hypoxic & interrupts cell cycle progression
-        if (double rng = master_rng.uniform(0, 1); rng > hypoxia_strength*influences[3])
+        // Keeping in so the RNG tracks evenly
+        if (double rng = master_rng.uniform(0, 1); rng > 0*influences[3])
         {
             cellCyclePos++;
         }
+        
         // Always decrement the antigen contact
         antigen_contact--;
     }

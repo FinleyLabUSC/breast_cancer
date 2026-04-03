@@ -430,6 +430,7 @@ void Environment::recruitImmuneCells_cancerBirthDeath(double tstep) {
                                 // Recruit CD8 (i==0) or macrophage (i=1) or CD4 (i=2) or NK (i=3) or MDSC (i=4)
                                 addCell(recLoc, cellParams, immuneCellRecTypes[i]);
                                 cell_list.back()->runtime_index = cell_list.size()-1;
+                                std::cout << "Recruited a cell at: " << recLoc[0] << ", " << recLoc[1] << "." << std::endl;
 
                                 immuneCells2rec[i] -= 1; // Decrement # of immune cells to recruit
                                 recruited = true;

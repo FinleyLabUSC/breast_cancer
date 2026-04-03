@@ -100,6 +100,7 @@ class RS_Cell
 
     // location
     std::array<double, 2> x;
+    std::array<double, 2> next_x;
 
     // physical properties
     double radius;

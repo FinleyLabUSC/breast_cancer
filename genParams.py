@@ -91,8 +91,8 @@ cellParams[8, 2] = 1 / 0.957  # infScale; indirect effect on killProb
 cellParams[9, 2] = 40.0  # influence distance
 cellParams[10, 2] = tcellMigBias  # migration bias base
 cellParams[11, 2] = 1 / cd8_CCL # Default should be 4.5 hr cell cycle length 
-cellParams[12, 2] = time_between_antigen # Max time between antigen presentations for CD8 prolif
-cellParams[13, 2] = 0 # prev. migScale = 1 / 0.979
+cellParams[12, 2] = 0.957 # Exhaustion decay on deathProb exh
+cellParams[13, 2] = 0.982 # base killprob change
 
 # macrophage params
 cellParams[0, 3] = m  # mu

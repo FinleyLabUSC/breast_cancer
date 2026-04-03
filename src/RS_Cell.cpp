@@ -12,6 +12,7 @@ RS_Cell::RS_Cell(std::array<double, 2> loc, std::vector<std::vector<double>>& ce
     type = cellType;
     state = 0;
     x = loc;
+    next_x = loc;
 
     radius = 0;
     compressed = false;
@@ -109,14 +110,14 @@ void RS_Cell::migrate_NN(double dt, std::array<double, 2> nn_loc, RNG& master_rn
         dx_movement = dx_random;
     }
 
-    // Migrate!
+    // Update the next-location member, but do not move just yet
     for(int i=0; i<2; ++i){
-        x[i] += dt*migrationSpeed*dx_movement[i];
-        if(std::isnan(x[i])){
+        next_x[i] += dt*migrationSpeed*dx_movement[i];
+        if(std::isnan(next_x[i])){
             throw std::runtime_error("migration NaN");
         }
     }
-    location_history.push_back(x);
+    location_history.push_back(next_x);
 }
 
 void RS_Cell::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
