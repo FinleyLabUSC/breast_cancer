@@ -42,10 +42,15 @@ void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double 
     mother_uniqueID = -1; // A mother_uniqueID of -1 indicates that the cell was part of the initialization of the tumor.
 
     // NK Cells express PD1 & are cytotoxic
+    double x = master_rng.uniform(0, 1); // Draw a random variable for lifespan determination
+    double b = 1 - 1/deathProb_mult;
+    double n = deathProb/b;
+    double l = 1/(1.5 * b) * std::log(1 - 1.5/n * std::log(1 - x)); // Draw lifespan from Gompertz distribution w/ shape params b & n
+    double a = master_rng.uniform(0, l); // Randomly obtain an age from the lifespan
     pd1_expression_level = master_rng.uniform(0,max_pd1_level);
-    deathProb = master_rng.uniform(4 * death_prob_base, 20 * death_prob_base); // High death rate
-    migrationSpeed = master_rng.uniform(0, 0.25 * migration_speed_base);
-    killProb = master_rng.uniform(0, 0.25 * kill_prob_base); // Low cytotoxic effect
+    deathProb = death_prob_base * std::exp((deathProb_mult - 1) * a); // High death rate
+    migrationSpeed = migration_speed_base * std::exp((1 - migSpeed_mult) * a);
+    killProb = kill_prob_base * std::exp((1 - killProb_mult) * a); // Low cytotoxic effect
 }
 
 void NK::indirectInteractions(double tstep, size_t step_count, RNG& master_rng, std::mt19937& temporary_rng, double anti_pd1_concentration, double binding_rate_pd1_drug)
