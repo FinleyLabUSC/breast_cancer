@@ -124,6 +124,7 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         // migrate first
         #pragma omp parallel for schedule(dynamic)
         for(int i=0; i<cell_list.size(); ++i) {
+            cell_list[i]->next_x = cell_list[i]->x; // Ensure that the next_x property is at the current x before updating
             auto nn_loc = cell_grid.get_filter_NN(cell_list[i]->x, 30*(cell_list[i]->radius), 3);
             unsigned int seed_for_temp_rng = rng.get_context_seed(200*step_count+q,cell_list[i]->unique_cell_ID,4);
             std::mt19937 temporary_rng(seed_for_temp_rng);
@@ -133,7 +134,6 @@ void Environment::calculateForces(double tstep, size_t step_count) {
         #pragma omp parallel for schedule(dynamic)
         for(int i=0; i<cell_list.size(); ++i) {
             cell_list[i]->x = cell_list[i]->next_x;
-            // No need to update next_x because it already is the actual location
         }
             
         // std::cout << "Updating neighbors... " << std::endl;

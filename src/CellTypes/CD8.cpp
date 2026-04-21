@@ -58,9 +58,9 @@ void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double
     double a = master_rng.uniform(0, l); // Randomly obtain an age from the lifespan
     pd1_expression_level = master_rng.uniform(0,max_pd1_level);
     deathProb = death_prob_base * std::exp((deathProb_mult - 1) * a); // High death rate
-    migrationSpeed = migration_speed_base * std::exp((1 - migSpeed_mult) * a); // Low migration speed
-    divProb = divProb_base * std::exp((1 - cellCycle_mult) * a); // Low division probability
-    killProb = kill_prob_base * std::exp((1 - killProb_mult) * a); // Low cyctotoxic effect
+    migrationSpeed = migration_speed_base * std::exp(-(1 - migSpeed_mult) * a); // Low migration speed
+    divProb = divProb_base * std::exp(-(1 - cellCycle_mult) * a); // Low division probability
+    killProb = kill_prob_base * std::exp(-(1 - killProb_mult) * a); // Low cyctotoxic effect
 
     // Sample cell cycle position
     cellCyclePos = master_rng.uniform(0, 1/divProb);
