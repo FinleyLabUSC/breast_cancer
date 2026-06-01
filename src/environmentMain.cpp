@@ -26,8 +26,8 @@ Environment::Environment(std::string folder, std::string set, double cd8_prolif,
     // changes to cd8_prolif, cd8_death, cd8_rec.
     // These three lines are to update the parameters which we're sweeping over.
     // If you're sweeping over different parameters change the corresponding elements of cellParams and recParams, and the arguments which pass to main().
-    cellParams[12][2] = cd8_prolif; // CD8 killprob exh / kd_kp
-    cellParams[13][2] = cd8_death; // CD8 ccl exh / kd_prol (ccl)
+    cellParams[12][2] = 0.9897; // Fixed kdeath
+    cellParams[13][2] = 0.1; // CD8 ccl exh / kd_prol (ccl)
     recParams[0] = 0.063; // Set via paramsweep
 
     immuneCellRecRates.reserve(5);

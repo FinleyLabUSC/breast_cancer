@@ -13,7 +13,7 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     deathProb = cellParams[5][2];
     migrationSpeed = cellParams[6][2];
     next_migrationSpeed = migrationSpeed;
-    baseKillProb = cellParams[7][2]; // USUALLY THIS IS [7][2] CHANGING FOR PARAMSWEEP
+    baseKillProb = cellParams[13][2]; // USUALLY THIS IS [7][2] CHANGING FOR PARAMSWEEP
     infScale = cellParams[8][2];
     influenceRadius = cellParams[9][2];
     migrationBias = cellParams[10][2];
@@ -28,11 +28,11 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     death_prob_base = deathProb;
     rmax = 1.5*radius*2;
     init_time = init_tstamp;
-    killProb_mult = cellParams[12][2];
-    cellCycle_mult =cellParams[13][2];
-    deathProb_mult = 1 / 0.9897; // Originally deduced to be 0.997
+    killProb_mult = 0.957;
+    cellCycle_mult = 0.982;
+    deathProb_mult = 1 / cellParams[12][2]; // Originally deduced to be 0.997
     migSpeed_mult = 0.979;
-    migBias_mult = 0.958; // Faster decay in bias than speed
+    migBias_mult = 0.979;
     cellCyclePos = 0;
     antigen_contact = 0;
     max_antigen_time = 9; // # of hrs between antigen contacts allowed for proliferation
@@ -59,6 +59,7 @@ void CD8::initialize_cell_from_file(int cell_state, int cell_list_length, double
     pd1_expression_level = master_rng.uniform(0,max_pd1_level);
     deathProb = death_prob_base * std::exp((deathProb_mult - 1) * a); // High death rate
     migrationSpeed = migration_speed_base * std::exp(-(1 - migSpeed_mult) * a); // Low migration speed
+    migrationBias = migrationBias * std::exp(-(1 - migBias_mult) * a); // Low migration bias
     divProb = divProb_base * std::exp(-(1 - cellCycle_mult) * a); // Low division probability
     killProb = kill_prob_base * std::exp(-(1 - killProb_mult) * a); // Low cyctotoxic effect
 

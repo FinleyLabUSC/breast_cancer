@@ -26,8 +26,8 @@ NK::NK(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams, 
     killProb_mult = 0.957;
     cellCycle_mult = 1; // No NK Cell proliferation
     deathProb_mult = 1 / 0.997;
-    migSpeed_mult = 0.979;
-    migBias_mult = 0.979;
+    migSpeed_mult = 0.992;
+    migBias_mult = 0.992;
 }
 
 void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double mean_cancer_cell_cycle_length, double std_cancer_cell_cycle_length, RNG& master_rng)
@@ -50,6 +50,7 @@ void NK::initialize_cell_from_file(int cell_state, int cell_list_length, double 
     pd1_expression_level = master_rng.uniform(0,max_pd1_level);
     deathProb = death_prob_base * std::exp((deathProb_mult - 1) * a); // High death rate
     migrationSpeed = migration_speed_base * std::exp(-(1 - migSpeed_mult) * a);
+    migrationBias = migrationBias * std::exp(-(1 - migBias_mult) * a);
     killProb = kill_prob_base * std::exp(-(1 - killProb_mult) * a); // Low cytotoxic effect
 }
 
