@@ -1,0 +1,22 @@
+[project]
+name = "analyzeABM"
+version = "0.0.1"
+dependencies = [
+    "alphashape",
+    "cmap",
+    "descartes",
+    "matplotlib>3.10.6",
+    "numpy>=2.2.6",
+    "opencv-python",
+    "pandas>=2.3.2",
+    "scikit-learn>=1.7.2",
+    "scipy>=1.16.2",
+    "shapely",
+    "seaborn>=0.13.2",
+    "statannotations>0.7.2",
+]
+requires-python = ">3.10"
+authors = [
+    {name = "Tyler King", email="kingtyle@usc.edu"}
+]
+readme = "README.md"
