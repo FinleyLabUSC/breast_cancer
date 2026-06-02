@@ -51,3 +51,7 @@ name_to_state = {value: key for key, value in state_to_name.items()}
 cellorder = ["M0", "M1", "M2", "cancer", "CD4+", "Treg", "CD8+", "NK", "MDSC", "myeloid", "lymphoid", "stromal"]
 cellorder_nogen = ["M0", "M1", "M2", "cancer", "CD4+", "Treg", "CD8+", "NK", "MDSC"]
 mets = [100, 106, 107, 108, 112, 113, 114, 117, 122, 123, 125, 128, 130, 132, 134, 140, 142, 143, 145]
+
+# For display only
+cell_labels = ["M0", "M1", "M2", "Cancer", "Th", "TReg", "CD8", "NK", "MDSC", "Myeloid", "Lymphoid", "Stromal"]
+num_cell_types = 12
