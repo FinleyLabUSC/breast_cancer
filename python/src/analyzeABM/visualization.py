@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import os
 
 def plot_celldata(cell_csvpath, title="Tumor plot", xmin=-1000, xmax=1000, ymin=-1000, ymax=1000):
     usecols = [1, 2, 3, 4, 5]
@@ -14,6 +14,7 @@ def plot_celldata(cell_csvpath, title="Tumor plot", xmin=-1000, xmax=1000, ymin=
     scale = (6.4 / (max(xmax - xmin, ymax - ymin) * 2 + 1) * 300.) ** 2
     cells = pd.read_csv(cell_csvpath, usecols=usecols, names=["cell_type", "x", "y", "radius", "state"])
     cells["s_scaled"] = scale * cells["radius"]
+    cells["state"] = cells["state"].map(adjust_state)
 
     # Maybe change this so that cancer cells get drawn LAST
     cells.plot.scatter("x", "y", c="state", s="s_scaled",
@@ -111,3 +112,120 @@ def plot_kill_ts(ts_df, types_to_plot=None, title="Time series data", ax=None, n
     f = plt.gcf()
 
     return f
+
+from matplotlib.ticker import MultipleLocator
+cnames = {"m0":"M0", "m1":"M1", "m2":"M2", "mdsc":"MDSC",
+          "c":"cancer",
+          "cd4_th":"CD4+ T cell", "cd4_treg":"T regulatory cell","cd8":"CD8+ T cell", "nk":"NK cell",
+          "myeloid":"myeloid", "lymphoid":"lymphoid", "stromal":"stromal"}
+
+def plot_sweep(basefolder, extension, labels, tx=False, ctype="c", normalize=True, num_sweeps=5, 
+               num_replicates=10, ax_list=None, sweep_desc="Parameter value", sweep_unit="", linestyle="solid", err_type=("sd", 1),
+               gridlines=False):
+    """
+    Plots time-series curves (95% interval) for each parameter value per met, averaging across replicates. 
+    Assumes that the data covers the full 600-day range and is organized in the same way the ABM output is.
+    """
+    
+    mets = [100, 106, 107, 130, 134, 134] # Always sweep these 5 mets; the last met is for labeling
+    
+    if ax_list is None: # Generate plot axes if none given
+        fig, ax = plt.subplots(2, 3, figsize=(10, 20/3), dpi=150)
+    else:
+        ax = ax_list
+        
+    pos = [ax[0,0], ax[0,1], ax[0,2], ax[1,0], ax[1,1], ax[1,2]]
+    
+    for i, met in enumerate(mets): # Iterate thru mets
+        pos[i].set_prop_cycle(None)
+        for j in range(num_sweeps): # Iterate thru specific param sweeps
+            path = os.path.join(basefolder, f"mIHC_{met}_{extension}_{j+1}")
+            if tx:
+                path += "_tx"
+            ts = retrieve_TS(path, num_replicates=num_replicates) # Plot each sweep
+            plot_ts(ts, [ctype], title=f"Met {met - 100}", ax=pos[i], normalize=normalize, err_type=err_type, linestyle=linestyle)
+
+        if normalize: # Get correct y-axis label
+            ylabel = f"Normalized {cnames[ctype]} population"
+        else:
+            ylabel = f"{cnames[ctype]} population"
+
+        
+        if i != 5: # Formatting
+            pos[i].set(ylabel=ylabel, xlim = (0, 600))
+            if gridlines:
+                pos[i].xaxis.set_minor_locator(MultipleLocator(25))
+                pos[i].xaxis.set_major_locator(MultipleLocator(100))
+                pos[i].grid(which="minor")
+                pos[i].grid(which="major", c="k")
+
+    if linestyle != "dashed":
+        for i, line in enumerate(ax[1,2].lines):
+            line.set_label(labels[i] + " " + sweep_unit)
+
+    ax[1,2].set(title="")
+    ax[1,2].axis("off") # Hide axes
+    ax[1,2].legend(loc = "center", title = sweep_desc, title_fontproperties=mpl.font_manager.FontProperties(weight='bold'))
+    ax[1,2].set(ylim=(-1001,-1000), xlim=(-1001,-1000)) # Hide any plots
+
+manual_columns = ["Hr","m0","m1","m2","c","cd4_th","cd4_treg","cd8","nk","mdsc","myeloid","lymphoid","stromal","radius"]
+
+def plot_tp_sa_curve(basefolder, extension, labels, metric="n_cancer", time=600,
+                     n_replicates=10, tx=False, reverse_labels=True, ax=None, plot_data=False,
+                     numerical_labels = True, num_dec = 3, mets=[100, 107, 130, 134]):
+    """
+    Plots sensitivity analysis curve (metric as func. of analyzed parameter) for a metric as a given timepoint.
+    Metrics available are: "n_cancer" and "sqrt_n_cancer".
+    If "plot_data" is on, then the plot will scatter individual observations for each replicate for each met.
+    """
+    complete_results = []
+    base_results = []
+    
+    for met in mets: # Loop over mets
+        all_results = []
+        for i, label in enumerate(labels): # Loop over labels
+            if not numerical_labels:
+                labelstr = f"{label:.{num_dec}f}"
+                labelstr = labelstr.replace(".", "_")
+                labelstr
+                path = os.path.join(basefolder, f"mIHC_{met}_{extension}_{labelstr}")
+            else:
+                path = os.path.join(basefolder, f"mIHC_{met}_{extension}_{i+1}")
+            if tx:
+                path += "_tx"
+            results = []
+            for j in range(10):
+                CSV_path = os.path.join(path + f"/set_{j}/populations_TS.csv")
+                data = pd.read_csv(CSV_path, header=0)
+                if 'c' not in data.columns:
+                    data = pd.read_csv(CSV_path, header=None, names=manual_columns)
+                if i == j and i == 0:
+                    base_results.append([data["c"].tolist()[0], np.sqrt(data["c"].tolist()[0])])
+                query = (-1 if time >= len(data) else time)
+                results.append([data["c"].tolist()[query], np.sqrt(data["c"].tolist()[query])])
+            all_results.append(results)
+        complete_results.append(all_results)
+
+    complete_results = np.array(complete_results)
+    base_results = np.array(base_results)
+    
+    dfs = []
+    for i in range(len(mets)):
+        temp_df = pd.DataFrame()
+        temp_df["n_cancer"] = complete_results[i,:,:,0].flatten() / base_results[i][0]
+        temp_df["sqrt_cancer"] = complete_results[i,:,:,1].flatten() / base_results[i][1]
+        temp_df["met"] = np.ones(len(temp_df))*mets[i]
+        recs = labels*n_replicates
+        recs.sort(reverse=reverse_labels)
+        temp_df["recs"] = recs
+        dfs.append(temp_df)
+    all_df = pd.concat(dfs)
+
+    if ax is None:
+        fig, ax = plt.subplots(2, 3, figsize = (15, 10), dpi=300, constrained_layout="True")
+
+    ax.fill_between([min(labels), max(labels)], 0.7, 1.2, color='grey', alpha=0.5, hatch="//", facecolor='none')
+    sns.lineplot(all_df, x="recs", y=metric, hue="met", errorbar=('sd'), palette="tab10", ax=ax, legend=None)
+
+    if plot_data:
+        sns.scatterplot(all_df, x="recs", y=metric, hue="met", palette="tab10", s=15, ax=ax)

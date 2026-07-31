@@ -55,3 +55,32 @@ mets = [100, 106, 107, 108, 112, 113, 114, 117, 122, 123, 125, 128, 130, 132, 13
 # For display only
 cell_labels = ["M0", "M1", "M2", "Cancer", "Th", "TReg", "CD8", "NK", "MDSC", "Myeloid", "Lymphoid", "Stromal"]
 num_cell_types = 12
+
+# Alternative state_to_name mapping
+csmap = {0:"M0",
+         1:"M1",
+         2:"M2",
+         3:"cancer",
+         4:"CD4+",
+         5:"Treg",
+         6:"CD8+",
+         8:"NK",
+         10:"MDSC",
+         11:"myeloid",
+         12:"lymphoid",
+         13:"stromal"
+}
+
+# Use this to adjust state for plotting w/ colorbar
+adjust_state = {0:0,
+                1:1,
+                2:2,
+                3:3,
+                4:4,
+                5:5,
+                6:6,
+                8:7,
+                10:8,
+                11:9,
+                12:10,
+                13:11}

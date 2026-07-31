@@ -8,35 +8,11 @@ from sklearn.neighbors import NearestNeighbors
 import seaborn as sns
 from collections import defaultdict
 import os
-
-
-def extract_neighbors(input_var):
-    """
-    :param input_var: list containing path to data, met number, rep number, and hour
-    :return: dataframe with celltype, cell UID, rep/met/hour info, and neighbors vector
-    """
-    # Extract data for this time point
-    path, met, rep, hour = input_var
-    data = pd.read_csv(path, usecols=[0, 2, 3, 5], names=["CellID", "x", "y", "state"])
-    data["ctype"] = data["state"].map(state_to_name).astype("category")
-    data["ctype"] = data["ctype"].cat.set_categories(list(state_to_name.values()))
-    data["UID"] = [f"{met}_{hour}_{idx}" for idx in data["CellID"]]
-    data["rep"] = rep
-    data["met"] = met
-    data["hour"] = hour
-
-    # Calculate nearest neighbors, with a new instance each time
-    # There are 15 cells in a window, but need to include self
-    nbrs = NearestNeighbors(n_neighbors=14, algorithm="auto").fit(data[["x", "y"]])
-    dist, indices = nbrs.kneighbors(data[["x", "y"]])
-
-    nvects = []
-    for i, idx in enumerate(indices):
-        nvects.append(
-            data.iloc[idx].ctype.value_counts().sort_index().to_numpy())  # This gives ordered list of neighbors
-    data["neighbors"] = nvects
-
-    return data
+from scipy.spatial import Delaunay, delaunay_plot_2d
+from matplotlib import colors
+from matplotlib.collections import LineCollection
+import tacco
+import anndata as ad
 
 
 def retrieve_ts(folder_name, num_replicates=5, max_len=600):
@@ -275,12 +251,12 @@ def bi_gompertz(x, b1, b2, p):
 
 
 # Extract exhaustion trajectories for CD8+ cells
-def extract_exhaustion_trajectories(path, ctype="CD8+", remove_end=False):
+def extract_exhaustion_trajectories(path, ctype="CD8+ T", remove_end=False):
     """
     Extracts the exhaustion trajectories of certain cell types.
 
     path should be the base directory for the simulation.
-    ctype can ONLY be "CD8+" or "NK"
+    ctype can ONLY be "CD8+ T" or "NK"
     """
     get_type = name_to_state[ctype]
 
@@ -368,7 +344,7 @@ def align_on_exh(df_dict, feature="p(kill)", alignment="to_birth", max_time=600)
     return data_list, uid_list
 
 
-def calc_neigh_traj(df, remove_start=True, remove_end=False):
+def calc_neigh_traj(df, types=["MDSC_neigh", "CD8+_neigh", "cancer_neigh"], remove_start=True, remove_end=False):
     # Calculates MDSC, CD8+, and cancer neighbors by default
 
     trajectories = defaultdict(list)
@@ -453,3 +429,151 @@ def extract_influences(input_var):
     data_merged["met"] = met
     data_merged["hour"] = hour
     return data_merged
+
+
+"""
+SPATIAL ANALYSIS
+"""
+
+
+def extract_neighbors(input_var):
+    """
+    :param input_var: list containing path to data, met number, rep number, and hour
+    :return: dataframe with celltype, cell UID, rep/met/hour info, and neighbors vector
+    """
+    # Extract data for this time point
+    path, met, rep, hour = input_var
+    data = pd.read_csv(path, usecols=[0, 2, 3, 5], names=["CellID", "x", "y", "state"])
+    data["ctype"] = data["state"].map(state_to_name).astype("category")
+    data["ctype"] = data["ctype"].cat.set_categories(list(state_to_name.values()))
+    data["UID"] = [f"{met}_{hour}_{idx}" for idx in data["CellID"]]
+    data["rep"] = rep
+    data["met"] = met
+    data["hour"] = hour
+
+    # Calculate nearest neighbors, with a new instance each time
+    # There are 15 cells in a window, but need to include self
+    nbrs = NearestNeighbors(n_neighbors=14, algorithm="auto").fit(data[["x", "y"]])
+    dist, indices = nbrs.kneighbors(data[["x", "y"]])
+
+    nvects = []
+    for i, idx in enumerate(indices):
+        nvects.append(
+            data.iloc[idx].ctype.value_counts().sort_index().to_numpy())  # This gives ordered list of neighbors
+    data["neighbors"] = nvects
+
+    return data
+
+
+def calc_pruned_delaunay(df, max_dist = 20, plot=False):
+    """
+    Calculates the full and pruned Delaunay graphs of a given spatial arrangement of cells.
+    :param df: a DataFrame read-in from an ABM output csv containing AT LEAST the x, y, state, and r columns.
+    :param max_dist: the maximum length an edge between cells can be, in microns
+    :param plot: bool whether or not to plot and return the Figure object
+    :return: List of [keep_edges, pruned_neigh, delaunay_mapping, fig]
+    """
+    # Create these columns if they don't already exist
+    df["ctype"] = df["state"].map(csmap)
+    df["ctype"] = df["ctype"].astype('category')
+
+    # Obtain the full Delaunay triangulation
+    mapping = Delaunay(df[["x", "y"]])
+
+    # Prune the Delaunay triangulation based on a maximal distance
+    edges = set()
+    for simplex in mapping.simplices:
+        for i in range(3):
+            edge = tuple(sorted([simplex[i], simplex[(i + 1) % 3]]))
+            edges.add(edge)
+    points = df[["x","y"]].to_numpy()
+    keep_edges = []
+    for a, b in edges:
+        dist = np.linalg.norm(points[a] - points[b])
+        if dist <= max_dist:
+            keep_edges.append((a, b))
+
+    # Construct defaultdict of index -> neighbors for pruned Delaunay
+    pruned_neigh = defaultdict(set)
+    for a, b in keep_edges:
+        pruned_neigh[a].add(b)
+        pruned_neigh[b].add(a)
+
+    # Plot the full and pruned Delaunay triangulations if needed
+    if plot:
+        df["color"] = df["ctype"].map(dict_cell_colors)
+        rgb_colors = [colors.to_rgb(color) for color in df["color"]]
+        fig, ax = plt.subplots(1, 2, figsize=(10, 5), dpi=300)
+        ax[0].triplot(mapping.points[:,0], mapping.points[:,1], mapping.simplices, lw=.5, linestyle='-', color='k')
+        ax[0].scatter(df["x"], df["y"], c=rgb_colors, s=0.25*df["r"])
+        ax[0].set(title="Full Delaunay Graph")
+        lc = LineCollection([[points[a], points[b]] for a, b in keep_edges], colors="k", linestyles="-",linewidths=0.5)
+        ax[1].add_collection(lc)
+        ax[1].set(xlim = ax[0].get_xlim(), ylim = ax[0].get_ylim(), title="Pruned Delaunay Graph")
+        ax[1].scatter(df["x"], df["y"], c=rgb_colors, s=0.25*df["r"], zorder=2)
+        fig.tight_layout()
+
+        return [keep_edges, pruned_neigh, mapping, fig]
+
+    return [keep_edges, pruned_neigh, mapping]
+
+
+def determine_pruned_neighbors(df, precomputed=None, ctypes=["CD8+"]):
+    """
+    Calculates whether or not cells have a neighbor of a specific cell type.
+    :param df: a DataFrame read-in from an ABM output csv containing AT LEAST the x, y, and state columns
+    :param precomputed: the output of calc_pruned_delaunay() if previously run WITHOUT a figure
+    :param ctypes: a List of cell type strings
+    :return: a dict of lists of boolean values that correspond to whether or not the cells have a neighbor of the key cell type 
+    """
+    if not precomputed:
+        ke, pn, delaunay = calc_pruned_delaunay(df)
+    else:
+        ke, pn, delaunay = precomputed
+
+    neigh_lists = defaultdict(list)
+    for k in range(len(df)):
+        n = list(pn[k]) # Gets the neighbors of cell index k
+        nvcs = df.iloc[n].ctype.value_counts() # Gets value_counts of all the cell types
+        for ctype in ctypes:
+            neigh_lists[ctype].append(nvcs[ctype] > 0)
+
+    return neigh_lists
+
+def generate_interaction_matrix(df, score="z", n_perm=150):
+    # Preprocess data
+    adata = ad.AnnData(df[["idx","x","y"]])
+    adata.obs['cell type'] = [csmap[i] for i in df["state"].tolist()]
+    adata.obs['cell type'] = adata.obs["cell type"].astype("category")
+    adata.obsm['spatial'] = adata.X[:, 1:3]
+
+    # Compute co-occurrence matrix using TACCO, extract the target score matrix, and get the celltypes that have data
+    tacco.tools.co_occurrence_matrix(adata, "cell type", position_key="spatial", max_distance=30, result_key='co_occur_mat', n_permutation=n_perm, verbose=0)
+    ctypes_present = adata.uns["co_occur_mat"]['annotation'].to_numpy() # Get celltypes present in matrix
+    mat = adata.uns["co_occur_mat"][score].reshape(len(ctypes_present), len(ctypes_present))
+    mat = np.nan_to_num(mat) # Set NaN values to zero
+    
+
+    # Crop the matrix to remove lymphoid, myeloid, and stromal cells
+    remove_idxs = []
+    if 'lymphoid' in ctypes_present:
+        remove_idxs.append(np.nonzero(adata.uns["co_occur_mat"]['annotation'].to_numpy() == 'lymphoid')[0][0])
+    if 'stromal' in ctypes_present:
+        remove_idxs.append(np.nonzero(adata.uns["co_occur_mat"]['annotation'].to_numpy() == 'stromal')[0][0])
+    if 'myeloid' in ctypes_present:
+        remove_idxs.append(np.nonzero(adata.uns["co_occur_mat"]['annotation'].to_numpy() == 'myeloid')[0][0])
+    mat = np.delete(mat, remove_idxs, axis=0)
+    mat = np.delete(mat, remove_idxs, axis=1)
+    ctypes_present = np.delete(ctypes_present, remove_idxs)
+
+    # Add in zeros if there are celltypes missing
+    ctypes = ['M0', 'M1', 'M2', 'cancer', 'CD4+', 'Treg', 'CD8+', 'NK', 'MDSC']
+    ctypes_to_add = list(set(ctypes) - set(ctypes_present))
+    ctypes_present = np.hstack([ctypes_present, ctypes_to_add])
+    mat = np.pad(mat, (0, len(ctypes_to_add)))
+
+    # Shuffle the matrix into the correct order
+    df = pd.DataFrame(mat, columns=ctypes_present, index=ctypes_present)
+    df = df[ctypes].loc[ctypes]
+
+    return df
