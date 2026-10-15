@@ -38,7 +38,7 @@ cd8RecRate = 0.0274 # 0.00192 # these are the percentages of T cells from non-tx
 cd4RecRate = 0.0848 # 0.00192 # these are the percentages of T cells from non-tx tumors provided by ERT
 macRecRate = 0.297 # 0.00125 # these are the percentages of mature myeloid cells from non-tx tumors provided by ERT
 nkRecRate = 0.0117 # 0.00044 # these are the percentages of NK cells from non-tx tumors provided by ERT
-mdscRecRate = 0.396 # 0.00469 # these are the percentages of MDSCs from non-tx tumors provided by ERT
+mdscRecRate = 0 # 0.396 # 0.00469 # these are the percentages of MDSCs from non-tx tumors provided by ERT
 
 # Unnecessary; keeping for now
 recDelay = 0.00 # In the Tangella 2024 paper, they had a delay of 3 days. But because this mdoel is initialized from tumor images, we neglect that delay.

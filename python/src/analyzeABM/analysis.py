@@ -452,8 +452,8 @@ def extract_neighbors(input_var):
     data["hour"] = hour
 
     # Calculate nearest neighbors, with a new instance each time
-    # There are 15 cells in a window, but need to include self
-    nbrs = NearestNeighbors(n_neighbors=14, algorithm="auto").fit(data[["x", "y"]])
+    # There are 10 cells in a window, but need to include self
+    nbrs = NearestNeighbors(n_neighbors=9, algorithm="auto").fit(data[["x", "y"]])
     dist, indices = nbrs.kneighbors(data[["x", "y"]])
 
     nvects = []

@@ -13,7 +13,7 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     deathProb = cellParams[5][2];
     migrationSpeed = cellParams[6][2];
     next_migrationSpeed = migrationSpeed;
-    baseKillProb = cellParams[13][2]; // USUALLY THIS IS [7][2] CHANGING FOR PARAMSWEEP
+    baseKillProb = cellParams[7][2]; // Change if needed for param sweep
     infScale = cellParams[8][2];
     influenceRadius = cellParams[9][2];
     migrationBias = cellParams[10][2];
@@ -30,7 +30,7 @@ CD8::CD8(std::array<double, 2> loc, std::vector<std::vector<double>>& cellParams
     init_time = init_tstamp;
     killProb_mult = 0.957;
     cellCycle_mult = 0.982;
-    deathProb_mult = 1 / cellParams[12][2]; // Originally deduced to be 0.997
+    deathProb_mult = 1 / 0.9897; // Originally deduced to be 0.9897
     migSpeed_mult = 0.979;
     migBias_mult = 0.979;
     cellCyclePos = 0;

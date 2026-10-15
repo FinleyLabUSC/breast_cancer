@@ -11,9 +11,9 @@ cell_colors = [
     'tab:blue', # cancer
     'tab:green', # CD4 T helper
     'lime', # CD4 TReg
-    'tab:orange', # CD8
-    'tab:brown', # NK cell
-    'xkcd:goldenrod', # MDSC
+    'xkcd:green yellow', # CD8
+    'xkcd:goldenrod', # NK cell
+    'xkcd:light red', # MDSC
     'xkcd:light pink', # Myeloid
     'xkcd:beige', # Lymphoid
     'darkgray' # Stromal
@@ -25,13 +25,14 @@ dict_cell_colors = {
     "cancer" : 'tab:blue', # cancer
     "CD4+" : 'tab:green', # CD4 T helper
     "Treg" : 'lime', # CD4 Treg
-    "CD8+" : 'tab:orange', # CD8
-    "NK" : 'tab:brown', # NK cell
-    "MDSC" : 'xkcd:goldenrod', # MDSC
+    "CD8+" : 'xkcd:green yellow', # CD8
+    "NK" : 'xkcd:goldenrod', # NK cell
+    "MDSC" : 'xkcd:light red', # MDSC
     "myeloid" : 'xkcd:light pink', # Myeloid
     "lymphoid" : 'xkcd:beige', # Lymphoid
     "stromal" : 'darkgray' # Stromal
 }
+
 cell_cmap = mcolors.ListedColormap(cell_colors)
 state_to_name = {
     0:"M0",
