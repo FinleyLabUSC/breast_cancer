@@ -1,7 +1,7 @@
 ## OVERVIEW
 This repository contains code for running an agent-based model of the tumor microenviornment, incorporating a variety of immune cells and processes.
 
-In addition to cancer cells, the model currently includes three macrophages phenotypes (M0, M1, and M2), two CD4+ T cell phenotypes (Th and TReg), CD8+ cytotoxic T cells, natural killer cells, and myeloid-derived supressor cells.
+In addition to cancer cells, the model currently includes three macrophages phenotypes (M0-, M1-, and M2-like cells), CD4+ T cells and T regulatory cells (Tregs), CD8+ cytotoxic T cells, natural killer (NK) cells, and myeloid-derived supressor-like cells.
 
 After compiling the program using CMake, the executable can be run on the command line as described in the Changelog (see Sept. 3, 2025).
 The program will produce CSV files that describe the spatial organization of the TME at pre-specified intervals (default is currently 1 hour), alongside details into cell state and cell state-variables.
