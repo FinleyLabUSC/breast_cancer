@@ -1,3 +1,0 @@
-C:/Users/tyler/CLionProjects/breast_cancer/cmake-build-debug/CMakeFiles/breast_cancer.dir
-C:/Users/tyler/CLionProjects/breast_cancer/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/tyler/CLionProjects/breast_cancer/cmake-build-debug/CMakeFiles/rebuild_cache.dir
