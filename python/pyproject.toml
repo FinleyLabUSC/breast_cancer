@@ -3,6 +3,7 @@ name = "analyzeABM"
 version = "0.0.1"
 dependencies = [
     "alphashape",
+    "anndata>0.12.2",
     "cmap",
     "descartes",
     "matplotlib>3.10.6",
@@ -14,6 +15,8 @@ dependencies = [
     "shapely",
     "seaborn>=0.13.2",
     "statannotations>0.7.2",
+    "tacco>0.5.0",
+    "umap>0.5.9.post2"
 ]
 requires-python = ">3.10"
 authors = [
