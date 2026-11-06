@@ -1,57 +1,14 @@
 ## OVERVIEW
-This repository contains code for running an agent-based model of the tumor microenviornment, incorporating a variety of immune cells and processes.
+This repository contains code for running an agent-based model of tumor-immune interactions in the microenvironment of HER2+ breast-to-lung metastases, as described in King et al., 2026 (bioRxiv: https://doi.org/10.64898/2026.10.16.759478). In this model, we build on previous work our group has done using ABMs to investigate tumor-immune dynamics in the TME. Specifically, we focus on examining the exhaustion processes of CD8+ T and NK cells, integrating new immune cell types, and implementing two immune checkpoint inhibitors (and their associated pathways) that could be potentially used to treat solid cancers. Additionally, the repository contains other code used to either extract initial conditions from mIHC imaging data or to analyze simulation outputs. 
 
-In addition to cancer cells, the model currently includes three macrophages phenotypes (M0-, M1-, and M2-like cells), CD4+ T cells and T regulatory cells (Tregs), CD8+ cytotoxic T cells, natural killer (NK) cells, and myeloid-derived supressor-like cells.
+### C++ code for agent-based model
+The agent-based model used to simulate the evolution of the TME is implemented in C++. The version made available here was designed to run on the University of Southern California's HPC system and thus must be run on Linux-based system. Additionally, large sections of the model's code are parallelized and thus the model requires OpenMP to run properly. A structured overview of the model, which will describe the mathematical implementation of the model, will be made available as supplementary methods for the paper when published. This document also provides a brief overview of how the model is implemented in C++, describes the simulation loop, and enumerates the outputs of the model.
 
-After compiling the program using CMake, the executable can be run on the command line as described in the Changelog (see Sept. 3, 2025).
-The program will produce CSV files that describe the spatial organization of the TME at pre-specified intervals (default is currently 1 hour), alongside details into cell state and cell state-variables.
-The program also produces CSV files that describe the location of each cell (by index) at a finer increment (currently .005 hr). 
-It also will produce summary information about bulk populations over time and by what mechanisms cancer cells die.e
+### Matlab code for extraction of metastases
+This code is designed to extract metastases, which are used as initial conditions, from imaging data. The unprocessed data needed to run these extractions will be made available upon request.
 
-The repository is currently configured to produce HETEROGENOUS INITIAL CONDITIONS if not given mIHC data.
+### Python code for cell type labeling
+This code is designed for fully labeling cells in extracted metastases with the  cell type labels, so that they can be used as initial conditions for the agent based model. As described in the paper methods, cell type assignment is done in two steps. First, we attempt to assign cell type labels based on binary protein expression profiles and a look-up table of acceptable protein phenotypes. Cells that are unsuccessfully labeled in this step (i.e., their phenotype does not map to a cell type) are labeled as "unknown." Subsequently, we train a random forest model on the successfully labeled cells, but instead use their fluorescence values from imaging as input features rather than binary protein expression. We then use this RF model to label the "unknown" cell types. The RF model is developed (and contrasted with clustering methods) in the `preprocessing.ipynb` notebook, while the RF model is deployed and prediction probabilities evaluated in the `alignment.ipynb` notebook.
 
-## CHANGELOG
-### 15 December 2025
-- Added three general cell types (Lymphoid, Myeloid, Stromal) that can be imported from mIHC data with very limited functionality
-- Added physics-based immune synapsing that allows for synapsed immune & cancer cells to remain mobile (via forces) while retaining physical overlap
-- Added mIHC files from scaling (100-series) and spatial equilibrium (200-series)
-- Added a number of new testing initializations for M1, M2, and Treg differentiation
-### 27 October 2025
-- Performed heterogeous testing and validated restructured behavior against original framework
-- Changed restructuring branch to MAIN branch of the repo; all other branches which use the old framework are now legacy branches
-### 8 October 2025
-- The summary behaviour of this ABM is equivalent to the old ABM for homogenous tumor initializations
-### 23 September 2025
-- Added function to initialize heterogeneous tumor
-### 22 September 2025
-- All remaining functionality has been restored
-- Default initialization changed to `initializeInVitro()` which seeds 100 cancer cells
-- Because of RNG call behavior, this model will NOT yield identical outcomes to the previous ABM
-- Currently checking to make sure the overall (summary) behavior of the ABMs are similar!
-- The old C++ files have been migrated into the Legacy folder; currently they are excluded from sources so will not compile
-### 16 September 2025
-- The six children classes have been created with proper constructors & file initialization functions in the `CellTypes` directory; these will eventually replace the `Cell_[Type].cpp` files in the main source directory
-- Cancer cells and CD8 cells proliferate using the new `cycle_proliferate` and `prob_proliferate` functions
-- Default migration behavior (toward nearest cancer) is default `migrate_NN`; cancer cells override to do purely random walk
-### 15 September 2025
-- All strings have been edited to execute correctly on Windows (as opposed to Linux or macOS)
-- For the time being, it is not guaranteed that this branch will run or compile correctly!
-- Changes currently being staged:
-    - A new definition for the base Cell class (`RS_Cell.cpp` and `RS_Cell.h`; these will eventually replace `Cell_General.cpp` and `Cell.h`)
-### September 3rd 2025
-- This version requires 11 arguments:
-    - A string (`local` or `CARC`) which specifies where it's being run. This handles the correct folder structures for saving.
-    - A string for where you want to save the output. I've used `modelPredictions`.
-    - An int that specifies the `replicate_number`. This is the seed used for the RNG's.
-    - Placeholder arguments: `pST dp_fac kp_fac`
-    - An int that specifies which treatment is being simulated (0 - control, 1 - anti PD1, 2 - anti CTLA4, 3 - combination)
-    - An int which specifies the name of the met you're using to initialize the model. Currently, there are three to choose from.
-    - A double specifying the binding_rate_pd1_drug = 0.1.
-    - Values for the cd8_prolif probability, cd8_death probability, and cd8_recruitment rate.
-        - The last three values are for a sweep I was performing.
-- In CLion you can use the following as the program arguments in the configuration. It sets rep_num = 1, specifies no treatment, specifies the use of in_silico_3.csv as the initializing met file, and gives three values for the cd8 probabilities.
-    - `local modelPredictions 1 1 1 1 0 3 0.6 0.01 0.25`
-### June 1st 2025
-- The model is now officially seeded using context-dependent and on-demand generation. Data race conditions in the parallel regions have been fixed. Multiple iterations over the cell_list have been collapsed for efficiency. Time series data is written to a single file.
-### May 13th 2025
-- This version should include the unique identifier, the T cell trajectories from the GRN but with no seeding.
+### Python code for data analysis
+The `python/` directory contains Python code and the Jupyter notebook needed to run the analysis that generates the figures in our paper. The `README.md` file in that folder provides more details.
