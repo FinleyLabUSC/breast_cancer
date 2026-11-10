@@ -8,7 +8,35 @@ The agent-based model used to simulate the evolution of the TME is implemented i
 This code is designed to extract metastases, which are used as initial conditions, from imaging data via clustering. This workflow returns sections of larger images which contains metastases, which are then fed to a subsequent step that allows us to manually identify the region of cells that composes the metastasis. These segmented metastases are aligned against the larger data set during the cell-type labeling step.
 
 ### Python code for cell type labeling
-This code is designed for fully labeling cells in extracted metastases with the  cell type labels, so that they can be used as initial conditions for the agent based model. As described in the paper methods, cell type assignment is done in two steps. First, we attempt to assign cell type labels based on binary protein expression profiles and a look-up table of acceptable protein phenotypes. Cells that are unsuccessfully labeled in this step (i.e., their phenotype does not map to a cell type) are labeled as "unknown." Subsequently, we train a random forest model on the successfully labeled cells, but instead use their fluorescence values from imaging as input features rather than binary protein expression. We then use this RF model to label the "unknown" cell types. The RF model is developed (and contrasted with clustering methods) in the `preprocessing.ipynb` notebook, while the RF model is deployed and prediction probabilities evaluated in the `alignment.ipynb` notebook.
+This code is designed for fully labeling cells in extracted metastases with the  cell type labels, so that they can be used as initial conditions for the agent based model. As described in the paper methods, cell type assignment is done in two steps. First, we attempt to assign cell type labels based on binary protein expression profiles and a look-up table of acceptable protein phenotypes. Cells that are unsuccessfully labeled in this step (i.e., their phenotype does not map to a cell type) are labeled as "unknown." Subsequently, we train a random forest model on the successfully labeled cells, but instead use their fluorescence values from imaging as input features rather than binary protein expression. We then use this RF model to label the "unknown" cell types. The RF model is developed in the `preprocessing.ipynb` notebook, while the RF model is deployed and prediction probabilities evaluated in the `alignment.ipynb` notebook. More information about the data needed to run these notebooks is contained in the `README.md` file in this folder.
 
 ### Python code for data analysis
 The `python/` directory contains Python code and the Jupyter notebook needed to run the analysis that generates the figures in our paper. The `README.md` file in that folder provides more details.
+
+### Recommended directory structure and data availability
+The data needed to run analyses are available in Zenodo (doi: 10.5281/zenodo.23929396). We recommend that your directory is structured exactly like below, with ** after the name indicating that it must be downloaded from the Zenodo repository.
+
+```
+breast_cancer/
+├── cell_classification/
+|   ├── alignment.ipynb**
+|   ├── all_nontx_data_rf.joblib**
+|   ├── BinaryCellClassification.xlsx**
+|   ├── complete_cluster_data/ (from complete_cluster_data.zip**)
+|   ├── extracted_met_data/ (from extracted_met_data.zip**)
+|   ├── preprocessing.ipynb
+|   ├── README.md
+|   └── WholeTissueConsolidated_data.csv (in raw_cell_data.zip**)
+├── inc/
+├── matlab/
+├── python/
+├── mihc/ (from mihc.zip**)
+├── python/
+├── simulations/ (from simulations.zip**)
+|   ├── main_simulations/
+|   ├── mdsc_depletion/
+|   ├── treg_depletion/
+|   ├── sensitivity_analysis_notx/
+|   └── sensitivity_analysis_tx/
+└── src/
+```
