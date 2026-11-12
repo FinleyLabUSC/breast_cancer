@@ -1,4 +1,4 @@
-This package contains the Python code needed for preprocessing and analyzing data related to the agent-based model developed in [PAPER]. This code has been designed mostly for internal use and is being made public in order to facilitate reproducability of the various analyses and figures generated as part of the aforementioned publication. 
+This package contains the Python code needed for preprocessing and analyzing data related to the agent-based model. This code has been designed mostly for internal use and is being made public in order to facilitate reproducability of the various analyses and figures generated as part of our publication. 
 
 The various functions included in the package have been are sorted into analysis, animation, and preprocessing, and visualization categories:
 * `analysis.py` includes code necessary for processing the ABM outputs, extracting timeseries data, calculating neighborhoods, etc.;

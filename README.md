@@ -14,7 +14,7 @@ This code is designed for fully labeling cells in extracted metastases with the 
 The `python/` directory contains Python code and the Jupyter notebook needed to run the analysis that generates the figures in our paper. The `README.md` file in that folder provides more details.
 
 ### Recommended directory structure and data availability
-The data needed to run analyses are available in Zenodo (doi: 10.5281/zenodo.23929396). We recommend that your directory is structured exactly like below, with ** after the name indicating that it must be downloaded from the Zenodo repository.
+The data needed to run analyses are available in Zenodo (https://doi.org/10.5281/zenodo.23929396). We recommend that your directory is structured exactly like below, with ** after the name indicating that it must be downloaded from the Zenodo repository.
 
 ```
 breast_cancer/
